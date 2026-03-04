@@ -1,0 +1,24 @@
+{
+  "name": "nebula",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws build",
+    "dev": "./scripts/dev/start.sh",
+    "dev:bg": "./scripts/dev/start-bg.sh",
+    "dev:stop": "./scripts/dev/stop-bg.sh",
+    "dev:status": "./scripts/dev/status-bg.sh",
+    "typecheck": "npm run -ws typecheck",
+    "nebula:hourly": "npm run -w nebula-maintainer run",
+    "nebula:cron:run": "node scripts/automation/nebula-cron-run.cjs",
+    "nebula:cron:health": "node scripts/automation/nebula-health-check.cjs",
+    "nebula:github:sync": "node scripts/automation/nebula-github-sync.cjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

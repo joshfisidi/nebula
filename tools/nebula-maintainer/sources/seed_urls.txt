@@ -1,0 +1,6 @@
+https://r3f.docs.pmnd.rs/advanced/scaling-performance
+https://r3f.docs.pmnd.rs/advanced/pitfalls
+https://threejs.org/examples/
+https://nextjs.org/docs/app/guides/production-checklist
+https://nextjs.org/docs/app/getting-started/deploying
+https://github.com/vasturiano/three-fatline

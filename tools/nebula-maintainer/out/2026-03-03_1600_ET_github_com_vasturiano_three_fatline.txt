@@ -1,0 +1,333 @@
+#GitHub
+
+   Skip to content
+
+Navigation Menu
+
+   (BUTTON) Toggle navigation
+
+   (BUTTON)
+   Sign in
+   (BUTTON) Appearance settings
+
+     * (BUTTON) Platform
+          + AI CODE CREATION
+               o GitHub CopilotWrite better code with AI
+               o GitHub SparkBuild and deploy intelligent apps
+               o GitHub ModelsManage and compare prompts
+               o MCP Registry^NewIntegrate external tools
+          + DEVELOPER WORKFLOWS
+               o ActionsAutomate any workflow
+               o CodespacesInstant dev environments
+               o IssuesPlan and track work
+               o Code ReviewManage code changes
+          + APPLICATION SECURITY
+               o GitHub Advanced SecurityFind and fix vulnerabilities
+               o Code securitySecure your code as you build
+               o Secret protectionStop leaks before they start
+          + EXPLORE
+               o Why GitHub
+               o Documentation
+               o Blog
+               o Changelog
+               o Marketplace
+       View all features
+     * (BUTTON) Solutions
+          + BY COMPANY SIZE
+               o Enterprises
+               o Small and medium teams
+               o Startups
+               o Nonprofits
+          + BY USE CASE
+               o App Modernization
+               o DevSecOps
+               o DevOps
+               o CI/CD
+               o View all use cases
+          + BY INDUSTRY
+               o Healthcare
+               o Financial services
+               o Manufacturing
+               o Government
+               o View all industries
+       View all solutions
+     * (BUTTON) Resources
+          + EXPLORE BY TOPIC
+               o AI
+               o Software Development
+               o DevOps
+               o Security
+               o View all topics
+          + EXPLORE BY TYPE
+               o Customer stories
+               o Events & webinars
+               o Ebooks & reports
+               o Business insights
+               o GitHub Skills
+          + SUPPORT & SERVICES
+               o Documentation
+               o Customer support
+               o Community forum
+               o Trust center
+               o Partners
+       View all resources
+     * (BUTTON) Open Source
+          + COMMUNITY
+               o GitHub SponsorsFund open source developers
+          + PROGRAMS
+               o Security Lab
+               o Maintainer Community
+               o Accelerator
+               o Archive Program
+          + REPOSITORIES
+               o Topics
+               o Trending
+               o Collections
+     * (BUTTON) Enterprise
+          + ENTERPRISE SOLUTIONS
+               o Enterprise platformAI-powered developer platform
+          + AVAILABLE ADD-ONS
+               o GitHub Advanced SecurityEnterprise-grade security
+                 features
+               o Copilot for BusinessEnterprise-grade AI features
+               o Premium SupportEnterprise-grade 24/7 support
+     * Pricing
+
+   (BUTTON)
+   Search or jump to...
+
+Search code, repositories, users, issues, pull requests...
+
+   Search
+   ____________________
+   Clear (BUTTON)
+
+   Search syntax tips
+
+Provide feedback
+
+   (BUTTON)
+
+   We read every piece of feedback, and take your input very seriously.
+
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   [ ] Include my email address so I can be contacted
+
+   (BUTTON) Cancel (BUTTON) Submit feedback
+
+Saved searches
+
+Use saved searches to filter your results more quickly
+
+   (BUTTON)
+
+   Name ____________________
+   Query ____________________
+
+   To see all available qualifiers, see our documentation.
+
+   (BUTTON) Cancel (BUTTON) Create saved search
+
+   Sign in
+
+   Sign up
+
+   (BUTTON) Appearance settings
+
+   (BUTTON) Resetting focus
+
+   You signed in with another tab or window. Reload to refresh your
+   session. You signed out in another tab or window. Reload to refresh
+   your session. You switched accounts on another tab or window. Reload to
+   refresh your session. (BUTTON) Dismiss alert
+
+   (BUTTON)
+   {{ message }}
+
+   vasturiano / three-fatline Public
+     * Notifications You must be signed in to change notification settings
+     * Fork 13
+     * Star 81
+
+     * Code
+     * Issues 5
+     * Pull requests 1
+     * Actions
+     * Projects
+     * Security 0
+     * Insights
+
+   (BUTTON) Additional navigation options
+     * Code
+     * Issues
+     * Pull requests
+     * Actions
+     * Projects
+     * Security
+     * Insights
+
+   (BUTTON) (BUTTON)
+
+vasturiano/three-fatline
+
+   (BUTTON)
+    master
+   (BUTTON)
+   BranchesTags
+   (BUTTON) Go to file
+   (BUTTON) Code
+   (BUTTON) Open more actions menu
+   (BUTTON) (BUTTON)
+
+Folders and files
+
+         Name       Name
+   Last commit message
+   Last commit date
+
+Latest commit
+
+
+History
+
+   80 Commits
+   80 Commits
+   example
+   example
+
+
+   src
+   src
+
+
+   README.md
+   README.md
+
+
+   package.json
+   package.json
+
+
+   rollup.config.js
+   rollup.config.js
+
+
+   yarn.lock
+   yarn.lock
+
+
+   (BUTTON) View all files
+
+Repository files navigation
+
+     * README
+
+   (BUTTON)
+
+three-fatline
+
+   NPM package Build Size NPM Downloads
+
+   A modularized version of
+   https://github.com/mrdoob/three.js/tree/master/examples/jsm/lines/.
+
+   See the example (source)
+
+Usage Example:
+
+import { Line2, LineGeometry, LineMaterial } from 'three-fatline';
+
+const geometry = new LineGeometry();
+geometry.setPositions([-160, 200, 0, 0, -200, 0, 160, 200, 0]); // [ x1, y1, z1,
+  x2, y2, z2, ... ] format
+
+const material = new LineMaterial({
+  color: 'red',
+  linewidth: 10, // px
+  resolution: new THREE.Vector2(640, 480) // resolution of the viewport
+  // dashed, dashScale, dashSize, gapSize
+});
+
+const myLine = new Line2(geometry, material);
+
+myLine.computeLineDistances();
+
+About
+
+   A ThreeJS Line object with variable width
+   vasturiano.github.io/three-fatline/example/fat-lines/
+
+Resources
+
+   Readme
+
+Uh oh!
+
+   There was an error while loading. Please reload this page.
+   Activity
+
+Stars
+
+   81 stars
+
+Watchers
+
+   2 watching
+
+Forks
+
+   13 forks
+   Report repository
+
+Releases
+
+   27 tags
+
+Packages 0
+
+
+
+
+Uh oh!
+
+   There was an error while loading. Please reload this page.
+
+Uh oh!
+
+   There was an error while loading. Please reload this page.
+
+Contributors 3
+
+     * @vasturiano vasturiano Vasco Asturiano
+     * @phocks phocks Joshua Byrd
+     * @rickardcreatics rickardcreatics
+
+Languages
+
+     * JavaScript 72.0%
+     * HTML 28.0%
+
+   (BUTTON) (BUTTON)
+
+Footer
+
+   � 2026 GitHub, Inc.
+
+Footer navigation
+
+     * Terms
+     * Privacy
+     * Security
+     * Status
+     * Community
+     * Docs
+     * Contact
+     * (BUTTON) Manage cookies
+     * (BUTTON) Do not share my personal information
+
+   (BUTTON) You can't perform that action at this time.
+
+   (BUTTON)

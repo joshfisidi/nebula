@@ -1,0 +1,37 @@
+# Nebula Production Roadmap (3D Mind-Map)
+
+## Phase 0 — Stabilize Orchestrator (now)
+- Deterministic RALPH hourly loop with lock + idempotent hour artifact.
+- Persistent queue (`.openclaw/state/nebula/queue.json`) with priority/age ordering.
+- Safe patch cap per run (`NEBULA_MAX_PATCHES_PER_RUN`) and rollback notes.
+- Hardening checks shift from brittle global commands to workspace-aware validation.
+
+## Phase 1 — Core Quality Gates
+- Add lint/test infrastructure package-by-package (starting with `@nebula/web` and `@nebula/server`).
+- Keep `@nebula/web` production build green on every hourly run.
+- Introduce deterministic smoke tests for graph ingestion and websocket sync.
+- Track validation reliability trends in upgrade artifacts.
+
+## Phase 2 — 3D Mind-Map Runtime Performance
+- Enforce R3F/Three standards: instance reuse, frame-budgeted updates, memoized geometry/materials.
+- Add performance budget checks (scene node count, draw calls, frame time heuristics).
+- Introduce LOD and culling strategy for large repositories.
+- Add controlled feature flags for expensive rendering features.
+
+## Phase 3 — Product Hardening
+- Add crash-safe state persistence for viewport, filters, and graph expansion.
+- Add controlled import-edge indexing with bounded worker concurrency.
+- Add replayable event logs for graph updates (debug + audit).
+- Add release checklist and versioned upgrade protocol.
+
+## Phase 4 — Operator-Grade Operations
+- Queue categories: reliability, performance, UX, debt, security.
+- Dead-letter triage workflow and auto-suggested remediation tasks.
+- Artifact compaction and historical trend dashboards.
+- Scheduled canary checks and rollback playbooks for all high-impact patches.
+
+## Definition of Done for “Production-Grade Baseline”
+- Hourly maintainer runs without overlap, remains idempotent, and never uses destructive git ops.
+- Queue reliably processes safe diffs with bounded retries and dead-letter capture.
+- Hardening outputs are signalful (pass/fail/skip with reasons).
+- Architecture and roadmap docs remain aligned with implemented checks.

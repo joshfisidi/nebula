@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.openclaw.nebula.hourly</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd /Users/josh/.openclaw/workspace/projects/nebula && npm run nebula:hourly</string>
+  </array>
+  <key>StartInterval</key><integer>3600</integer>
+  <key>StandardOutPath</key><string>/Users/josh/.openclaw/workspace/projects/nebula/.openclaw/logs/nebula-hourly.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/josh/.openclaw/workspace/projects/nebula/.openclaw/logs/nebula-hourly.err.log</string>
+  <key>RunAtLoad</key><true/>
+</dict>
+</plist>

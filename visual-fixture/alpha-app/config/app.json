@@ -1,0 +1,5 @@
+{
+  "name": "alpha-app",
+  "env": "dev",
+  "features": ["graph", "labels", "particles"]
+}

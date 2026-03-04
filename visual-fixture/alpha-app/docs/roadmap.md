@@ -1,0 +1,3 @@
+- stabilize scene boot
+- improve label culling
+- optimize edge rendering
