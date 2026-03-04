@@ -59,12 +59,12 @@ function ensureRemote(owner, repo) {
       throw new Error(`Failed to create repo ${repoId}: ${created.stderr || created.stdout}`);
     }
   } else {
-    const urlSsh = `git@github.com:${repoId}.git`;
+    const urlHttps = `https://github.com/${repoId}.git`;
     const remotes = runOk('git', ['remote']).split('\n').filter(Boolean);
     if (!remotes.includes(REMOTE_NAME)) {
-      runOk('git', ['remote', 'add', REMOTE_NAME, urlSsh]);
+      runOk('git', ['remote', 'add', REMOTE_NAME, urlHttps]);
     } else {
-      runOk('git', ['remote', 'set-url', REMOTE_NAME, urlSsh]);
+      runOk('git', ['remote', 'set-url', REMOTE_NAME, urlHttps]);
     }
   }
 
