@@ -44,10 +44,19 @@ while (($#)); do
   esac
 done
 
+# Legacy aliases kept for compatibility, but universe runtime uses UNIVERSE_* vars.
 export WATCH_DIR="${WATCH_DIR:-$ROOT_DIR}"
 export MULTI_PROJECT_ROOT="${MULTI_PROJECT_ROOT:-0}"
 export ENABLE_IMPORT_EDGES="${ENABLE_IMPORT_EDGES:-0}"
-export PORT="${PORT:-4001}"
+
+# Canonical universe runtime env
+export UNIVERSE_WATCH_ROOT="${UNIVERSE_WATCH_ROOT:-$WATCH_DIR}"
+export UNIVERSE_WS_PORT="${UNIVERSE_WS_PORT:-${PORT:-18891}}"
+
+# Web runtime env for ws client
+export NEXT_PUBLIC_UNIVERSE_WS_PORT="${NEXT_PUBLIC_UNIVERSE_WS_PORT:-$UNIVERSE_WS_PORT}"
+export NEXT_PUBLIC_UNIVERSE_WS="${NEXT_PUBLIC_UNIVERSE_WS:-ws://localhost:$UNIVERSE_WS_PORT}"
+
 if [[ -n "$WEB_PORT_CLI" ]]; then
   export WEB_PORT="$WEB_PORT_CLI"
 else
@@ -55,9 +64,9 @@ else
 fi
 
 echo "Starting Nebula dev stack"
-echo "- watch root: $WATCH_DIR"
-echo "- websocket: ws://localhost:$PORT"
-echo "- ws (LAN):  ws://<device-ip>:$PORT"
+echo "- watch root: $UNIVERSE_WATCH_ROOT"
+echo "- websocket: ws://localhost:$UNIVERSE_WS_PORT"
+echo "- ws (LAN):  ws://<device-ip>:$UNIVERSE_WS_PORT"
 echo "- import edges: $ENABLE_IMPORT_EDGES"
 echo "- web:       http://localhost:$WEB_PORT"
 echo "- web (LAN): http://<device-ip>:$WEB_PORT"
