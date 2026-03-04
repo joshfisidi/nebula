@@ -17,10 +17,10 @@ pnpm dev
 ```
 
 This starts both apps with hot reload:
-- WebSocket server on `:4001`
+- Universe WebSocket server on `:18891`
 - Next.js web app on `:3000` (bound to `0.0.0.0`)
-- Default watch root: current `nebula/` repository (single-project mode)
-- Default graph mode: parent tree edges (import edges disabled by default)
+- Default watch root: current `nebula/` repository
+- Layout: deterministic concentric/radial symmetry (server canonical)
 
 Open:
 - Local: `http://localhost:3000`
@@ -42,27 +42,22 @@ Logs are written to `.nebula-dev.log` in repo root.
 
 ## WebSocket URL (remote access)
 Web app auto-connects to:
-- `NEXT_PUBLIC_NEBULA_WS_URL` when set, otherwise
-- `ws://<current-browser-host>:4001`
+- `NEXT_PUBLIC_UNIVERSE_WS` when set, otherwise
+- `ws://<current-browser-host>:18891`
 
-So opening the web app over Tailscale uses your Tailscale IP automatically.
+Optional split config:
+- `NEXT_PUBLIC_UNIVERSE_WS_PORT=18891`
 
 ## Watch Target
-By default, `pnpm dev` watches the current Nebula repository (`./`) and visualizes existing files/folders as a view-only graph.
-Set `WATCH_DIR` to watch a different path:
+By default, `pnpm dev` watches the current Nebula repository (`./`) and streams live graph patches.
+Set `UNIVERSE_WATCH_ROOT` to watch a different path:
 
 ```bash
-WATCH_DIR=/absolute/path/to/repos node dist/index.js
+UNIVERSE_WATCH_ROOT=/absolute/path/to/repos node dist/index.js
 ```
 
-Enable separate universes per first-level subdirectory:
+Set websocket port if needed:
 
 ```bash
-WATCH_DIR=/absolute/path/to/repos MULTI_PROJECT_ROOT=1 node dist/index.js
-```
-
-Enable import dependency edges:
-
-```bash
-WATCH_DIR=/absolute/path ENABLE_IMPORT_EDGES=1 node dist/index.js
+UNIVERSE_WS_PORT=18891 node dist/index.js
 ```
