@@ -299,15 +299,11 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Contributors
+Contributors 3
 
-     *
-     *
-     *
-
-Uh oh!
-
-   There was an error while loading. Please reload this page.
+     * @vasturiano vasturiano Vasco Asturiano
+     * @phocks phocks Joshua Byrd
+     * @rickardcreatics rickardcreatics
 
 Languages
 

@@ -3,7 +3,7 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const DEFAULT_BRANCH = process.env.NEBULA_PUSH_BRANCH || 'agent';
+const DEFAULT_BRANCH = process.env.NEBULA_PUSH_BRANCH || 'main';
 const REMOTE_NAME = process.env.NEBULA_REMOTE_NAME || 'nebula';
 const VISIBILITY = process.env.NEBULA_REPO_VISIBILITY || 'private'; // private|public
 

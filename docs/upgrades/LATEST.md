@@ -23,7 +23,7 @@ evidence:
     sha256: "acf20cfa6c6e50f5ba75d9b6a1f8a6c34994cbe14fbd463a28c26c4423d65fe0"
   - title: "github_com_vasturiano_three_fatline"
     url: "https://github.com/vasturiano/three-fatline"
-    sha256: "e163a85ed09d1c3b54040c6f1c72fa47488e8b721adcee92f507ac2dc2840b08"
+    sha256: "e374f0208c301e31b1c5ceccdfd6345b63bc11b82502de752c4188068e3c70fc"
 ---
 
 # Nebula Hourly Upgrade 2026-03-04_1800_ET

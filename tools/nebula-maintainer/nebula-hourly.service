@@ -4,4 +4,4 @@ Description=Nebula hourly research + upgrade generation
 [Service]
 Type=oneshot
 WorkingDirectory=/Users/josh/.openclaw/workspace/projects/nebula
-ExecStart=/usr/bin/env bash -lc 'npm run nebula:hourly'
+ExecStart=/usr/bin/env bash -lc 'npm run nebula:cron:run'
