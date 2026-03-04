@@ -78,7 +78,10 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
           break;
         case "setPos": {
           const node = nodes.get(op.id);
-          if (node) node.posTarget = op.pos;
+          if (node) {
+            node.posTarget = op.pos;
+            node.posCurrent = { ...op.pos };
+          }
           break;
         }
       }

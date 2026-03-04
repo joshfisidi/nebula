@@ -1,12 +1,12 @@
-# Nebula Target Architecture (Production 3D Mind-Map)
+# Nebula Target Architecture (Production Flat Deterministic Graph)
 
 ## System Overview
-- **Web Client (`@nebula/web`, Next.js App Router):** renders the 3D mind-map with R3F/Three and operator controls.
+- **Web Client (`@nebula/web`, Next.js App Router):** renders a flat deterministic graph view (SVG/canvas-style) with operator controls.
 - **Realtime Backend (`@nebula/server`):** file-system watcher + websocket broadcaster for graph deltas.
 - **Shared Packages (`@nebula/protocol`, `@nebula/physics`):** typed graph contracts and simulation/layout primitives.
 - **Maintainer (`tools/nebula-maintainer`):** deterministic hourly RALPH loop for evidence → backlog → localized safe patching → hardening.
 
-## Runtime Standards (Next.js + R3F/Three)
+## Runtime Standards (Next.js, flat deterministic UI)
 1. **Deterministic rendering pipeline**
    - No unbounded per-frame object allocation.
    - Stable keys and memoized geometry/material instances.

@@ -1,4 +1,4 @@
-# Nebula Production Roadmap (3D Mind-Map)
+# Nebula Production Roadmap (Flat Deterministic Visualization)
 
 ## Phase 0 — Stabilize Orchestrator (now)
 - Deterministic RALPH hourly loop with lock + idempotent hour artifact.
@@ -12,11 +12,11 @@
 - Introduce deterministic smoke tests for graph ingestion and websocket sync.
 - Track validation reliability trends in upgrade artifacts.
 
-## Phase 2 — 3D Mind-Map Runtime Performance
-- Enforce R3F/Three standards: instance reuse, frame-budgeted updates, memoized geometry/materials.
-- Add performance budget checks (scene node count, draw calls, frame time heuristics).
-- Introduce LOD and culling strategy for large repositories.
-- Add controlled feature flags for expensive rendering features.
+## Phase 2 — Flat Runtime Performance + Legibility
+- Enforce deterministic 2D layout rules with zero-jitter patch application.
+- Add performance budget checks (node count, edge count, frame time, interaction latency).
+- Add progressive detail strategy (labels/details by zoom threshold).
+- Add controlled feature flags for expensive visual effects.
 
 ## Phase 3 — Product Hardening
 - Add crash-safe state persistence for viewport, filters, and graph expansion.
