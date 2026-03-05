@@ -11,6 +11,8 @@ fs.mkdirSync(runsDir, { recursive: true });
 const runId = new Date().toISOString().replace(/[:.]/g, '-');
 const logPath = path.join(runsDir, `${runId}.log`);
 const statusPath = path.join(stateDir, 'status.json');
+const upgradeBriefDir = path.join(repoRoot, 'upgrades', 'briefs');
+fs.mkdirSync(upgradeBriefDir, { recursive: true });
 
 function writeStatus(status) {
   fs.writeFileSync(statusPath, JSON.stringify(status, null, 2));
@@ -46,6 +48,43 @@ function bestEffortNotify(summary) {
   } catch {
     // best effort only
   }
+}
+
+function newestHourlyArtifact() {
+  const hourlyDir = path.join(repoRoot, 'docs', 'upgrades', 'hourly');
+  try {
+    const files = fs
+      .readdirSync(hourlyDir)
+      .filter((f) => /^UPGRADE_.*\.md$/.test(f))
+      .sort();
+    if (!files.length) return null;
+    return path.join(hourlyDir, files[files.length - 1]);
+  } catch {
+    return null;
+  }
+}
+
+function writeOperatorBrief({ status, steps, logPath }) {
+  const stamp = new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto', hour12: false }).replace(/[,: ]/g, '_');
+  const briefPath = path.join(upgradeBriefDir, `BRIEF_${stamp}_ET.md`);
+  const artifact = newestHourlyArtifact();
+  const lines = [
+    '# Nebula Hourly Brief',
+    '',
+    `- run_id: ${status.run_id}`,
+    `- status: ${status.status}`,
+    `- started_at: ${status.started_at}`,
+    `- finished_at: ${status.finished_at}`,
+    `- duration_ms: ${status.duration_ms}`,
+    `- artifact: ${artifact ? path.relative(repoRoot, artifact) : '(none)'}`,
+    `- log: ${path.relative(repoRoot, logPath)}`,
+    '',
+    '## Steps',
+    ...steps.map((s) => `- ${s.name}: ${s.ok ? 'ok' : 'fail'} (exit ${s.exit_code})`),
+    '',
+  ];
+  fs.writeFileSync(briefPath, lines.join('\n'));
+  return briefPath;
 }
 
 const startedAt = new Date();
@@ -111,11 +150,13 @@ const status = {
       })(),
 };
 
+const briefPath = writeOperatorBrief({ status, steps: status.steps, logPath });
+status.brief_path = briefPath;
 writeStatus(status);
 
 const brief = ok
-  ? `Nebula hourly ✅ upgrade+push finished (${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })} ET)`
-  : `Nebula hourly ❌ failed (${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })} ET). Check ${path.relative(repoRoot, logPath)}`;
+  ? `Nebula hourly ✅ upgrade+push finished (${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })} ET) | brief: ${path.relative(repoRoot, briefPath)}`
+  : `Nebula hourly ❌ failed (${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })} ET). Check ${path.relative(repoRoot, logPath)} | brief: ${path.relative(repoRoot, briefPath)}`;
 bestEffortNotify(brief);
 
 console.log(JSON.stringify(status, null, 2));
