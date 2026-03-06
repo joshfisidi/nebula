@@ -19,6 +19,7 @@
     "postprocessing": "^6.36.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "reactflow": "^11.11.4",
     "three": "^0.171.0",
     "three-stdlib": "^2.35.12",
     "zustand": "^5.0.3"
