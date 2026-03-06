@@ -391,6 +391,30 @@ function runWorkspaceScriptCheck(workspaceDir: string, workspaceName: string, sc
   };
 }
 
+function runInvariantCheck(
+  check: string,
+  predicate: () => boolean,
+  passMessage: string,
+  failMessage: string,
+): {check: string; status: string; classification: string; command: string; cwd: string; output: string} {
+  const ok = (() => {
+    try {
+      return predicate();
+    } catch {
+      return false;
+    }
+  })();
+
+  return {
+    check,
+    status: ok ? 'pass' : 'fail',
+    classification: ok ? 'success' : 'invariant_failed',
+    command: 'internal invariant check',
+    cwd: NEBULA_ROOT,
+    output: ok ? passMessage : failMessage,
+  };
+}
+
 function harden() {
   const pkgFiles = listWorkspacePackageFiles();
   const checks: Array<{check: string; status: string; classification: string; command: string; cwd: string; output: string}> = [];
@@ -437,6 +461,52 @@ function harden() {
     cwd: NEBULA_ROOT,
     output: webBuild.output,
   });
+
+  checks.push(
+    runInvariantCheck(
+      'dev.ws_url:remote-safe-default',
+      () => {
+        const file = path.join(NEBULA_ROOT, 'scripts/dev/start.sh');
+        if (!fs.existsSync(file)) return false;
+        const text = fs.readFileSync(file, 'utf8');
+        return !text.includes('NEXT_PUBLIC_UNIVERSE_WS="${NEXT_PUBLIC_UNIVERSE_WS:-ws://localhost:');
+      },
+      'NEXT_PUBLIC_UNIVERSE_WS does not default to localhost (remote clients safe).',
+      'Regression: NEXT_PUBLIC_UNIVERSE_WS localhost default detected in scripts/dev/start.sh',
+    ),
+  );
+
+  checks.push(
+    runInvariantCheck(
+      'server.ws_bind:0.0.0.0',
+      () => {
+        const file = path.join(NEBULA_ROOT, 'apps/server/src/universe/ws.ts');
+        if (!fs.existsSync(file)) return false;
+        const text = fs.readFileSync(file, 'utf8');
+        return text.includes('host: "0.0.0.0"');
+      },
+      'WebSocket server bind host is 0.0.0.0 (LAN/Tailscale reachable).',
+      'Regression: WebSocket server is not explicitly bound to 0.0.0.0',
+    ),
+  );
+
+  checks.push(
+    runInvariantCheck(
+      'ui.project_viewer:present',
+      () => fs.existsSync(path.join(NEBULA_ROOT, 'apps/web/src/universe/ProjectViewerPanel.tsx')),
+      'ProjectViewerPanel exists.',
+      'Regression: apps/web/src/universe/ProjectViewerPanel.tsx missing',
+    ),
+  );
+
+  checks.push(
+    runInvariantCheck(
+      'ui.reactflow_overlay:present',
+      () => fs.existsSync(path.join(NEBULA_ROOT, 'apps/web/src/universe/ReactFlowOverlay.tsx')),
+      'ReactFlowOverlay exists.',
+      'Regression: apps/web/src/universe/ReactFlowOverlay.tsx missing',
+    ),
+  );
 
   const summary = {
     pass: checks.filter((x) => x.status === 'pass').length,
