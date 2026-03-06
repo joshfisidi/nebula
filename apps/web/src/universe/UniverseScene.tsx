@@ -11,6 +11,7 @@ import { NodeSystem } from "./NodeSystem";
 import { ParticleSystem } from "./ParticleSystem";
 import { Starfield } from "./Starfield";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
+import { ProjectViewerPanel } from "./ProjectViewerPanel";
 import { useUniverseGraphStore } from "./graphStore";
 
 function StatusHud({ flowEnabled }: { flowEnabled: boolean }) {
@@ -62,6 +63,7 @@ export function UniverseScene() {
     <UniverseLiveProvider>
       <div style={{ position: "relative", width: "100%", height: "100vh" }}>
         <StatusHud flowEnabled={flowEnabled} />
+        <ProjectViewerPanel />
         <Canvas camera={camera} dpr={[1, 1.75]}>
           <color attach="background" args={["#050910"]} />
           <ambientLight intensity={0.65} />
