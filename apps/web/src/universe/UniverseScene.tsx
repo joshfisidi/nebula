@@ -24,7 +24,7 @@ function StatusHud({ flowEnabled }: { flowEnabled: boolean }) {
       style={{
         position: "fixed",
         top: "0.75rem",
-        left: "0.75rem",
+        right: "0.75rem",
         zIndex: 5,
         fontSize: "0.75rem",
         lineHeight: 1.35,
