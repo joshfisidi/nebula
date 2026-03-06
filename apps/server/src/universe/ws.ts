@@ -8,7 +8,7 @@ export interface UniverseWs {
 }
 
 export function startUniverseWsServer(port: number, getSnapshot: () => UniverseSnapshotMessage): UniverseWs {
-  const wss = new WebSocketServer({ port });
+  const wss = new WebSocketServer({ port, host: "0.0.0.0" });
   const clients = new Set<WebSocket>();
 
   wss.on("connection", (socket) => {

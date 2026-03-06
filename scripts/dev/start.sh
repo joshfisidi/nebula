@@ -54,8 +54,9 @@ export UNIVERSE_WATCH_ROOT="${UNIVERSE_WATCH_ROOT:-$WATCH_DIR}"
 export UNIVERSE_WS_PORT="${UNIVERSE_WS_PORT:-${PORT:-18891}}"
 
 # Web runtime env for ws client
+# Important: do NOT default NEXT_PUBLIC_UNIVERSE_WS to localhost,
+# or remote clients (Tailscale/LAN) will connect to their own localhost.
 export NEXT_PUBLIC_UNIVERSE_WS_PORT="${NEXT_PUBLIC_UNIVERSE_WS_PORT:-$UNIVERSE_WS_PORT}"
-export NEXT_PUBLIC_UNIVERSE_WS="${NEXT_PUBLIC_UNIVERSE_WS:-ws://localhost:$UNIVERSE_WS_PORT}"
 
 if [[ -n "$WEB_PORT_CLI" ]]; then
   export WEB_PORT="$WEB_PORT_CLI"
