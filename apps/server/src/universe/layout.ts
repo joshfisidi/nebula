@@ -1,8 +1,11 @@
 import type { GraphNode, Vec3 } from "./types.js";
 
 const TAU = Math.PI * 2;
-const R = 8;
-const Z_FILE_LAYER = 2;
+const BASE_RADIUS = 10;
+const DEPTH_EXPONENT = 1.18;
+const MIN_ARC_PADDING = 0.02;
+const Z_FILE_LAYER = 3.4;
+const Z_DEPTH_STEP = 0.34;
 
 interface ChildIndex {
   byParent: Map<string, GraphNode[]>;
@@ -33,20 +36,26 @@ export function computeLayout(nodes: Map<string, GraphNode>, rootId: string): Ma
     if (!node) return;
 
     const theta = (thetaStart + thetaEnd) * 0.5;
-    const r = node.depth * R;
+    const depthRadius = node.depth === 0 ? 0 : BASE_RADIUS * Math.pow(node.depth, DEPTH_EXPONENT);
+    const radialJitter = node.kind === "file" ? 1.4 : 0;
+    const r = depthRadius + radialJitter;
+
     out.set(id, {
       x: Math.cos(theta) * r,
       y: Math.sin(theta) * r,
-      z: node.kind === "dir" ? 0 : -Z_FILE_LAYER
+      z: node.kind === "dir" ? node.depth * Z_DEPTH_STEP : -(Z_FILE_LAYER + node.depth * Z_DEPTH_STEP)
     });
 
     const kids = index.byParent.get(id) ?? [];
     if (kids.length === 0) return;
 
     const span = thetaEnd - thetaStart;
+    const paddedSpan = Math.max(0, span - MIN_ARC_PADDING * 2);
+    const spanOffset = (span - paddedSpan) * 0.5;
+
     for (let i = 0; i < kids.length; i += 1) {
-      const childStart = thetaStart + (span * i) / kids.length;
-      const childEnd = thetaStart + (span * (i + 1)) / kids.length;
+      const childStart = thetaStart + spanOffset + (paddedSpan * i) / kids.length;
+      const childEnd = thetaStart + spanOffset + (paddedSpan * (i + 1)) / kids.length;
       walk(kids[i].id, childStart, childEnd);
     }
   };

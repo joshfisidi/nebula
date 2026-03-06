@@ -16,7 +16,22 @@ function StatusHud() {
   const edgeCount = useUniverseGraphStore((s) => s.edgeArray.length);
 
   return (
-    <div style={{ position: "fixed", top: 12, left: 12, zIndex: 5, fontSize: 12, color: "#d6e7ff", background: "rgba(7,12,23,0.65)", border: "1px solid rgba(105,159,255,0.32)", borderRadius: 10, padding: "8px 10px" }}>
+    <div
+      style={{
+        position: "fixed",
+        top: "0.75rem",
+        left: "0.75rem",
+        zIndex: 5,
+        fontSize: "0.75rem",
+        lineHeight: 1.35,
+        color: "#d6e7ff",
+        background: "rgba(7,12,23,0.65)",
+        border: "1px solid rgba(105,159,255,0.32)",
+        borderRadius: "0.625rem",
+        padding: "0.5rem 0.625rem",
+        minWidth: "7.5rem"
+      }}
+    >
       <div>ws: {connected ? "connected" : "disconnected"}</div>
       <div>nodes: {nodeCount}</div>
       <div>edges: {edgeCount}</div>
