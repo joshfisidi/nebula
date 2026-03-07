@@ -435,7 +435,30 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         {(["auto", "overview", "focus"] as const).map((m) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
+            onClick={() => {
+              setMode(m);
+
+              const focused = focusNodeRef.current ?? focusId ?? graphSnapshot.focus ?? laidOut.nodes[0]?.id ?? graphSnapshot.nodes[0]?.id;
+              if (focused) {
+                focusNodeRef.current = focused;
+                focusLockRef.current = true;
+                setFocusId(focused);
+
+                if (rf) {
+                  rf.fitView({
+                    nodes: [{ id: focused }],
+                    duration: 240,
+                    padding: isMobile ? 0.48 : 0.34,
+                    includeHiddenNodes: false,
+                    maxZoom: isMobile ? 0.92 : 1.12
+                  });
+                }
+
+                window.setTimeout(() => {
+                  focusLockRef.current = false;
+                }, 280);
+              }
+            }}
             style={{
               fontSize: 11,
               borderRadius: 8,
