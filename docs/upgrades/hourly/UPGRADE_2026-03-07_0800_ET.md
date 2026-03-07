@@ -185,7 +185,7 @@ Skipped: @nebula/web has no "test" script
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    61.7 kB         149 kB
+┌ ○ /                                    61.5 kB         149 kB
 └ ○ /_not-found                          872 B          88.2 kB
 + First Load JS shared by all            87.3 kB
   ├ chunks/5b8f0dd8-8f5ee2673eb461bb.js  53.6 kB
@@ -349,7 +349,7 @@ Skipped: nebula-maintainer has no "test" script
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    61.7 kB         149 kB
+┌ ○ /                                    61.5 kB         149 kB
 └ ○ /_not-found                          872 B          88.2 kB
 + First Load JS shared by all            87.3 kB
   ├ chunks/5b8f0dd8-8f5ee2673eb461bb.js  53.6 kB
