@@ -11,10 +11,12 @@ import ReactFlow, {
   useEdgesState,
   useNodesState
 } from "reactflow";
+import { AnimatedSVGEdge } from "./AnimatedSVGEdge";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
+const MAX_ANIMATED_EDGE_NODES = 1200;
 
 function toFlowNode(node: { id: string; name: string; posCurrent: { x: number; y: number } }): Node {
   return {
@@ -35,12 +37,13 @@ function toFlowNode(node: { id: string; name: string; posCurrent: { x: number; y
   };
 }
 
-function toFlowEdge(edge: { id: string; from: string; to: string }): Edge {
+function toFlowEdge(edge: { id: string; from: string; to: string }, animated: boolean): Edge {
   return {
     id: edge.id,
     source: edge.from,
     target: edge.to,
-    style: { opacity: 0.08 }
+    type: animated ? "animatedSvg" : undefined,
+    style: { opacity: animated ? 0.18 : 0.08 }
   };
 }
 
@@ -54,17 +57,20 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const state = useUniverseGraphStore.getState();
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
     const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
+    const useAnimatedEdges = enabled && nodeArray.length <= MAX_ANIMATED_EDGE_NODES;
 
     return {
       nodes: nodeArray.map(toFlowNode),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
-        .map(toFlowEdge)
+        .map((edge) => toFlowEdge(edge, useAnimatedEdges)),
+      useAnimatedEdges
     };
-  }, [version, selectedProjectsKey]);
+  }, [version, selectedProjectsKey, enabled]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graphSnapshot.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(graphSnapshot.edges);
+  const edgeTypes = useMemo(() => ({ animatedSvg: AnimatedSVGEdge }), []);
 
   useEffect(() => {
     setNodes(graphSnapshot.nodes);
@@ -101,6 +107,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
