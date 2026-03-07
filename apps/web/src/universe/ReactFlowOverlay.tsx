@@ -15,12 +15,14 @@ import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 import {
   chooseLayout,
+  finalizeLayout,
   layoutWithDagre,
   layoutWithElk,
   layoutWithRadial,
   type LayoutEngine,
   type LayoutMode
 } from "./layoutEngines";
+import { RoutedEdge } from "./RoutedEdge";
 
 type VisibleNode = {
   id: string;
@@ -35,6 +37,7 @@ type VisibleNode = {
 };
 
 const MAX_INTERACTIVE_NODES = 2500;
+const edgeTypes = { routed: RoutedEdge };
 
 function scoreNode(name: string, kind: "dir" | "file", search: string): number {
   let score = kind === "dir" ? 25 : 5;
@@ -55,10 +58,14 @@ function toFlowNode(node: VisibleNode): Node {
     isSummary;
 
   const label = isSummary ? node.name : isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
+  const width = Math.round(Math.max(isBubbleGroup ? 64 : 80, Math.min(isBubbleGroup ? 160 : 220, label.length * (isBubbleGroup ? 6.2 : 6.8) + (isBubbleGroup ? 26 : 24))));
+  const height = isBubbleGroup ? 30 : 34;
 
   return {
     id: node.id,
     position: node.position,
+    width,
+    height,
     data: { label, depth: node.depth },
     draggable: false,
     selectable: true,
@@ -79,8 +86,10 @@ function toFlowNode(node: VisibleNode): Node {
       fontSize: isBubbleGroup ? 10.5 : 11,
       lineHeight: 1.2,
       padding: isBubbleGroup ? "6px 12px" : "6px 8px",
-      minWidth: isBubbleGroup ? 64 : 80,
-      maxWidth: isBubbleGroup ? 160 : 220,
+      width,
+      height,
+      minWidth: width,
+      maxWidth: width,
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap",
@@ -95,7 +104,7 @@ function toFlowEdge(edge: { id: string; from: string; to: string }, depth: numbe
     id: edge.id,
     source: edge.from,
     target: edge.to,
-    type: "smoothstep",
+    type: "routed",
     style: { stroke: `hsla(${hue} 82% 64% / 0.34)`, strokeWidth: 1 }
   };
 }
@@ -296,7 +305,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
     const run = async () => {
       if (engine === "field") {
-        if (!cancelled) setLaidOut({ nodes: graphSnapshot.nodes, edges: graphSnapshot.edges });
+        const out = finalizeLayout(graphSnapshot.nodes, graphSnapshot.edges);
+        if (!cancelled) setLaidOut(out);
         return;
       }
 
@@ -469,6 +479,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         zoomOnScroll
         panOnDrag
         proOptions={{ hideAttribution: true }}
+        edgeTypes={edgeTypes}
       >
         <Background color="rgba(80,120,180,0.12)" gap={isMobile ? 18 : 22} size={1} />
         <Controls showInteractive={false} position={isMobile ? "top-right" : "bottom-right"} />
