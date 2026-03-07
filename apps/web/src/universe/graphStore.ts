@@ -57,6 +57,70 @@ function assignProjectIds(nodes: Map<string, RenderNode>) {
   }
 }
 
+function applyDeterministicTreeLayout(nodes: Map<string, RenderNode>) {
+  const children = new Map<string, RenderNode[]>();
+  const roots: RenderNode[] = [];
+
+  for (const node of nodes.values()) {
+    if (!node.parentId || !nodes.has(node.parentId)) {
+      roots.push(node);
+      continue;
+    }
+
+    const arr = children.get(node.parentId) ?? [];
+    arr.push(node);
+    children.set(node.parentId, arr);
+  }
+
+  for (const arr of children.values()) {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  roots.sort((a, b) => a.name.localeCompare(b.name));
+
+  const xById = new Map<string, number>();
+  let cursor = 0;
+
+  const place = (node: RenderNode, depth: number) => {
+    const kids = children.get(node.id) ?? [];
+    if (kids.length === 0) {
+      xById.set(node.id, cursor);
+      node.depth = depth;
+      cursor += 1;
+      return;
+    }
+
+    const start = cursor;
+    for (const child of kids) {
+      place(child, depth + 1);
+    }
+    const end = cursor - 1;
+    xById.set(node.id, (start + end) / 2);
+    node.depth = depth;
+  };
+
+  for (const root of roots) {
+    place(root, 0);
+    cursor += 2;
+  }
+
+  const values = [...xById.values()];
+  const minX = values.length ? Math.min(...values) : 0;
+  const maxX = values.length ? Math.max(...values) : 0;
+  const center = (minX + maxX) * 0.5;
+
+  const X_SPACING = 2.3;
+  const Y_SPACING = 3.1;
+
+  for (const node of nodes.values()) {
+    const x = (xById.get(node.id) ?? 0) - center;
+    const target: Vec3 = { x: x * X_SPACING, y: -node.depth * Y_SPACING, z: node.depth * 0.05 };
+    node.pos = target;
+    node.posTarget = { ...target };
+    node.posCurrent = { ...target };
+  }
+}
+
 export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   connected: false,
   nodes: new Map(),
@@ -78,6 +142,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     }
 
     assignProjectIds(nodes);
+    applyDeterministicTreeLayout(nodes);
 
     const edges = new Map<string, GraphEdge>();
     for (const edge of snapshot.graph.edges) {
@@ -126,6 +191,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     }
 
     assignProjectIds(nodes);
+    applyDeterministicTreeLayout(nodes);
     set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: state.version + 1 });
   },
 
