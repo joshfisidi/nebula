@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -113,6 +113,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
   const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("dagre");
   const [laidOut, setLaidOut] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
+  const focusLockRef = useRef(false);
+  const focusNodeRef = useRef<string | null>(null);
 
   useEffect(() => {
     const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -358,6 +360,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     (_: MouseEvent, node: Node) => {
       if (node.id.startsWith("summary:")) return;
       setFocusId(node.id);
+      focusNodeRef.current = node.id;
+      focusLockRef.current = true;
 
       const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
       if (runtime?.kind === "dir") {
@@ -367,12 +371,16 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       if (rf) {
         rf.fitView({
           nodes: [{ id: node.id }],
-          duration: 220,
-          padding: isMobile ? 0.5 : 0.35,
+          duration: 260,
+          padding: isMobile ? 0.44 : 0.32,
           includeHiddenNodes: false,
-          maxZoom: isMobile ? 0.92 : 1.2
+          maxZoom: isMobile ? 0.9 : 1.1
         });
       }
+
+      window.setTimeout(() => {
+        focusLockRef.current = false;
+      }, 320);
     },
     [isMobile, rf, setFocusId, toggleExpandedNode]
   );
@@ -380,9 +388,25 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   useEffect(() => {
     if (!rf || !enabled || graphSnapshot.nodes.length === 0) return;
 
+    if (focusLockRef.current) {
+      return;
+    }
+
     const frame = requestAnimationFrame(() => {
+      const focused = focusNodeRef.current;
+      if (focused && laidOut.nodes.some((n) => n.id === focused)) {
+        rf.fitView({
+          nodes: [{ id: focused }],
+          duration: 180,
+          padding: isMobile ? 0.46 : 0.3,
+          includeHiddenNodes: false,
+          maxZoom: isMobile ? 0.9 : 1.1
+        });
+        return;
+      }
+
       rf.fitView({
-        duration: 260,
+        duration: 240,
         padding: isMobile ? 0.34 : 0.2,
         includeHiddenNodes: false,
         minZoom: 0.22,
@@ -391,7 +415,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [rf, enabled, laidOut.nodes.length, laidOut.edges.length, expandedKey, selectedProjectsKey, isMobile, layoutEngine]);
+  }, [rf, enabled, laidOut.nodes, graphSnapshot.nodes.length, expandedKey, selectedProjectsKey, isMobile, layoutEngine]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
     setZoom(view.zoom);
