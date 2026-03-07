@@ -168,18 +168,30 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     [addEdgeToGraph]
   );
 
+  useEffect(() => {
+    if (!rf || !enabled || graphSnapshot.nodes.length === 0) return;
+
+    const frame = requestAnimationFrame(() => {
+      rf.fitView({
+        duration: 260,
+        padding: isMobile ? 0.34 : 0.2,
+        includeHiddenNodes: false,
+        minZoom: 0.22,
+        maxZoom: isMobile ? 0.9 : 1.15
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [rf, enabled, graphSnapshot.nodes.length, graphSnapshot.edges.length, expandedKey, selectedProjectsKey, isMobile]);
+
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
       const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
       if (runtime?.kind === "dir") {
         toggleExpandedNode(node.id);
       }
-
-      if (rf) {
-        rf.fitView({ nodes: [{ id: node.id }], duration: 220, padding: 0.35, includeHiddenNodes: false });
-      }
     },
-    [rf, toggleExpandedNode]
+    [toggleExpandedNode]
   );
 
   return (
