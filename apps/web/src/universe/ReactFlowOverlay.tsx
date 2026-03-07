@@ -122,7 +122,6 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   }, []);
 
   const isMobile = viewport.width < 900;
-  const isPortrait = viewport.height > viewport.width;
 
   const graphSnapshot = useMemo(() => {
     const state = useUniverseGraphStore.getState();
@@ -250,8 +249,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const laneValues = [...pos.values()].map((p) => p.lane);
     const laneCenter = laneValues.length ? (Math.min(...laneValues) + Math.max(...laneValues)) * 0.5 : 0;
 
-    const depthSpacing = isMobile ? (isPortrait ? 118 : 132) : 170;
-    const laneSpacing = isMobile ? (isPortrait ? 84 : 62) : 38;
+    const depthSpacing = isMobile ? 124 : 170;
+    const laneSpacing = isMobile ? 72 : 38;
 
     const flowNodes: VisibleNode[] = visibleRealNodes.map((id) => {
       const node = byId.get(id)!;
@@ -296,7 +295,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       edges: flowEdges,
       focus
     };
-  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, isPortrait, zoom]);
+  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, zoom]);
 
   useEffect(() => {
     let cancelled = false;
@@ -330,12 +329,12 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }
 
       if (engine === "dagre") {
-        const out = layoutWithDagre(graphSnapshot.nodes, graphSnapshot.edges, isMobile && isPortrait ? "TB" : "LR");
+        const out = layoutWithDagre(graphSnapshot.nodes, graphSnapshot.edges, "LR");
         if (!cancelled) setLaidOut(out);
         return;
       }
 
-      const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile ? undefined : isPortrait ? "DOWN" : "RIGHT");
+      const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile ? undefined : "RIGHT");
       if (!cancelled) setLaidOut(out);
     };
 
@@ -343,7 +342,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     return () => {
       cancelled = true;
     };
-  }, [graphSnapshot.nodes, graphSnapshot.edges, isMobile, isPortrait, mode, zoom]);
+  }, [graphSnapshot.nodes, graphSnapshot.edges, isMobile, mode, zoom]);
 
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
@@ -435,7 +434,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         onConnect={onConnect}
         onInit={setRf}
         onMoveEnd={onMoveEnd}
-        defaultViewport={isMobile && isPortrait ? { x: 0, y: 32, zoom: 0.75 } : { x: 80, y: 0, zoom: 0.9 }}
+        defaultViewport={isMobile ? { x: 20, y: 0, zoom: 0.78 } : { x: 80, y: 0, zoom: 0.9 }}
         nodesDraggable={false}
         nodesConnectable={enabled}
         elementsSelectable={enabled}
