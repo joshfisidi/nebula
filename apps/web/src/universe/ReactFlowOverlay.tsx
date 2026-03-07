@@ -8,30 +8,44 @@ import ReactFlow, {
   Edge,
   Node,
   OnConnect,
-  type ReactFlowInstance
+  type ReactFlowInstance,
+  type Viewport
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 
-const MAX_INTERACTIVE_NODES = 2500;
-
-function toFlowNode(node: {
+type VisibleNode = {
   id: string;
   name: string;
   path?: string;
-  kind: string;
+  kind: "dir" | "file" | "summary";
   depth: number;
   expanded: boolean;
   position: { x: number; y: number };
-}): Node {
+};
+
+const MAX_INTERACTIVE_NODES = 2500;
+
+function scoreNode(name: string, kind: "dir" | "file", search: string): number {
+  let score = kind === "dir" ? 25 : 5;
+  const n = name.toLowerCase();
+  if (["package.json", "readme.md", "tsconfig.json", ".env", "next.config.mjs"].includes(n)) score += 40;
+  if (search && n.includes(search)) score += 1000;
+  return score;
+}
+
+function toFlowNode(node: VisibleNode): Node {
   const isDir = node.kind === "dir";
+  const isSummary = node.kind === "summary";
   const normalizedName = node.name.toLowerCase();
   const normalizedPath = (node.path ?? "").toLowerCase();
   const isBubbleGroup =
     /(^|\/)(docs|dist|cache|node_modules)(\/|$)/.test(normalizedPath) ||
-    ["docs", "dist", "cache", "node_modules"].includes(normalizedName);
+    ["docs", "dist", "cache", "node_modules"].includes(normalizedName) ||
+    isSummary;
 
-  const label = isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
+  const label = isSummary ? node.name : isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
+
   return {
     id: node.id,
     position: node.position,
@@ -56,10 +70,11 @@ function toFlowNode(node: {
       lineHeight: 1.2,
       padding: isBubbleGroup ? "6px 12px" : "6px 8px",
       minWidth: isBubbleGroup ? 64 : 80,
-      maxWidth: isBubbleGroup ? 140 : 220,
+      maxWidth: isBubbleGroup ? 160 : 220,
       overflow: "hidden",
       textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      opacity: isSummary ? 0.9 : 1
     }
   };
 }
@@ -79,10 +94,13 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const version = useUniverseGraphStore((s) => s.version);
   const selectedProjectsKey = useUniverseGraphStore((s) => [...s.selectedProjectIds].sort().join("|"));
   const expandedKey = useUniverseGraphStore((s) => [...s.expandedNodeIds].sort().join("|"));
+  const focusId = useUniverseGraphStore((s) => s.focusId);
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
+  const setFocusId = useUniverseGraphStore((s) => s.setFocusId);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
 
   const [viewport, setViewport] = useState({ width: 1280, height: 720 });
+  const [zoom, setZoom] = useState(0.9);
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
 
   useEffect(() => {
@@ -97,15 +115,16 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   const graphSnapshot = useMemo(() => {
     const state = useUniverseGraphStore.getState();
-    const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
-    const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
+    const selectedNodes = state.nodeArray
+      .filter((node) => state.selectedProjectIds.size > 0 && state.selectedProjectIds.has(node.projectId))
+      .slice(0, MAX_INTERACTIVE_NODES);
 
-    const byId = new Map(nodeArray.map((node) => [node.id, node]));
+    const byId = new Map(selectedNodes.map((n) => [n.id, n]));
     const children = new Map<string, string[]>();
     const roots: string[] = [];
 
-    for (const node of nodeArray) {
-      if (node.parentId && visibleNodeIds.has(node.parentId)) {
+    for (const node of selectedNodes) {
+      if (node.parentId && byId.has(node.parentId)) {
         const arr = children.get(node.parentId) ?? [];
         arr.push(node.id);
         children.set(node.parentId, arr);
@@ -117,7 +136,81 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     for (const arr of children.values()) {
       arr.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
     }
-    roots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
+
+    const focus = focusId && byId.has(focusId) ? focusId : roots[0] ?? null;
+    const search = "";
+    const maxVisible = zoom < 0.38 ? 90 : zoom < 0.65 ? 170 : 280;
+    const childBudget = zoom < 0.5 ? 8 : 24;
+
+    const visible = new Set<string>();
+    const summaryEdges: Array<{ id: string; from: string; to: string; depth: number }> = [];
+    const summaryNodes: VisibleNode[] = [];
+
+    if (focus) {
+      let c: string | undefined | null = focus;
+      while (c) {
+        visible.add(c);
+        c = byId.get(c)?.parentId;
+      }
+
+      const queue: string[] = [focus];
+      while (queue.length > 0 && visible.size < maxVisible) {
+        const id = queue.shift()!;
+        const node = byId.get(id);
+        if (!node || node.kind !== "dir") continue;
+
+        const ranked = (children.get(id) ?? [])
+          .map((cid) => byId.get(cid))
+          .filter((n): n is NonNullable<typeof n> => Boolean(n))
+          .sort((a, b) => scoreNode(b.name, b.kind, search) - scoreNode(a.name, a.kind, search));
+
+        const kept = ranked.slice(0, childBudget);
+        const overflow = ranked.slice(childBudget);
+
+        for (const child of kept) {
+          if (visible.size >= maxVisible) break;
+          visible.add(child.id);
+          if (child.kind === "dir" && (state.expandedNodeIds.has(child.id) || child.id === focus)) {
+            queue.push(child.id);
+          }
+        }
+
+        if (overflow.length > 0 && visible.size < maxVisible) {
+          const sid = `summary:${id}`;
+          visible.add(sid);
+          summaryNodes.push({
+            id: sid,
+            name: `+${overflow.length} more`,
+            kind: "summary",
+            depth: (node.depth ?? 0) + 1,
+            expanded: false,
+            position: { x: 0, y: 0 }
+          });
+          summaryEdges.push({ id: `edge:${id}:${sid}`, from: id, to: sid, depth: node.depth ?? 0 });
+        }
+      }
+    }
+
+    const visibleRealNodes = [...visible].filter((id) => !id.startsWith("summary:") && byId.has(id));
+    const visibleSet = new Set(visibleRealNodes);
+
+    const visChildren = new Map<string, string[]>();
+    const visRoots: string[] = [];
+    for (const id of visibleRealNodes) {
+      const node = byId.get(id)!;
+      if (node.parentId && visibleSet.has(node.parentId)) {
+        const arr = visChildren.get(node.parentId) ?? [];
+        arr.push(id);
+        visChildren.set(node.parentId, arr);
+      } else {
+        visRoots.push(id);
+      }
+    }
+
+    for (const arr of visChildren.values()) {
+      arr.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
+    }
+    visRoots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
 
     const pos = new Map<string, { depth: number; lane: number }>();
     const branchSign = new Map<string, number>();
@@ -131,7 +224,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     };
 
     const place = (id: string, depth: number, inheritedSign = 0): number => {
-      const kids = children.get(id) ?? [];
+      const kids = visChildren.get(id) ?? [];
       const current = byId.get(id);
 
       let sign = inheritedSign;
@@ -154,7 +247,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       return lane;
     };
 
-    for (const rootId of roots) {
+    for (const rootId of visRoots) {
       place(rootId, 0, 0);
       cursor += 1;
     }
@@ -164,47 +257,89 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
     const depthSpacing = isMobile ? (isPortrait ? 118 : 132) : 170;
     const laneSpacing = isMobile ? (isPortrait ? 84 : 62) : 38;
-    const maxEdges = isMobile ? 900 : 1800;
+
+    const flowNodes: VisibleNode[] = visibleRealNodes.map((id) => {
+      const node = byId.get(id)!;
+      const p = pos.get(id) ?? { depth: 0, lane: 0 };
+      const lane = (p.lane - laneCenter) * laneSpacing;
+      const depth = p.depth * depthSpacing;
+
+      let position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
+      if (isMobile && isPortrait && p.depth > 0) {
+        const sign = branchSign.get(id) ?? 0;
+        if (sign !== 0) position = { x: lane, y: depth * sign };
+      }
+
+      return {
+        id: node.id,
+        name: node.name,
+        path: node.path,
+        kind: node.kind,
+        depth: node.depth,
+        expanded: state.expandedNodeIds.has(node.id),
+        position
+      };
+    });
+
+    const depthById = new Map(flowNodes.map((n) => [n.id, n.depth]));
+    for (const s of summaryNodes) {
+      const parentPos = flowNodes.find((n) => n.id === s.id.replace("summary:", ""))?.position;
+      if (parentPos) {
+        s.position = isMobile && isPortrait
+          ? { x: parentPos.x + 46, y: parentPos.y + 72 }
+          : { x: parentPos.x + 150, y: parentPos.y + 28 };
+      }
+      flowNodes.push(s);
+      depthById.set(s.id, s.depth);
+    }
+
+    const visibleEdgeIds = new Set(flowNodes.map((n) => n.id));
+    const flowEdges = state.edgeArray
+      .filter((edge) => visibleEdgeIds.has(edge.from) && visibleEdgeIds.has(edge.to))
+      .map((edge) => toFlowEdge(edge, depthById.get(edge.from) ?? 0));
+
+    for (const se of summaryEdges) {
+      flowEdges.push(toFlowEdge({ id: se.id, from: se.from, to: se.to }, se.depth));
+    }
 
     return {
-      nodes: nodeArray.map((node) => {
-        const p = pos.get(node.id) ?? { depth: 0, lane: 0 };
-        const lane = (p.lane - laneCenter) * laneSpacing;
-        const depth = p.depth * depthSpacing;
-
-        let position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
-
-        if (isMobile && isPortrait && p.depth > 0) {
-          const sign = branchSign.get(node.id) ?? 0;
-          if (sign !== 0) {
-            position = { x: lane, y: depth * sign };
-          }
-        }
-
-        return toFlowNode({
-          ...node,
-          expanded: state.expandedNodeIds.has(node.id),
-          position
-        });
-      }),
-      edges: state.edgeArray
-        .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
-        .slice(0, maxEdges)
-        .map((edge) => {
-          const depth = state.nodes.get(edge.from)?.depth ?? 0;
-          return toFlowEdge(edge, depth);
-        })
+      nodes: flowNodes.map(toFlowNode),
+      edges: flowEdges,
+      focus
     };
-  }, [version, selectedProjectsKey, expandedKey, isMobile, isPortrait]);
+  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, isPortrait, zoom]);
 
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
       const source = connection.source;
       const target = connection.target;
-      if (!source || !target) return;
+      if (!source || !target || source.startsWith("summary:") || target.startsWith("summary:")) return;
       addEdgeToGraph({ source, target });
     },
     [addEdgeToGraph]
+  );
+
+  const onNodeClick = useCallback(
+    (_: MouseEvent, node: Node) => {
+      if (node.id.startsWith("summary:")) return;
+      setFocusId(node.id);
+
+      const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
+      if (runtime?.kind === "dir") {
+        toggleExpandedNode(node.id);
+      }
+
+      if (rf) {
+        rf.fitView({
+          nodes: [{ id: node.id }],
+          duration: 220,
+          padding: isMobile ? 0.5 : 0.35,
+          includeHiddenNodes: false,
+          maxZoom: isMobile ? 0.92 : 1.2
+        });
+      }
+    },
+    [isMobile, rf, setFocusId, toggleExpandedNode]
   );
 
   useEffect(() => {
@@ -223,25 +358,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     return () => cancelAnimationFrame(frame);
   }, [rf, enabled, graphSnapshot.nodes.length, graphSnapshot.edges.length, expandedKey, selectedProjectsKey, isMobile]);
 
-  const onNodeClick = useCallback(
-    (_: MouseEvent, node: Node) => {
-      const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
-      if (runtime?.kind === "dir") {
-        toggleExpandedNode(node.id);
-      }
-
-      if (rf) {
-        rf.fitView({
-          nodes: [{ id: node.id }],
-          duration: 220,
-          padding: isMobile ? 0.5 : 0.35,
-          includeHiddenNodes: false,
-          maxZoom: isMobile ? 0.92 : 1.2
-        });
-      }
-    },
-    [rf, toggleExpandedNode, isMobile]
-  );
+  const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
+    setZoom(view.zoom);
+  }, []);
 
   return (
     <div
@@ -259,6 +378,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         onInit={setRf}
+        onMoveEnd={onMoveEnd}
         defaultViewport={isMobile && isPortrait ? { x: 0, y: 32, zoom: 0.75 } : { x: 80, y: 0, zoom: 0.9 }}
         nodesDraggable={false}
         nodesConnectable={enabled}

@@ -15,6 +15,7 @@ interface UniverseGraphState {
   edgeArray: GraphEdge[];
   selectedProjectIds: Set<string>;
   expandedNodeIds: Set<string>;
+  focusId: string | null;
   version: number;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
@@ -27,6 +28,7 @@ interface UniverseGraphState {
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
   toggleExpandedNode: (nodeId: string) => void;
+  setFocusId: (nodeId: string | null) => void;
   isNodeVisible: (node: RenderNode) => boolean;
 }
 
@@ -126,6 +128,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   edgeArray: [],
   selectedProjectIds: new Set<string>(),
   expandedNodeIds: new Set<string>(),
+  focusId: null,
   version: 0,
 
   setConnected(connected) {
@@ -246,14 +249,14 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
 
   setProjectSelection(projectId) {
     if (!projectId) {
-      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>() });
+      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
       return;
     }
-    set({ selectedProjectIds: new Set<string>([projectId]), expandedNodeIds: new Set<string>() });
+    set({ selectedProjectIds: new Set<string>([projectId]), expandedNodeIds: new Set<string>(), focusId: projectId });
   },
 
   clearProjectSelection() {
-    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>() });
+    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
   },
 
   selectAllProjects() {
@@ -262,7 +265,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       for (const node of state.nodeArray) {
         if (node.projectId) all.add(node.projectId);
       }
-      return { selectedProjectIds: all, expandedNodeIds: new Set<string>() };
+      return { selectedProjectIds: all, expandedNodeIds: new Set<string>(), focusId: null };
     });
   },
 
@@ -273,6 +276,10 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       else next.add(nodeId);
       return { expandedNodeIds: next };
     });
+  },
+
+  setFocusId(nodeId) {
+    set({ focusId: nodeId });
   },
 
   isNodeVisible(node) {
