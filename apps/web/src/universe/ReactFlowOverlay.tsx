@@ -18,12 +18,19 @@ const MAX_INTERACTIVE_NODES = 2500;
 function toFlowNode(node: {
   id: string;
   name: string;
+  path?: string;
   kind: string;
   depth: number;
   expanded: boolean;
   position: { x: number; y: number };
 }): Node {
   const isDir = node.kind === "dir";
+  const normalizedName = node.name.toLowerCase();
+  const normalizedPath = (node.path ?? "").toLowerCase();
+  const isBubbleGroup =
+    /(^|\/)(docs|dist|cache|node_modules)(\/|$)/.test(normalizedPath) ||
+    ["docs", "dist", "cache", "node_modules"].includes(normalizedName);
+
   const label = isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
   return {
     id: node.id,
@@ -32,16 +39,24 @@ function toFlowNode(node: {
     draggable: false,
     selectable: true,
     style: {
-      background: isDir ? "rgba(15,27,56,0.95)" : "rgba(12,20,40,0.92)",
+      background: isBubbleGroup
+        ? "rgba(20,35,70,0.95)"
+        : isDir
+          ? "rgba(15,27,56,0.95)"
+          : "rgba(12,20,40,0.92)",
       color: "#dbeafe",
-      border: isDir ? `1px solid hsla(${(node.depth * 43) % 360} 80% 70% / 0.7)` : "1px solid rgba(148,163,184,0.45)",
-      borderRadius: 10,
+      border: isBubbleGroup
+        ? "1px solid rgba(125,211,252,0.88)"
+        : isDir
+          ? `1px solid hsla(${(node.depth * 43) % 360} 80% 70% / 0.7)`
+          : "1px solid rgba(148,163,184,0.45)",
+      borderRadius: isBubbleGroup ? 999 : 10,
       boxShadow: "none",
-      fontSize: 11,
+      fontSize: isBubbleGroup ? 10.5 : 11,
       lineHeight: 1.2,
-      padding: "6px 8px",
-      minWidth: 80,
-      maxWidth: 220,
+      padding: isBubbleGroup ? "6px 12px" : "6px 8px",
+      minWidth: isBubbleGroup ? 64 : 80,
+      maxWidth: isBubbleGroup ? 140 : 220,
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap"
