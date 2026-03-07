@@ -29,6 +29,8 @@ type VisibleNode = {
   kind: "dir" | "file" | "summary";
   depth: number;
   expanded: boolean;
+  salience: number;
+  z: number;
   position: { x: number; y: number };
 };
 
@@ -70,10 +72,10 @@ function toFlowNode(node: VisibleNode): Node {
       border: isBubbleGroup
         ? "1px solid rgba(125,211,252,0.88)"
         : isDir
-          ? `1px solid hsla(${(node.depth * 43) % 360} 80% 70% / 0.7)`
-          : "1px solid rgba(148,163,184,0.45)",
+          ? `1px solid hsla(${(node.depth * 43) % 360} 80% ${68 + Math.min(14, node.salience * 4)}% / 0.78)`
+          : `1px solid rgba(148,163,184,${Math.min(0.82, 0.36 + node.salience * 0.08)})`,
       borderRadius: isBubbleGroup ? 999 : 10,
-      boxShadow: "none",
+      boxShadow: isSummary ? "none" : `0 0 ${8 + node.salience * 7}px rgba(96,165,250,${Math.min(0.28, node.salience * 0.05)})`,
       fontSize: isBubbleGroup ? 10.5 : 11,
       lineHeight: 1.2,
       padding: isBubbleGroup ? "6px 12px" : "6px 8px",
@@ -82,7 +84,7 @@ function toFlowNode(node: VisibleNode): Node {
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap",
-      opacity: isSummary ? 0.9 : 1
+      opacity: isSummary ? 0.9 : Math.max(0.78, 1 - Math.abs(node.z) * 0.02)
     }
   };
 }
@@ -111,7 +113,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [zoom, setZoom] = useState(0.9);
   const [mode, setMode] = useState<LayoutMode>("auto");
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
-  const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("dagre");
+  const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("field");
   const [laidOut, setLaidOut] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
@@ -197,6 +199,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
             kind: "summary",
             depth: (node.depth ?? 0) + 1,
             expanded: false,
+            salience: 0.8,
+            z: 0,
             position: { x: 0, y: 0 }
           });
           summaryEdges.push({ id: `edge:${id}:${sid}`, from: id, to: sid, depth: node.depth ?? 0 });
@@ -207,61 +211,20 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const visibleRealNodes = [...visible].filter((id) => !id.startsWith("summary:") && byId.has(id));
     const visibleSet = new Set(visibleRealNodes);
 
-    const visChildren = new Map<string, string[]>();
-    const visRoots: string[] = [];
-    for (const id of visibleRealNodes) {
-      const node = byId.get(id)!;
-      if (node.parentId && visibleSet.has(node.parentId)) {
-        const arr = visChildren.get(node.parentId) ?? [];
-        arr.push(id);
-        visChildren.set(node.parentId, arr);
-      } else {
-        visRoots.push(id);
-      }
-    }
-
-    for (const arr of visChildren.values()) {
-      arr.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
-    }
-    visRoots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
-
-    const pos = new Map<string, { depth: number; lane: number }>();
-    let cursor = 0;
-
-    const place = (id: string, depth: number): number => {
-      const kids = visChildren.get(id) ?? [];
-
-      if (kids.length === 0) {
-        const lane = cursor;
-        cursor += 1;
-        pos.set(id, { depth, lane });
-        return lane;
-      }
-
-      const lanes = kids.map((kid) => place(kid, depth + 1));
-      const lane = lanes.reduce((sum, v) => sum + v, 0) / lanes.length;
-      pos.set(id, { depth, lane });
-      return lane;
-    };
-
-    for (const rootId of visRoots) {
-      place(rootId, 0);
-      cursor += 1;
-    }
-
-    const laneValues = [...pos.values()].map((p) => p.lane);
-    const laneCenter = laneValues.length ? (Math.min(...laneValues) + Math.max(...laneValues)) * 0.5 : 0;
-
-    const depthSpacing = isMobile ? 124 : 170;
-    const laneSpacing = isMobile ? 72 : 38;
+    const livePositions = visibleRealNodes.map((id) => byId.get(id)?.posCurrent ?? { x: 0, y: 0, z: 0 });
+    const xs = livePositions.map((p) => p.x);
+    const ys = livePositions.map((p) => p.y);
+    const centerX = xs.length ? (Math.min(...xs) + Math.max(...xs)) * 0.5 : 0;
+    const centerY = ys.length ? (Math.min(...ys) + Math.max(...ys)) * 0.5 : 0;
+    const fieldScale = isMobile ? 34 : 42;
 
     const flowNodes: VisibleNode[] = visibleRealNodes.map((id) => {
       const node = byId.get(id)!;
-      const p = pos.get(id) ?? { depth: 0, lane: 0 };
-      const lane = (p.lane - laneCenter) * laneSpacing;
-      const depth = p.depth * depthSpacing;
-
-      const position = { x: depth, y: lane };
+      const live = node.posCurrent ?? node.posTarget ?? node.pos ?? { x: 0, y: 0, z: 0 };
+      const position = {
+        x: (live.x - centerX) * fieldScale,
+        y: (live.y - centerY) * fieldScale
+      };
 
       return {
         id: node.id,
@@ -270,6 +233,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         kind: node.kind,
         depth: node.depth,
         expanded: state.expandedNodeIds.has(node.id),
+        salience: node.physics?.salience ?? 1,
+        z: live.z,
         position
       };
     });
@@ -302,6 +267,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   useEffect(() => {
     let cancelled = false;
+    const hasRuntimePositions = graphSnapshot.nodes.some((node) => {
+      const data = node.position;
+      return Math.abs(data.x) > 0.001 || Math.abs(data.y) > 0.001;
+    });
 
     const hasCrossLinks = graphSnapshot.edges.some((e) => {
       const s = graphSnapshot.nodes.find((n) => n.id === e.source);
@@ -317,14 +286,20 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       zoom,
       visibleCount: graphSnapshot.nodes.length,
       hasGroups: false,
-      hasCrossLinks
+      hasCrossLinks,
+      hasRuntimePositions
     });
 
-    const engine = isMobile ? "elk" : autoEngine;
+    const engine = isMobile && autoEngine !== "field" ? "elk" : autoEngine;
 
     setLayoutEngine(engine);
 
     const run = async () => {
+      if (engine === "field") {
+        if (!cancelled) setLaidOut({ nodes: graphSnapshot.nodes, edges: graphSnapshot.edges });
+        return;
+      }
+
       if (engine === "radial") {
         const out = layoutWithRadial(graphSnapshot.nodes, graphSnapshot.edges);
         if (!cancelled) setLaidOut(out);

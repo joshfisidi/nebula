@@ -109,6 +109,7 @@ function applyDeterministicTreeLayout(nodes: Map<string, RenderNode>) {
   const Y_SPACING = 0.85;
 
   for (const node of nodes.values()) {
+    if (node.pos) continue;
     const laneY = (yById.get(node.id) ?? 0) - centerY;
     const target: Vec3 = { x: node.depth * X_SPACING, y: laneY * Y_SPACING, z: 0 };
     node.pos = target;
@@ -159,12 +160,13 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       switch (op.op) {
         case "upsertNode": {
           const existing = nodes.get(op.node.id);
-          const target = toVec(op.node.pos);
+          const target = op.node.pos ? toVec(op.node.pos) : existing?.posTarget ?? existing?.posCurrent ?? { x: 0, y: 0, z: 0 };
           nodes.set(op.node.id, {
             ...op.node,
             projectId: existing?.projectId ?? op.node.id,
-            posCurrent: existing?.posCurrent ?? { ...target },
-            posTarget: target
+            pos: { ...target },
+            posCurrent: { ...target },
+            posTarget: { ...target }
           });
           break;
         }
@@ -180,6 +182,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
         case "setPos": {
           const node = nodes.get(op.id);
           if (node) {
+            node.pos = { ...op.pos };
             node.posTarget = op.pos;
             node.posCurrent = { ...op.pos };
           }

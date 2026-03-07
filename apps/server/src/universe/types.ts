@@ -1,3 +1,5 @@
+import type { NodePhysicsMeta } from "@nebula/physics";
+
 export type NodeKind = "dir" | "file";
 export type EdgeKind = "contains";
 
@@ -17,6 +19,7 @@ export interface GraphNode {
   sizeBytes?: number;
   mtimeMs?: number;
   pos?: Vec3;
+  physics?: NodePhysicsMeta;
 }
 
 export interface GraphEdge {

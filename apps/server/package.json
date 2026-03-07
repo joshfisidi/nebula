@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@nebula/physics": "workspace:*",
     "@nebula/protocol": "workspace:*",
     "chokidar": "^4.0.1",
     "ws": "^8.18.0"

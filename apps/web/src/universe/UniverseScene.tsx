@@ -32,7 +32,7 @@ function StatusHud({ mobile }: { mobile: boolean }) {
       <div>ws: {connected ? "connected" : "disconnected"}</div>
       <div>nodes: {nodeCount}</div>
       <div>edges: {edgeCount}</div>
-      <div>mode: react-flow deterministic</div>
+      <div>mode: react-flow semantic-field</div>
     </div>
   );
 }

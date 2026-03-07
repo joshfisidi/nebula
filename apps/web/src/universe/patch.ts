@@ -1,6 +1,17 @@
 export type NodeKind = "dir" | "file";
 export type EdgeKind = "contains";
 
+export interface NodePhysicsMeta {
+  mass: number;
+  charge: number;
+  restLengthScale: number;
+  stiffnessScale: number;
+  volatility: number;
+  salience: number;
+  subtreeMass: number;
+  depth: number;
+}
+
 export interface Vec3 {
   x: number;
   y: number;
@@ -17,6 +28,7 @@ export interface GraphNode {
   sizeBytes?: number;
   mtimeMs?: number;
   pos?: Vec3;
+  physics?: NodePhysicsMeta;
 }
 
 export interface GraphEdge {

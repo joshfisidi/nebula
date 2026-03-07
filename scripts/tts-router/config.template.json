@@ -1,0 +1,36 @@
+{
+  "defaultProvider": "qwen-local",
+  "fallbackProvider": "elevenlabs",
+  "mode": "fast",
+  "timeouts": {
+    "qwenMs": 12000,
+    "elevenMs": 15000
+  },
+  "retries": {
+    "qwen": 1,
+    "eleven": 0
+  },
+  "limits": {
+    "maxChars": 900,
+    "chunkChars": 450
+  },
+  "paths": {
+    "stateDir": ".openclaw/state/tts",
+    "outDir": ".openclaw/state/tts/out",
+    "tmpDir": ".openclaw/state/tts/tmp",
+    "metricsPath": ".openclaw/state/tts/metrics.jsonl",
+    "lastStatusPath": ".openclaw/state/tts/last-status.json"
+  },
+  "qwen": {
+    "baseUrl": "http://127.0.0.1:8000",
+    "modelFast": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "modelQuality": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "speaker": "Ryan",
+    "language": "English"
+  },
+  "elevenlabs": {
+    "apiKeyEnv": "ELEVENLABS_API_KEY",
+    "voiceIdEnv": "ELEVENLABS_VOICE_ID",
+    "modelId": "eleven_multilingual_v2"
+  }
+}

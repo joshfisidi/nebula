@@ -14,6 +14,10 @@
     "jsx": "preserve",
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@nebula/physics": ["packages/physics/src/index.ts"],
+      "@nebula/protocol": ["packages/protocol/src/index.ts"]
+    }
   }
 }
