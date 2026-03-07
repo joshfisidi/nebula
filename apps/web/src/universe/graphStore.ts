@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { GraphEdge, GraphNode, PatchOp, UniverseSnapshotMessage, Vec3 } from "./patch";
 
 interface RenderNode extends GraphNode {
+  projectId: string;
   posCurrent: Vec3;
   posTarget: Vec3;
 }
@@ -12,6 +13,7 @@ interface UniverseGraphState {
   edges: Map<string, GraphEdge>;
   nodeArray: RenderNode[];
   edgeArray: GraphEdge[];
+  selectedProjectIds: Set<string>;
   version: number;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
@@ -19,10 +21,39 @@ interface UniverseGraphState {
   tick: (alpha: number) => void;
   setNodePosition: (id: string, pos: Vec3) => void;
   addEdge: (params: { source: string; target: string }) => void;
+  toggleProjectSelection: (projectId: string) => void;
+  clearProjectSelection: () => void;
+  selectAllProjects: () => void;
+  isNodeVisible: (node: RenderNode) => boolean;
 }
 
 function toVec(value?: Vec3): Vec3 {
   return value ?? { x: 0, y: 0, z: 0 };
+}
+
+function assignProjectIds(nodes: Map<string, RenderNode>) {
+  const memo = new Map<string, string>();
+
+  const resolve = (id: string): string => {
+    const cached = memo.get(id);
+    if (cached) return cached;
+
+    const node = nodes.get(id);
+    if (!node) return id;
+
+    if (!node.parentId) {
+      memo.set(id, id);
+      return id;
+    }
+
+    const rootId = resolve(node.parentId);
+    memo.set(id, rootId);
+    return rootId;
+  };
+
+  for (const node of nodes.values()) {
+    node.projectId = resolve(node.id);
+  }
 }
 
 export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
@@ -31,6 +62,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   edges: new Map(),
   nodeArray: [],
   edgeArray: [],
+  selectedProjectIds: new Set<string>(),
   version: 0,
 
   setConnected(connected) {
@@ -41,8 +73,10 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     const nodes = new Map<string, RenderNode>();
     for (const node of snapshot.graph.nodes) {
       const pos = toVec(node.pos);
-      nodes.set(node.id, { ...node, posCurrent: { ...pos }, posTarget: { ...pos } });
+      nodes.set(node.id, { ...node, projectId: node.id, posCurrent: { ...pos }, posTarget: { ...pos } });
     }
+
+    assignProjectIds(nodes);
 
     const edges = new Map<string, GraphEdge>();
     for (const edge of snapshot.graph.edges) {
@@ -64,6 +98,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
           const target = toVec(op.node.pos);
           nodes.set(op.node.id, {
             ...op.node,
+            projectId: existing?.projectId ?? op.node.id,
             posCurrent: existing?.posCurrent ?? { ...target },
             posTarget: target
           });
@@ -89,6 +124,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       }
     }
 
+    assignProjectIds(nodes);
     set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: state.version + 1 });
   },
 
@@ -132,6 +168,34 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     });
 
     set({ edges, edgeArray: [...edges.values()], version: state.version + 1 });
+  },
+
+  toggleProjectSelection(projectId) {
+    set((state) => {
+      const next = new Set(state.selectedProjectIds);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return { selectedProjectIds: next };
+    });
+  },
+
+  clearProjectSelection() {
+    set({ selectedProjectIds: new Set<string>() });
+  },
+
+  selectAllProjects() {
+    set((state) => {
+      const all = new Set<string>();
+      for (const node of state.nodeArray) {
+        if (node.projectId) all.add(node.projectId);
+      }
+      return { selectedProjectIds: all };
+    });
+  },
+
+  isNodeVisible(node) {
+    const selected = get().selectedProjectIds;
+    return selected.size > 0 && selected.has(node.projectId);
   }
 }));
 

@@ -29,6 +29,7 @@ export function NodeSystem() {
     let fileCount = 0;
 
     for (const node of store.nodeArray) {
+      if (!store.isNodeVisible(node)) continue;
       temp.position.set(node.posCurrent.x, node.posCurrent.y, node.posCurrent.z);
       temp.scale.setScalar(node.kind === "dir" ? 1 : 1);
       temp.updateMatrix();

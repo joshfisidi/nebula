@@ -54,6 +54,7 @@ export function EdgeSystem() {
       const from = store.nodes.get(edge.from);
       const to = store.nodes.get(edge.to);
       if (!from || !to) continue;
+      if (!store.isNodeVisible(from) || !store.isNodeVisible(to)) continue;
       if (segmentIndex + EDGE_SEGMENTS >= MAX_LINE_SEGMENTS) break;
 
       const sx = from.posCurrent.x;

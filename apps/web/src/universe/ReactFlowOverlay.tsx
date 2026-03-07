@@ -46,17 +46,22 @@ function toFlowEdge(edge: { id: string; from: string; to: string }): Edge {
 
 export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { enabled: boolean }) {
   const version = useUniverseGraphStore((s) => s.version);
+  const selectedProjectsKey = useUniverseGraphStore((s) => [...s.selectedProjectIds].sort().join("|"));
   const setNodePosition = useUniverseGraphStore((s) => s.setNodePosition);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
 
   const graphSnapshot = useMemo(() => {
     const state = useUniverseGraphStore.getState();
-    const nodeArray = state.nodeArray.slice(0, MAX_INTERACTIVE_NODES);
+    const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
+    const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
+
     return {
       nodes: nodeArray.map(toFlowNode),
-      edges: state.edgeArray.map(toFlowEdge)
+      edges: state.edgeArray
+        .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
+        .map(toFlowEdge)
     };
-  }, [version]);
+  }, [version, selectedProjectsKey]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graphSnapshot.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(graphSnapshot.edges);

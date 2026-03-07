@@ -8,7 +8,20 @@ export function shouldIgnore(absPath: string): boolean {
   const segments = split(absPath);
   if (segments.length === 0) return false;
 
-  if (segments.includes("node_modules") || segments.includes(".pnpm-store") || segments.includes(".git")) {
+  const blockedDirs = new Set([
+    "node_modules",
+    ".pnpm-store",
+    ".git",
+    "dist",
+    "build",
+    ".next",
+    ".cache",
+    ".turbo",
+    ".parcel-cache",
+    "coverage"
+  ]);
+
+  if (segments.some((segment) => blockedDirs.has(segment))) {
     return true;
   }
 

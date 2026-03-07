@@ -15,12 +15,17 @@ type TreeNode = {
   parentId?: string;
   depth: number;
   path: string;
+  projectId: string;
 };
 
 export function ProjectViewerPanel() {
   const nodes = useUniverseGraphStore((s) => s.nodeArray);
   const edges = useUniverseGraphStore((s) => s.edgeArray);
   const connected = useUniverseGraphStore((s) => s.connected);
+  const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
+  const toggleProjectSelection = useUniverseGraphStore((s) => s.toggleProjectSelection);
+  const selectAllProjects = useUniverseGraphStore((s) => s.selectAllProjects);
+  const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -33,7 +38,8 @@ export function ProjectViewerPanel() {
         kind: n.kind,
         parentId: n.parentId,
         depth: n.depth,
-        path: n.path
+        path: n.path,
+        projectId: n.projectId
       };
       const key = n.parentId ?? "__root__";
       const arr = map.get(key) ?? [];
@@ -52,6 +58,19 @@ export function ProjectViewerPanel() {
   }, [nodes]);
 
   const rootNodes = useMemo(() => byParent.get("__root__") ?? [], [byParent]);
+
+  const projects = useMemo(
+    () =>
+      rootNodes
+        .map((node) => ({ id: node.id, projectId: node.projectId, name: node.name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [rootNodes]
+  );
+
+  const visibleRoots = useMemo(
+    () => rootNodes.filter((node) => selectedProjectIds.has(node.projectId)),
+    [rootNodes, selectedProjectIds]
+  );
 
   const visibleSet = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -126,6 +145,28 @@ export function ProjectViewerPanel() {
       </CardHeader>
 
       <CardContent>
+        <div className="mb-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
+            <span>Projects (select to load)</span>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" onClick={selectAllProjects}>all</Button>
+              <Button variant="ghost" size="sm" onClick={clearProjectSelection}>none</Button>
+            </div>
+          </div>
+          <div className="max-h-28 overflow-auto space-y-1">
+            {projects.map((project) => (
+              <label key={project.id} className="flex items-center gap-2 text-xs text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={selectedProjectIds.has(project.projectId)}
+                  onChange={() => toggleProjectSelection(project.projectId)}
+                />
+                <span className="truncate">{project.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-3 flex items-center gap-2">
           <Search size={14} className="text-slate-400" />
           <Input placeholder="Search files/folders..." value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -135,8 +176,10 @@ export function ProjectViewerPanel() {
         <div className="max-h-[62vh] overflow-auto rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
           {rootNodes.length === 0 ? (
             <div className="px-2 py-6 text-center text-xs text-slate-400">Waiting for graph data...</div>
+          ) : selectedProjectIds.size === 0 ? (
+            <div className="px-2 py-6 text-center text-xs text-slate-400">Select at least one project above to load it.</div>
           ) : (
-            rootNodes.map(renderNode)
+            visibleRoots.map(renderNode)
           )}
         </div>
       </CardContent>
