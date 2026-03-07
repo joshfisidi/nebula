@@ -105,10 +105,27 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     roots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
 
     const pos = new Map<string, { depth: number; lane: number }>();
+    const branchSign = new Map<string, number>();
     let cursor = 0;
 
-    const place = (id: string, depth: number): number => {
+    const classifyTopBranch = (name: string): number => {
+      const n = name.toLowerCase();
+      if (/(web|front|ui|client|app)/.test(n)) return -1;
+      if (/(server|back|api|worker|db|infra)/.test(n)) return 1;
+      return 0;
+    };
+
+    const place = (id: string, depth: number, inheritedSign = 0): number => {
       const kids = children.get(id) ?? [];
+      const current = byId.get(id);
+
+      let sign = inheritedSign;
+      if (depth === 1 && current) {
+        const classified = classifyTopBranch(current.name);
+        sign = classified !== 0 ? classified : inheritedSign;
+      }
+      branchSign.set(id, sign);
+
       if (kids.length === 0) {
         const lane = cursor;
         cursor += 1;
@@ -116,22 +133,22 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         return lane;
       }
 
-      const lanes = kids.map((kid) => place(kid, depth + 1));
+      const lanes = kids.map((kid) => place(kid, depth + 1, sign));
       const lane = lanes.reduce((sum, v) => sum + v, 0) / lanes.length;
       pos.set(id, { depth, lane });
       return lane;
     };
 
     for (const rootId of roots) {
-      place(rootId, 0);
+      place(rootId, 0, 0);
       cursor += 1;
     }
 
     const laneValues = [...pos.values()].map((p) => p.lane);
     const laneCenter = laneValues.length ? (Math.min(...laneValues) + Math.max(...laneValues)) * 0.5 : 0;
 
-    const depthSpacing = isMobile ? (isPortrait ? 120 : 135) : 170;
-    const laneSpacing = isMobile ? (isPortrait ? 88 : 62) : 38;
+    const depthSpacing = isMobile ? (isPortrait ? 118 : 132) : 170;
+    const laneSpacing = isMobile ? (isPortrait ? 84 : 62) : 38;
     const maxEdges = isMobile ? 900 : 1800;
 
     return {
@@ -140,7 +157,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         const lane = (p.lane - laneCenter) * laneSpacing;
         const depth = p.depth * depthSpacing;
 
-        const position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
+        let position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
+
+        if (isMobile && isPortrait && p.depth > 0) {
+          const sign = branchSign.get(node.id) ?? 0;
+          if (sign !== 0) {
+            position = { x: lane, y: depth * sign };
+          }
+        }
 
         return toFlowNode({
           ...node,
@@ -190,8 +214,18 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       if (runtime?.kind === "dir") {
         toggleExpandedNode(node.id);
       }
+
+      if (rf) {
+        rf.fitView({
+          nodes: [{ id: node.id }],
+          duration: 220,
+          padding: isMobile ? 0.5 : 0.35,
+          includeHiddenNodes: false,
+          maxZoom: isMobile ? 0.92 : 1.2
+        });
+      }
     },
-    [toggleExpandedNode]
+    [rf, toggleExpandedNode, isMobile]
   );
 
   return (
