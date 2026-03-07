@@ -66,7 +66,6 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const version = useUniverseGraphStore((s) => s.version);
   const selectedProjectsKey = useUniverseGraphStore((s) => [...s.selectedProjectIds].sort().join("|"));
   const expandedKey = useUniverseGraphStore((s) => [...s.expandedNodeIds].sort().join("|"));
-  const setNodePosition = useUniverseGraphStore((s) => s.setNodePosition);
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
 
@@ -75,38 +74,66 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
     const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
 
-    const xs = nodeArray.map((n) => n.posCurrent.x);
-    const ys = nodeArray.map((n) => n.posCurrent.y);
-    const minX = xs.length ? Math.min(...xs) : 0;
-    const maxX = xs.length ? Math.max(...xs) : 0;
-    const minY = ys.length ? Math.min(...ys) : 0;
-    const maxY = ys.length ? Math.max(...ys) : 0;
-    const cx = (minX + maxX) * 0.5;
-    const cy = (minY + maxY) * 0.5;
-    const rangeX = Math.max(1, maxX - minX);
-    const rangeY = Math.max(1, maxY - minY);
-    const targetW = 1200;
-    const targetH = 700;
-    const scale = Math.max(6, Math.min(46, Math.min(targetW / rangeX, targetH / rangeY)));
+    const byId = new Map(nodeArray.map((node) => [node.id, node]));
+    const children = new Map<string, string[]>();
+    const roots: string[] = [];
+
+    for (const node of nodeArray) {
+      if (node.parentId && visibleNodeIds.has(node.parentId)) {
+        const arr = children.get(node.parentId) ?? [];
+        arr.push(node.id);
+        children.set(node.parentId, arr);
+      } else {
+        roots.push(node.id);
+      }
+    }
+
+    for (const arr of children.values()) {
+      arr.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
+    }
+    roots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
+
+    const pos = new Map<string, { x: number; y: number }>();
+    let cursorY = 0;
+
+    const place = (id: string, depth: number): number => {
+      const kids = children.get(id) ?? [];
+      if (kids.length === 0) {
+        const y = cursorY;
+        cursorY += 1;
+        pos.set(id, { x: depth * 170, y: y * 38 });
+        return y;
+      }
+
+      const ys = kids.map((kid) => place(kid, depth + 1));
+      const y = ys.reduce((sum, v) => sum + v, 0) / ys.length;
+      pos.set(id, { x: depth * 170, y: y * 38 });
+      return y;
+    };
+
+    for (const rootId of roots) {
+      place(rootId, 0);
+      cursorY += 1;
+    }
+
+    const yValues = [...pos.values()].map((p) => p.y);
+    const yCenter = yValues.length ? (Math.min(...yValues) + Math.max(...yValues)) * 0.5 : 0;
 
     return {
-      nodes: nodeArray.map((node) =>
-        toFlowNode({
+      nodes: nodeArray.map((node) => {
+        const p = pos.get(node.id) ?? { x: 0, y: 0 };
+        return toFlowNode({
           ...node,
           expanded: state.expandedNodeIds.has(node.id),
-          position: {
-            x: (node.posCurrent.x - cx) * scale,
-            y: (node.posCurrent.y - cy) * scale
-          }
-        })
-      ),
+          position: { x: p.x, y: p.y - yCenter }
+        });
+      }),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
         .map((edge) => {
           const depth = state.nodes.get(edge.from)?.depth ?? 0;
           return toFlowEdge(edge, depth);
-        }),
-      transform: { cx, cy, scale }
+        })
     };
   }, [version, selectedProjectsKey, expandedKey]);
 
@@ -117,18 +144,6 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     setNodes(graphSnapshot.nodes);
     setEdges(graphSnapshot.edges);
   }, [graphSnapshot, setNodes, setEdges]);
-
-  const handleNodeDragStop = useCallback(
-    (_: MouseEvent, node: Node) => {
-      const { cx, cy, scale } = graphSnapshot.transform;
-      setNodePosition(node.id, {
-        x: node.position.x / scale + cx,
-        y: node.position.y / scale + cy,
-        z: 0
-      });
-    },
-    [graphSnapshot.transform, setNodePosition]
-  );
 
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
@@ -167,12 +182,11 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeDragStop={handleNodeDragStop}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         fitView
         fitViewOptions={{ padding: 0.18 }}
-        nodesDraggable={enabled}
+        nodesDraggable={false}
         nodesConnectable={enabled}
         elementsSelectable={enabled}
         zoomOnScroll={enabled}
