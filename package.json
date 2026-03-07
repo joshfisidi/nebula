@@ -13,6 +13,7 @@
     "dev:stop": "./scripts/dev/stop-bg.sh",
     "dev:status": "./scripts/dev/status-bg.sh",
     "typecheck": "npm run -ws typecheck",
+    "nebula:audit:snapshot": "bash scripts/automation/nebula-audit-snapshot.sh",
     "nebula:hourly": "npm run -w nebula-maintainer run",
     "nebula:cron:run": "node scripts/automation/nebula-cron-run.cjs",
     "nebula:cron:health": "node scripts/automation/nebula-health-check.cjs",

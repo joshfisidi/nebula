@@ -90,9 +90,14 @@ function writeOperatorBrief({ status, steps, logPath }) {
 const startedAt = new Date();
 const steps = [];
 
-steps.push(runStep('hourly_upgrade', 'npm', ['run', 'nebula:hourly']));
+steps.push(runStep('audit_snapshot', 'npm', ['run', 'nebula:audit:snapshot']));
 
-const upgradeOk = steps[0].ok;
+const auditOk = steps[0].ok;
+if (auditOk) {
+  steps.push(runStep('hourly_upgrade', 'npm', ['run', 'nebula:hourly']));
+}
+
+const upgradeOk = steps.find((s) => s.name === 'hourly_upgrade')?.ok === true;
 if (upgradeOk) {
   // Keep pushes on main by default for this repo.
   steps.push(
