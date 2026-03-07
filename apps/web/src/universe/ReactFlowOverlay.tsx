@@ -12,42 +12,44 @@ import ReactFlow, {
   useEdgesState,
   useNodesState
 } from "reactflow";
-import { AnimatedSVGEdge } from "./AnimatedSVGEdge";
-import { FloatingEdge } from "./FloatingEdge";
-import { FloatingConnectionLine } from "./FloatingConnectionLine";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
-const MAX_ANIMATED_EDGE_NODES = 1200;
-const MAX_FLOATING_EDGE_NODES = 2200;
 
-function toFlowNode(node: { id: string; name: string; posCurrent: { x: number; y: number } }): Node {
+function toFlowNode(node: { id: string; name: string; kind: string; posCurrent: { x: number; y: number } }): Node {
+  const isDir = node.kind === "dir";
   return {
     id: node.id,
-    position: { x: node.posCurrent.x, y: node.posCurrent.y },
+    position: { x: node.posCurrent.x * 18, y: node.posCurrent.y * 18 },
     data: { label: node.name },
     draggable: true,
     selectable: true,
     style: {
-      opacity: 0.01,
-      background: "transparent",
-      border: "none",
-      boxShadow: "none",
-      width: 14,
-      height: 14,
-      padding: 0
+      background: isDir ? "rgba(22,40,84,0.95)" : "rgba(16,24,44,0.92)",
+      color: "#dbeafe",
+      border: isDir ? "1px solid rgba(125,211,252,0.55)" : "1px solid rgba(148,163,184,0.45)",
+      borderRadius: 10,
+      boxShadow: "0 6px 18px rgba(2, 6, 23, 0.35)",
+      fontSize: 11,
+      lineHeight: 1.2,
+      padding: "6px 8px",
+      minWidth: 80,
+      maxWidth: 220,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
     }
   };
 }
 
-function toFlowEdge(edge: { id: string; from: string; to: string }, animated: boolean, floating: boolean): Edge {
+function toFlowEdge(edge: { id: string; from: string; to: string }): Edge {
   return {
     id: edge.id,
     source: edge.from,
     target: edge.to,
-    type: animated ? "animatedSvg" : floating ? "floating" : undefined,
-    style: { opacity: animated ? 0.18 : floating ? 0.24 : 0.08 }
+    type: "smoothstep",
+    style: { stroke: "rgba(125, 178, 255, 0.32)", strokeWidth: 1 }
   };
 }
 
@@ -61,22 +63,16 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const state = useUniverseGraphStore.getState();
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
     const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
-    const useAnimatedEdges = enabled && nodeArray.length <= MAX_ANIMATED_EDGE_NODES;
-    const useFloatingEdges = enabled && nodeArray.length <= MAX_FLOATING_EDGE_NODES;
-
     return {
       nodes: nodeArray.map(toFlowNode),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
-        .map((edge) => toFlowEdge(edge, useAnimatedEdges, useFloatingEdges)),
-      useAnimatedEdges,
-      useFloatingEdges
+        .map((edge) => toFlowEdge(edge))
     };
   }, [version, selectedProjectsKey, enabled]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graphSnapshot.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(graphSnapshot.edges);
-  const edgeTypes = useMemo(() => ({ animatedSvg: AnimatedSVGEdge, floating: FloatingEdge }), []);
 
   useEffect(() => {
     setNodes(graphSnapshot.nodes);
@@ -96,14 +92,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       const target = connection.target;
       if (!source || !target) return;
 
-      const shouldAnimate = enabled && nodes.length <= MAX_ANIMATED_EDGE_NODES;
-      const shouldFloat = enabled && nodes.length <= MAX_FLOATING_EDGE_NODES;
-      const nextType = shouldAnimate ? "animatedSvg" : shouldFloat ? "floating" : undefined;
-
-      setEdges((eds) => addEdge({ ...connection, type: nextType }, eds));
+      setEdges((eds) => addEdge({ ...connection, type: "smoothstep" }, eds));
       addEdgeToGraph({ source, target });
     },
-    [addEdgeToGraph, enabled, nodes.length, setEdges]
+    [addEdgeToGraph, setEdges]
   );
 
   return (
@@ -119,14 +111,12 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
         onConnect={onConnect}
-        connectionLineComponent={graphSnapshot.useFloatingEdges ? FloatingConnectionLine : undefined}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.18 }}
         nodesDraggable={enabled}
         nodesConnectable={enabled}
         elementsSelectable={enabled}
@@ -134,7 +124,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         panOnDrag={enabled}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="rgba(80,120,180,0.12)" gap={28} size={1} />
+        <Background color="rgba(80,120,180,0.12)" gap={22} size={1} />
         <Controls showInteractive={false} position="bottom-right" />
       </ReactFlow>
     </div>
