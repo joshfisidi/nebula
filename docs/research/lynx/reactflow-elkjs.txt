@@ -1,0 +1,451 @@
+   Skip to Content
+
+   React Flow
+
+   LearnReferenceExamplesUIShowcase (BUTTON) More
+
+   (BUTTON) SearchReact FlowPro (BUTTON)
+     * (BUTTON) Learn
+          + Quick Start
+          + (BUTTON) Core Concepts
+               o Overview
+               o Building a Flow
+               o Adding Interactivity
+               o The Viewport
+               o Built-In Components
+          + (BUTTON) Customization
+               o Nodes
+               o Handles
+               o Edges
+               o Edge Labels
+               o Utility Classes
+               o Theming
+          + (BUTTON) Layouting
+               o Overview
+               o Sub Flows
+          + (BUTTON) Advanced Use
+               o Hooks and Providers
+               o Accessibility
+               o Testing
+               o TypeScript
+               o Uncontrolled Flow
+               o Performance
+               o State Management
+               o Computing Flows
+               o Server Side Rendering
+               o Devtools
+               o Multiplayer
+               o Whiteboard Features
+          + (BUTTON) Tutorials
+               o Slideshow App
+               o Web Audio API
+               o Mind Map App
+               o React Flow UI
+          + (BUTTON) Troubleshooting
+               o Common Errors
+               o Remove Attribution
+               o Migrate to v12
+               o Migrate to v11
+               o Migrate to v10
+          + API Reference
+     * (BUTTON) Reference
+          + API Reference
+          + <ReactFlow />
+          + <ReactFlowProvider />
+          + Components
+               o <Background />
+               o <BaseEdge />
+               o <ControlButton />
+               o <Controls />
+               o <EdgeLabelRenderer />
+               o <EdgeText />
+               o <EdgeToolbar />
+               o <Handle />
+               o <MiniMap />
+               o <NodeResizeControl />
+               o <NodeResizer />
+               o <NodeToolbar />
+               o <Panel />
+               o <ViewportPortal />
+          + Hooks
+               o useConnection()
+               o useEdges()
+               o useEdgesState()
+               o useHandleConnections()
+               o useInternalNode()
+               o useKeyPress()
+               o useNodeConnections()
+               o useNodeId()
+               o useNodes()
+               o useNodesData()
+               o useNodesInitialized()
+               o useNodesState()
+               o useOnSelectionChange()
+               o useOnViewportChange()
+               o useReactFlow()
+               o useStore()
+               o useStoreApi()
+               o useUpdateNodeInternals()
+               o useViewport()
+          + Types
+               o Align
+               o AriaLabelConfig
+               o BackgroundVariant
+               o ColorMode
+               o Connection
+               o ConnectionLineComponent
+               o ConnectionLineComponentProps
+               o ConnectionLineType
+               o ConnectionMode
+               o ConnectionState
+               o CoordinateExtent
+               o DefaultEdgeOptions
+               o DeleteElements
+               o Edge
+               o EdgeChange
+               o EdgeMarker
+               o EdgeMouseHandler
+               o EdgeProps
+               o EdgeTypes
+               o FitViewOptions
+               o Handle
+               o HandleConnection
+               o InternalNode
+               o IsValidConnection
+               o KeyCode
+               o MarkerType
+               o MiniMapNodeProps
+               o Node
+               o NodeChange
+               o NodeConnection
+               o NodeHandle
+               o NodeMouseHandler
+               o NodeOrigin
+               o NodeProps
+               o NodeTypes
+               o OnBeforeDelete
+               o OnConnect
+               o OnConnectEnd
+               o OnConnectStart
+               o OnDelete
+               o OnEdgesChange
+               o OnEdgesDelete
+               o OnError
+               o OnInit
+               o OnMove
+               o OnNodeDrag
+               o OnNodesChange
+               o OnNodesDelete
+               o OnReconnect
+               o OnSelectionChangeFunc
+               o PanOnScrollMode
+               o PanelPosition
+               o Position
+               o ProOptions
+               o ReactFlowInstance
+               o ReactFlowJsonObject
+               o Rect
+               o ResizeParams
+               o SelectionDragHandler
+               o SelectionMode
+               o SnapGrid
+               o Viewport
+               o XYPosition
+               o ZIndexMode
+          + Utils
+               o addEdge()
+               o applyEdgeChanges()
+               o applyNodeChanges()
+               o getBezierPath()
+               o getConnectedEdges()
+               o getIncomers()
+               o getNodesBounds()
+               o getOutgoers()
+               o getSimpleBezierPath()
+               o getSmoothStepPath()
+               o getStraightPath()
+               o getViewportForBounds()
+               o isEdge()
+               o isNode()
+               o reconnectEdge()
+     * (BUTTON) Examples
+          + Examples
+          + Feature Overview
+          + (BUTTON) Nodes
+               o Add Node on Edge Drop
+               o Connection Limit
+               o Custom Node
+               o Delete Middle Node
+               o Drag Handle
+               o Easy Connect
+               o Intersections
+               o Node Resizer
+               o Node Toolbar
+               o Proximity Connect
+               o Rotatable Node
+               o Node Position Animation
+               o Stress
+               o Update Node
+               o Shapes
+          + (BUTTON) Edges
+               o Animating Edges
+               o Custom Connection Line
+               o Custom Edges
+               o Delete Edge on Drop
+               o Edge Label Renderer
+               o Edge Intersection
+               o Edge Toolbar
+               o Edge Types
+               o Floating Edges
+               o Markers
+               o Multi Connection Line
+               o Reconnect Edge
+               o Simple Floating Edges
+               o Temporary Edges
+               o Editable Edge
+          + (BUTTON) Interaction
+               o Computing Flows
+               o Connection Events
+               o Context Menu
+               o Contextual Zoom
+               o Drag and Drop
+               o Prevent Cycles
+               o Save and Restore
+               o Touch Device
+               o Validation
+               o Helper Lines
+               o Collaborative
+               o Copy Paste
+               o Undo Redo
+          + (BUTTON) Subflows & Grouping
+               o Selection Grouping
+               o Parent Child Relation
+               o Sub Flows
+          + (BUTTON) Layout
+               o Dagre
+               o Elkjs
+               o Elkjs Multiple Handles
+               o Horizontal
+               o Expand Collapse
+               o Auto Layout
+               o Force Layout
+               o Dynamic Layouting
+               o Node Collisions
+          + (BUTTON) Styling
+               o Base Style
+               o Dark Mode
+               o Tailwind
+               o Turbo Flow
+          + (BUTTON) Whiteboard
+               o Eraser
+               o Lasso Selection
+               o Rectangle
+               o Freehand Draw
+          + (BUTTON) Misc
+               o Download Image
+               o Server Side Image Creation
+     * (BUTTON) UI
+          + Introduction
+          + (BUTTON) Templates
+               o AI Workflow Editor
+               o Workflow Editor
+          + (BUTTON) Components
+               o Node Utilities
+               o Base Node
+               o Status Indicator
+               o Appendix
+               o Tooltip
+               o Custom Nodes
+               o Database Schema
+               o Placeholder
+               o Labeled Group
+               o Handles
+               o Base Handle
+               o Labeled Handle
+               o Button Handle
+               o Custom Edges
+               o Edge with Button
+               o Edge with Node Data
+               o Animated SVG Edge
+               o Controls
+               o Node Search
+               o Zoom Slider
+               o Zoom Select
+               o Misc
+               o DevTools
+          +
+              _________________________________________________________
+
+          + Request a Component
+     * Showcase
+     * (BUTTON) More
+          + Changelog
+          + Blog
+          + Contact Us
+          + Playground
+
+     * Examples
+     * Feature Overview
+     * (BUTTON) Nodes
+          + Add Node on Edge Drop
+          + Connection Limit
+          + Custom Node
+          + Delete Middle Node
+          + Drag Handle
+          + Easy Connect
+          + Intersections
+          + Node Resizer
+          + Node Toolbar
+          + Proximity Connect
+          + Rotatable Node
+          + Node Position Animation
+          + Stress
+          + Update Node
+          + Shapes
+     * (BUTTON) Edges
+          + Animating Edges
+          + Custom Connection Line
+          + Custom Edges
+          + Delete Edge on Drop
+          + Edge Label Renderer
+          + Edge Intersection
+          + Edge Toolbar
+          + Edge Types
+          + Floating Edges
+          + Markers
+          + Multi Connection Line
+          + Reconnect Edge
+          + Simple Floating Edges
+          + Temporary Edges
+          + Editable Edge
+     * (BUTTON) Interaction
+          + Computing Flows
+          + Connection Events
+          + Context Menu
+          + Contextual Zoom
+          + Drag and Drop
+          + Prevent Cycles
+          + Save and Restore
+          + Touch Device
+          + Validation
+          + Helper Lines
+          + Collaborative
+          + Copy Paste
+          + Undo Redo
+     * (BUTTON) Subflows & Grouping
+          + Selection Grouping
+          + Parent Child Relation
+          + Sub Flows
+     * (BUTTON) Layout
+          + Dagre
+          + Elkjs
+          + Elkjs Multiple Handles
+          + Horizontal
+          + Expand Collapse
+          + Auto Layout
+          + Force Layout
+          + Dynamic Layouting
+          + Node Collisions
+     * (BUTTON) Styling
+          + Base Style
+          + Dark Mode
+          + Tailwind
+          + Turbo Flow
+     * (BUTTON) Whiteboard
+          + Eraser
+          + Lasso Selection
+          + Rectangle
+          + Freehand Draw
+     * (BUTTON) Misc
+          + Download Image
+          + Server Side Image Creation
+
+   ExamplesLayout
+   Elkjs
+   (BUTTON) Copy page (BUTTON)
+
+Elkjs Tree
+
+   Like our dagre example, this example shows how you can integrate elkjs
+   with React Flow for more advanced tree layouts. The code for this
+   example builds a similar tree to the dagre example, but you can look at
+   the reference here  to see what you can configure (hint: it's a lot).
+
+   IFRAME:
+   https://example-apps.xyflow.com/react/examples/layout/elkjs/index.html
+
+   (BUTTON) App.jsx (BUTTON) xy-theme.css (BUTTON) index.css (BUTTON)
+   initialElements.js
+   (BUTTON) (BUTTON) (BUTTON) (BUTTON)
+
+   (BUTTON)
+   import { initialNodes, initialEdges } from './initialElements.js';
+   import ELK from 'elkjs/lib/elk.bundled.js'; import React, {
+   useCallback, useLayoutEffect } from 'react'; import { Background,
+   ReactFlow, ReactFlowProvider, addEdge, Panel, useNodesState,
+   useEdgesState, useReactFlow, } from '@xyflow/react'; import
+   '@xyflow/react/dist/style.css'; const elk = new ELK(); // Elk has a
+   *huge* amount of options to configure. To see everything you can //
+   tweak check out: // // -
+   https://www.eclipse.org/elk/reference/algorithms.html // -
+   https://www.eclipse.org/elk/reference/options.html const elkOptions = {
+   'elk.algorithm': 'layered',
+   'elk.layered.spacing.nodeNodeBetweenLayers': '100',
+   'elk.spacing.nodeNode': '80', }; const getLayoutedElements = (nodes,
+   edges, options = {}) => { const isHorizontal =
+   options?.['elk.direction'] === 'RIGHT'; const graph = { id: 'root',
+   layoutOptions: options, children: nodes.map((node) => ({ ...node, //
+   Adjust the target and source handle positions based on the layout //
+   direction. targetPosition: isHorizontal ? 'left' : 'top',
+   sourcePosition: isHorizontal ? 'right' : 'bottom', // Hardcode a width
+   and height for elk to use when layouting. width: 150, height: 50, })),
+   edges: edges, }; return elk .layout(graph) .then((layoutedGraph) => ({
+   nodes: layoutedGraph.children.map((node) => ({ ...node, // React Flow
+   expects a position property on the node instead of `x` // and `y`
+   fields. position: { x: node.x, y: node.y }, })), edges:
+   layoutedGraph.edges, })) .catch(console.error); }; function
+   LayoutFlow() { const [nodes, setNodes, onNodesChange] =
+   useNodesState([]); const [edges, setEdges, onEdgesChange] =
+   useEdgesState([]); const { fitView } = useReactFlow(); const onConnect
+   = useCallback((params) => setEdges((eds) => addEdge(params, eds)), []);
+   const onLayout = useCallback( ({ direction, useInitialNodes = false })
+   => { const opts = { 'elk.direction': direction, ...elkOptions }; const
+   ns = useInitialNodes ? initialNodes : nodes; const es = useInitialNodes
+   ? initialEdges : edges; getLayoutedElements(ns, es, opts).then( ({
+   nodes: layoutedNodes, edges: layoutedEdges }) => {
+   setNodes(layoutedNodes); setEdges(layoutedEdges); fitView(); }, ); },
+   [nodes, edges], ); // Calculate the initial layout on mount.
+   useLayoutEffect(() => { onLayout({ direction: 'DOWN', useInitialNodes:
+   true }); }, []); return ( <ReactFlow nodes={nodes} edges={edges}
+   onConnect={onConnect} onNodesChange={onNodesChange}
+   onEdgesChange={onEdgesChange} fitView > <Panel position="top-right">
+   <button className="xy-theme__button" onClick={() => onLayout({
+   direction: 'DOWN' })} > vertical layout </button> <button
+   className="xy-theme__button" onClick={() => onLayout({ direction:
+   'RIGHT' })} > horizontal layout </button> </Panel> <Background />
+   </ReactFlow> ); } export default () => ( <ReactFlowProvider>
+   <LayoutFlow /> </ReactFlowProvider> );
+
+   Last updated on February 4, 2026
+
+   Dagre
+   Elkjs Multiple Handles
+
+   A project by the xyflow team
+   We are building and maintaining open source software for node-based UIs
+   since 2019.
+
+   Docs
+   Getting StartedAPI ReferenceExamplesComponentsShowcasePlayground
+
+   Social
+   DiscordGithubX / TwitterBluesky
+
+   xyflow
+   BlogOpen SourceAboutContactCareers
+
+   Legal
+   MIT LicenseCode of ConductImprint
+
+   info@xyflow.com -- Copyright © 2026 webkid GmbH. All rights reserved --
+   website design by Facu Montanaro
