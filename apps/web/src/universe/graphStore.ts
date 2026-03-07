@@ -14,6 +14,7 @@ interface UniverseGraphState {
   nodeArray: RenderNode[];
   edgeArray: GraphEdge[];
   selectedProjectIds: Set<string>;
+  expandedNodeIds: Set<string>;
   version: number;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
@@ -25,6 +26,7 @@ interface UniverseGraphState {
   setProjectSelection: (projectId: string | null) => void;
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
+  toggleExpandedNode: (nodeId: string) => void;
   isNodeVisible: (node: RenderNode) => boolean;
 }
 
@@ -72,49 +74,44 @@ function applyDeterministicTreeLayout(nodes: Map<string, RenderNode>) {
     children.set(node.parentId, arr);
   }
 
-  for (const arr of children.values()) {
-    arr.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
+  for (const arr of children.values()) arr.sort((a, b) => a.name.localeCompare(b.name));
   roots.sort((a, b) => a.name.localeCompare(b.name));
 
-  const xById = new Map<string, number>();
-  let cursor = 0;
+  const yById = new Map<string, number>();
+  let laneCursor = 0;
 
   const place = (node: RenderNode, depth: number) => {
     const kids = children.get(node.id) ?? [];
+    node.depth = depth;
+
     if (kids.length === 0) {
-      xById.set(node.id, cursor);
-      node.depth = depth;
-      cursor += 1;
+      yById.set(node.id, laneCursor);
+      laneCursor += 1;
       return;
     }
 
-    const start = cursor;
-    for (const child of kids) {
-      place(child, depth + 1);
-    }
-    const end = cursor - 1;
-    xById.set(node.id, (start + end) / 2);
-    node.depth = depth;
+    const start = laneCursor;
+    for (const child of kids) place(child, depth + 1);
+    const end = Math.max(start, laneCursor - 1);
+    yById.set(node.id, (start + end) / 2);
   };
 
   for (const root of roots) {
     place(root, 0);
-    cursor += 2;
+    laneCursor += 2;
   }
 
-  const values = [...xById.values()];
-  const minX = values.length ? Math.min(...values) : 0;
-  const maxX = values.length ? Math.max(...values) : 0;
-  const center = (minX + maxX) * 0.5;
+  const ys = [...yById.values()];
+  const minY = ys.length ? Math.min(...ys) : 0;
+  const maxY = ys.length ? Math.max(...ys) : 0;
+  const centerY = (minY + maxY) * 0.5;
 
-  const X_SPACING = 2.3;
-  const Y_SPACING = 3.1;
+  const X_SPACING = 1.0;
+  const Y_SPACING = 0.85;
 
   for (const node of nodes.values()) {
-    const x = (xById.get(node.id) ?? 0) - center;
-    const target: Vec3 = { x: x * X_SPACING, y: -node.depth * Y_SPACING, z: node.depth * 0.05 };
+    const laneY = (yById.get(node.id) ?? 0) - centerY;
+    const target: Vec3 = { x: node.depth * X_SPACING, y: laneY * Y_SPACING, z: 0 };
     node.pos = target;
     node.posTarget = { ...target };
     node.posCurrent = { ...target };
@@ -128,6 +125,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   nodeArray: [],
   edgeArray: [],
   selectedProjectIds: new Set<string>(),
+  expandedNodeIds: new Set<string>(),
   version: 0,
 
   setConnected(connected) {
@@ -248,14 +246,14 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
 
   setProjectSelection(projectId) {
     if (!projectId) {
-      set({ selectedProjectIds: new Set<string>() });
+      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>() });
       return;
     }
-    set({ selectedProjectIds: new Set<string>([projectId]) });
+    set({ selectedProjectIds: new Set<string>([projectId]), expandedNodeIds: new Set<string>() });
   },
 
   clearProjectSelection() {
-    set({ selectedProjectIds: new Set<string>() });
+    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>() });
   },
 
   selectAllProjects() {
@@ -264,13 +262,40 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       for (const node of state.nodeArray) {
         if (node.projectId) all.add(node.projectId);
       }
-      return { selectedProjectIds: all };
+      return { selectedProjectIds: all, expandedNodeIds: new Set<string>() };
+    });
+  },
+
+  toggleExpandedNode(nodeId) {
+    set((state) => {
+      const next = new Set(state.expandedNodeIds);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return { expandedNodeIds: next };
     });
   },
 
   isNodeVisible(node) {
-    const selected = get().selectedProjectIds;
-    return selected.size > 0 && selected.has(node.projectId);
+    const state = get();
+    const selected = state.selectedProjectIds;
+    if (selected.size === 0 || !selected.has(node.projectId)) return false;
+
+    if (node.id === node.projectId) return true;
+
+    const parentId = node.parentId;
+    if (!parentId) return false;
+
+    let cursor: string | undefined = parentId;
+    while (cursor) {
+      if (cursor === node.projectId) {
+        return state.expandedNodeIds.has(cursor);
+      }
+
+      if (!state.expandedNodeIds.has(cursor)) return false;
+      cursor = state.nodes.get(cursor)?.parentId;
+    }
+
+    return false;
   }
 }));
 

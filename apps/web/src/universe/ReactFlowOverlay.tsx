@@ -17,18 +17,19 @@ import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
 
-function toFlowNode(node: { id: string; name: string; kind: string; posCurrent: { x: number; y: number } }): Node {
+function toFlowNode(node: { id: string; name: string; kind: string; depth: number; expanded: boolean; posCurrent: { x: number; y: number } }): Node {
   const isDir = node.kind === "dir";
+  const label = isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
   return {
     id: node.id,
     position: { x: node.posCurrent.x * 18, y: node.posCurrent.y * 18 },
-    data: { label: node.name },
+    data: { label },
     draggable: true,
     selectable: true,
     style: {
-      background: isDir ? "rgba(22,40,84,0.95)" : "rgba(16,24,44,0.92)",
+      background: isDir ? "rgba(15,27,56,0.95)" : "rgba(12,20,40,0.92)",
       color: "#dbeafe",
-      border: isDir ? "1px solid rgba(125,211,252,0.55)" : "1px solid rgba(148,163,184,0.45)",
+      border: isDir ? `1px solid hsla(${(node.depth * 43) % 360} 80% 70% / 0.7)` : "1px solid rgba(148,163,184,0.45)",
       borderRadius: 10,
       boxShadow: "0 6px 18px rgba(2, 6, 23, 0.35)",
       fontSize: 11,
@@ -43,20 +44,23 @@ function toFlowNode(node: { id: string; name: string; kind: string; posCurrent: 
   };
 }
 
-function toFlowEdge(edge: { id: string; from: string; to: string }): Edge {
+function toFlowEdge(edge: { id: string; from: string; to: string }, depth: number): Edge {
+  const hue = (depth * 47) % 360;
   return {
     id: edge.id,
     source: edge.from,
     target: edge.to,
     type: "smoothstep",
-    style: { stroke: "rgba(125, 178, 255, 0.32)", strokeWidth: 1 }
+    style: { stroke: `hsla(${hue} 85% 66% / 0.44)`, strokeWidth: 1.4 }
   };
 }
 
 export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { enabled: boolean }) {
   const version = useUniverseGraphStore((s) => s.version);
   const selectedProjectsKey = useUniverseGraphStore((s) => [...s.selectedProjectIds].sort().join("|"));
+  const expandedKey = useUniverseGraphStore((s) => [...s.expandedNodeIds].sort().join("|"));
   const setNodePosition = useUniverseGraphStore((s) => s.setNodePosition);
+  const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
 
   const graphSnapshot = useMemo(() => {
@@ -64,12 +68,15 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
     const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
     return {
-      nodes: nodeArray.map(toFlowNode),
+      nodes: nodeArray.map((node) => toFlowNode({ ...node, expanded: state.expandedNodeIds.has(node.id) })),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
-        .map((edge) => toFlowEdge(edge))
+        .map((edge) => {
+          const depth = state.nodes.get(edge.from)?.depth ?? 0;
+          return toFlowEdge(edge, depth);
+        })
     };
-  }, [version, selectedProjectsKey, enabled]);
+  }, [version, selectedProjectsKey, expandedKey]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graphSnapshot.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(graphSnapshot.edges);
@@ -81,7 +88,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   const handleNodeDragStop = useCallback(
     (_: MouseEvent, node: Node) => {
-      setNodePosition(node.id, { x: node.position.x, y: node.position.y, z: 0 });
+      setNodePosition(node.id, { x: node.position.x / 18, y: node.position.y / 18, z: 0 });
     },
     [setNodePosition]
   );
@@ -96,6 +103,16 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       addEdgeToGraph({ source, target });
     },
     [addEdgeToGraph, setEdges]
+  );
+
+  const onNodeClick = useCallback(
+    (_: MouseEvent, node: Node) => {
+      const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
+      if (runtime?.kind === "dir") {
+        toggleExpandedNode(node.id);
+      }
+    },
+    [toggleExpandedNode]
   );
 
   return (
@@ -114,6 +131,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
+        onNodeClick={onNodeClick}
         onConnect={onConnect}
         fitView
         fitViewOptions={{ padding: 0.18 }}
