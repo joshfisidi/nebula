@@ -1,21 +1,12 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, type MouseEvent } from "react";
-import ReactFlow, {
-  Background,
-  Controls,
-  Connection,
-  Edge,
-  Node,
-  OnConnect,
-  addEdge,
-  useEdgesState,
-  useNodesState
-} from "reactflow";
+import { memo, useCallback, useMemo, type MouseEvent } from "react";
+import ReactFlow, { Background, Controls, Connection, Edge, Node, OnConnect } from "reactflow";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
+const MAX_RENDERED_EDGES = 1800;
 
 function toFlowNode(node: {
   id: string;
@@ -38,7 +29,7 @@ function toFlowNode(node: {
       color: "#dbeafe",
       border: isDir ? `1px solid hsla(${(node.depth * 43) % 360} 80% 70% / 0.7)` : "1px solid rgba(148,163,184,0.45)",
       borderRadius: 10,
-      boxShadow: "0 6px 18px rgba(2, 6, 23, 0.35)",
+      boxShadow: "none",
       fontSize: 11,
       lineHeight: 1.2,
       padding: "6px 8px",
@@ -58,7 +49,7 @@ function toFlowEdge(edge: { id: string; from: string; to: string }, depth: numbe
     source: edge.from,
     target: edge.to,
     type: "smoothstep",
-    style: { stroke: `hsla(${hue} 85% 66% / 0.44)`, strokeWidth: 1.4 }
+    style: { stroke: `hsla(${hue} 82% 64% / 0.34)`, strokeWidth: 1 }
   };
 }
 
@@ -130,6 +121,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
+        .slice(0, MAX_RENDERED_EDGES)
         .map((edge) => {
           const depth = state.nodes.get(edge.from)?.depth ?? 0;
           return toFlowEdge(edge, depth);
@@ -137,24 +129,17 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     };
   }, [version, selectedProjectsKey, expandedKey]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(graphSnapshot.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(graphSnapshot.edges);
-
-  useEffect(() => {
-    setNodes(graphSnapshot.nodes);
-    setEdges(graphSnapshot.edges);
-  }, [graphSnapshot, setNodes, setEdges]);
+  const nodes = graphSnapshot.nodes;
+  const edges = graphSnapshot.edges;
 
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
       const source = connection.source;
       const target = connection.target;
       if (!source || !target) return;
-
-      setEdges((eds) => addEdge({ ...connection, type: "smoothstep" }, eds));
       addEdgeToGraph({ source, target });
     },
-    [addEdgeToGraph, setEdges]
+    [addEdgeToGraph]
   );
 
   const onNodeClick = useCallback(
@@ -180,12 +165,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
-        fitView
-        fitViewOptions={{ padding: 0.18 }}
+        defaultViewport={{ x: 80, y: 0, zoom: 0.9 }}
         nodesDraggable={false}
         nodesConnectable={enabled}
         elementsSelectable={enabled}
