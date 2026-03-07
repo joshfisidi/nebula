@@ -1,11 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { UniverseLiveProvider } from "./UniverseLiveProvider";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
 import { ProjectViewerPanel } from "./ProjectViewerPanel";
 import { useUniverseGraphStore } from "./graphStore";
 
-function StatusHud() {
+function StatusHud({ mobile }: { mobile: boolean }) {
   const connected = useUniverseGraphStore((s) => s.connected);
   const nodeCount = useUniverseGraphStore((s) => s.nodeArray.length);
   const edgeCount = useUniverseGraphStore((s) => s.edgeArray.length);
@@ -14,7 +15,8 @@ function StatusHud() {
     <div
       style={{
         position: "fixed",
-        top: "0.75rem",
+        top: mobile ? "auto" : "0.75rem",
+        bottom: mobile ? "0.75rem" : "auto",
         right: "0.75rem",
         zIndex: 30,
         fontSize: "0.75rem",
@@ -36,10 +38,19 @@ function StatusHud() {
 }
 
 export function UniverseScene() {
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    const update = () => setMobile(window.innerWidth < 900);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   return (
     <UniverseLiveProvider>
       <div style={{ position: "relative", width: "100%", height: "100vh", background: "#070b14" }}>
-        <StatusHud />
+        <StatusHud mobile={mobile} />
         <ProjectViewerPanel />
         <ReactFlowOverlay enabled />
       </div>

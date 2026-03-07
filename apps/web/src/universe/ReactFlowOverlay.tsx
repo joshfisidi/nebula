@@ -1,12 +1,19 @@
 "use client";
 
-import { memo, useCallback, useMemo, type MouseEvent } from "react";
-import ReactFlow, { Background, Controls, Connection, Edge, Node, OnConnect } from "reactflow";
+import { memo, useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  Connection,
+  Edge,
+  Node,
+  OnConnect,
+  type ReactFlowInstance
+} from "reactflow";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
-const MAX_RENDERED_EDGES = 1800;
 
 function toFlowNode(node: {
   id: string;
@@ -22,7 +29,7 @@ function toFlowNode(node: {
     id: node.id,
     position: node.position,
     data: { label },
-    draggable: true,
+    draggable: false,
     selectable: true,
     style: {
       background: isDir ? "rgba(15,27,56,0.95)" : "rgba(12,20,40,0.92)",
@@ -60,6 +67,19 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
 
+  const [viewport, setViewport] = useState({ width: 1280, height: 720 });
+  const [rf, setRf] = useState<ReactFlowInstance | null>(null);
+
+  useEffect(() => {
+    const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const isMobile = viewport.width < 900;
+  const isPortrait = viewport.height > viewport.width;
+
   const graphSnapshot = useMemo(() => {
     const state = useUniverseGraphStore.getState();
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
@@ -84,53 +104,59 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     }
     roots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
 
-    const pos = new Map<string, { x: number; y: number }>();
-    let cursorY = 0;
+    const pos = new Map<string, { depth: number; lane: number }>();
+    let cursor = 0;
 
     const place = (id: string, depth: number): number => {
       const kids = children.get(id) ?? [];
       if (kids.length === 0) {
-        const y = cursorY;
-        cursorY += 1;
-        pos.set(id, { x: depth * 170, y: y * 38 });
-        return y;
+        const lane = cursor;
+        cursor += 1;
+        pos.set(id, { depth, lane });
+        return lane;
       }
 
-      const ys = kids.map((kid) => place(kid, depth + 1));
-      const y = ys.reduce((sum, v) => sum + v, 0) / ys.length;
-      pos.set(id, { x: depth * 170, y: y * 38 });
-      return y;
+      const lanes = kids.map((kid) => place(kid, depth + 1));
+      const lane = lanes.reduce((sum, v) => sum + v, 0) / lanes.length;
+      pos.set(id, { depth, lane });
+      return lane;
     };
 
     for (const rootId of roots) {
       place(rootId, 0);
-      cursorY += 1;
+      cursor += 1;
     }
 
-    const yValues = [...pos.values()].map((p) => p.y);
-    const yCenter = yValues.length ? (Math.min(...yValues) + Math.max(...yValues)) * 0.5 : 0;
+    const laneValues = [...pos.values()].map((p) => p.lane);
+    const laneCenter = laneValues.length ? (Math.min(...laneValues) + Math.max(...laneValues)) * 0.5 : 0;
+
+    const depthSpacing = isMobile ? (isPortrait ? 120 : 135) : 170;
+    const laneSpacing = isMobile ? (isPortrait ? 88 : 62) : 38;
+    const maxEdges = isMobile ? 900 : 1800;
 
     return {
       nodes: nodeArray.map((node) => {
-        const p = pos.get(node.id) ?? { x: 0, y: 0 };
+        const p = pos.get(node.id) ?? { depth: 0, lane: 0 };
+        const lane = (p.lane - laneCenter) * laneSpacing;
+        const depth = p.depth * depthSpacing;
+
+        const position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
+
         return toFlowNode({
           ...node,
           expanded: state.expandedNodeIds.has(node.id),
-          position: { x: p.x, y: p.y - yCenter }
+          position
         });
       }),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
-        .slice(0, MAX_RENDERED_EDGES)
+        .slice(0, maxEdges)
         .map((edge) => {
           const depth = state.nodes.get(edge.from)?.depth ?? 0;
           return toFlowEdge(edge, depth);
         })
     };
-  }, [version, selectedProjectsKey, expandedKey]);
-
-  const nodes = graphSnapshot.nodes;
-  const edges = graphSnapshot.edges;
+  }, [version, selectedProjectsKey, expandedKey, isMobile, isPortrait]);
 
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
@@ -148,8 +174,12 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       if (runtime?.kind === "dir") {
         toggleExpandedNode(node.id);
       }
+
+      if (rf) {
+        rf.fitView({ nodes: [{ id: node.id }], duration: 220, padding: 0.35, includeHiddenNodes: false });
+      }
     },
-    [toggleExpandedNode]
+    [rf, toggleExpandedNode]
   );
 
   return (
@@ -163,20 +193,21 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }}
     >
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={graphSnapshot.nodes}
+        edges={graphSnapshot.edges}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
-        defaultViewport={{ x: 80, y: 0, zoom: 0.9 }}
+        onInit={setRf}
+        defaultViewport={isMobile && isPortrait ? { x: 0, y: 32, zoom: 0.75 } : { x: 80, y: 0, zoom: 0.9 }}
         nodesDraggable={false}
         nodesConnectable={enabled}
         elementsSelectable={enabled}
-        zoomOnScroll={enabled}
-        panOnDrag={enabled}
+        zoomOnScroll
+        panOnDrag
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="rgba(80,120,180,0.12)" gap={22} size={1} />
-        <Controls showInteractive={false} position="bottom-right" />
+        <Background color="rgba(80,120,180,0.12)" gap={isMobile ? 18 : 22} size={1} />
+        <Controls showInteractive={false} position={isMobile ? "top-right" : "bottom-right"} />
       </ReactFlow>
     </div>
   );

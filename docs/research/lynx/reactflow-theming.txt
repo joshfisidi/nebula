@@ -1,0 +1,644 @@
+   Skip to Content
+
+   React Flow
+
+   LearnReferenceExamplesUIShowcase (BUTTON) More
+
+   (BUTTON) SearchReact FlowPro (BUTTON)
+     * (BUTTON) Learn
+          + Quick Start
+          + (BUTTON) Core Concepts
+               o Overview
+               o Building a Flow
+               o Adding Interactivity
+               o The Viewport
+               o Built-In Components
+          + (BUTTON) Customization
+               o Nodes
+               o Handles
+               o Edges
+               o Edge Labels
+               o Utility Classes
+               o Theming
+          + (BUTTON) Layouting
+               o Overview
+               o Sub Flows
+          + (BUTTON) Advanced Use
+               o Hooks and Providers
+               o Accessibility
+               o Testing
+               o TypeScript
+               o Uncontrolled Flow
+               o Performance
+               o State Management
+               o Computing Flows
+               o Server Side Rendering
+               o Devtools
+               o Multiplayer
+               o Whiteboard Features
+          + (BUTTON) Tutorials
+               o Slideshow App
+               o Web Audio API
+               o Mind Map App
+               o React Flow UI
+          + (BUTTON) Troubleshooting
+               o Common Errors
+               o Remove Attribution
+               o Migrate to v12
+               o Migrate to v11
+               o Migrate to v10
+          + API Reference
+     * (BUTTON) Reference
+          + API Reference
+          + <ReactFlow />
+          + <ReactFlowProvider />
+          + Components
+               o <Background />
+               o <BaseEdge />
+               o <ControlButton />
+               o <Controls />
+               o <EdgeLabelRenderer />
+               o <EdgeText />
+               o <EdgeToolbar />
+               o <Handle />
+               o <MiniMap />
+               o <NodeResizeControl />
+               o <NodeResizer />
+               o <NodeToolbar />
+               o <Panel />
+               o <ViewportPortal />
+          + Hooks
+               o useConnection()
+               o useEdges()
+               o useEdgesState()
+               o useHandleConnections()
+               o useInternalNode()
+               o useKeyPress()
+               o useNodeConnections()
+               o useNodeId()
+               o useNodes()
+               o useNodesData()
+               o useNodesInitialized()
+               o useNodesState()
+               o useOnSelectionChange()
+               o useOnViewportChange()
+               o useReactFlow()
+               o useStore()
+               o useStoreApi()
+               o useUpdateNodeInternals()
+               o useViewport()
+          + Types
+               o Align
+               o AriaLabelConfig
+               o BackgroundVariant
+               o ColorMode
+               o Connection
+               o ConnectionLineComponent
+               o ConnectionLineComponentProps
+               o ConnectionLineType
+               o ConnectionMode
+               o ConnectionState
+               o CoordinateExtent
+               o DefaultEdgeOptions
+               o DeleteElements
+               o Edge
+               o EdgeChange
+               o EdgeMarker
+               o EdgeMouseHandler
+               o EdgeProps
+               o EdgeTypes
+               o FitViewOptions
+               o Handle
+               o HandleConnection
+               o InternalNode
+               o IsValidConnection
+               o KeyCode
+               o MarkerType
+               o MiniMapNodeProps
+               o Node
+               o NodeChange
+               o NodeConnection
+               o NodeHandle
+               o NodeMouseHandler
+               o NodeOrigin
+               o NodeProps
+               o NodeTypes
+               o OnBeforeDelete
+               o OnConnect
+               o OnConnectEnd
+               o OnConnectStart
+               o OnDelete
+               o OnEdgesChange
+               o OnEdgesDelete
+               o OnError
+               o OnInit
+               o OnMove
+               o OnNodeDrag
+               o OnNodesChange
+               o OnNodesDelete
+               o OnReconnect
+               o OnSelectionChangeFunc
+               o PanOnScrollMode
+               o PanelPosition
+               o Position
+               o ProOptions
+               o ReactFlowInstance
+               o ReactFlowJsonObject
+               o Rect
+               o ResizeParams
+               o SelectionDragHandler
+               o SelectionMode
+               o SnapGrid
+               o Viewport
+               o XYPosition
+               o ZIndexMode
+          + Utils
+               o addEdge()
+               o applyEdgeChanges()
+               o applyNodeChanges()
+               o getBezierPath()
+               o getConnectedEdges()
+               o getIncomers()
+               o getNodesBounds()
+               o getOutgoers()
+               o getSimpleBezierPath()
+               o getSmoothStepPath()
+               o getStraightPath()
+               o getViewportForBounds()
+               o isEdge()
+               o isNode()
+               o reconnectEdge()
+     * (BUTTON) Examples
+          + Examples
+          + Feature Overview
+          + (BUTTON) Nodes
+               o Add Node on Edge Drop
+               o Connection Limit
+               o Custom Node
+               o Delete Middle Node
+               o Drag Handle
+               o Easy Connect
+               o Intersections
+               o Node Resizer
+               o Node Toolbar
+               o Proximity Connect
+               o Rotatable Node
+               o Node Position Animation
+               o Stress
+               o Update Node
+               o Shapes
+          + (BUTTON) Edges
+               o Animating Edges
+               o Custom Connection Line
+               o Custom Edges
+               o Delete Edge on Drop
+               o Edge Label Renderer
+               o Edge Intersection
+               o Edge Toolbar
+               o Edge Types
+               o Floating Edges
+               o Markers
+               o Multi Connection Line
+               o Reconnect Edge
+               o Simple Floating Edges
+               o Temporary Edges
+               o Editable Edge
+          + (BUTTON) Interaction
+               o Computing Flows
+               o Connection Events
+               o Context Menu
+               o Contextual Zoom
+               o Drag and Drop
+               o Prevent Cycles
+               o Save and Restore
+               o Touch Device
+               o Validation
+               o Helper Lines
+               o Collaborative
+               o Copy Paste
+               o Undo Redo
+          + (BUTTON) Subflows & Grouping
+               o Selection Grouping
+               o Parent Child Relation
+               o Sub Flows
+          + (BUTTON) Layout
+               o Dagre
+               o Elkjs
+               o Elkjs Multiple Handles
+               o Horizontal
+               o Expand Collapse
+               o Auto Layout
+               o Force Layout
+               o Dynamic Layouting
+               o Node Collisions
+          + (BUTTON) Styling
+               o Base Style
+               o Dark Mode
+               o Tailwind
+               o Turbo Flow
+          + (BUTTON) Whiteboard
+               o Eraser
+               o Lasso Selection
+               o Rectangle
+               o Freehand Draw
+          + (BUTTON) Misc
+               o Download Image
+               o Server Side Image Creation
+     * (BUTTON) UI
+          + Introduction
+          + (BUTTON) Templates
+               o AI Workflow Editor
+               o Workflow Editor
+          + (BUTTON) Components
+               o Node Utilities
+               o Base Node
+               o Status Indicator
+               o Appendix
+               o Tooltip
+               o Custom Nodes
+               o Database Schema
+               o Placeholder
+               o Labeled Group
+               o Handles
+               o Base Handle
+               o Labeled Handle
+               o Button Handle
+               o Custom Edges
+               o Edge with Button
+               o Edge with Node Data
+               o Animated SVG Edge
+               o Controls
+               o Node Search
+               o Zoom Slider
+               o Zoom Select
+               o Misc
+               o DevTools
+          +
+              _________________________________________________________
+
+          + Request a Component
+     * Showcase
+     * (BUTTON) More
+          + Changelog
+          + Blog
+          + Contact Us
+          + Playground
+
+     * Quick Start
+     * (BUTTON) Core Concepts
+          + Overview
+          + Building a Flow
+          + Adding Interactivity
+          + The Viewport
+          + Built-In Components
+     * (BUTTON) Customization
+          + Nodes
+          + Handles
+          + Edges
+          + Edge Labels
+          + Utility Classes
+          + Theming
+     * (BUTTON) Layouting
+          + Overview
+          + Sub Flows
+     * (BUTTON) Advanced Use
+          + Hooks and Providers
+          + Accessibility
+          + Testing
+          + TypeScript
+          + Uncontrolled Flow
+          + Performance
+          + State Management
+          + Computing Flows
+          + Server Side Rendering
+          + Devtools
+          + Multiplayer
+          + Whiteboard Features
+     * (BUTTON) Tutorials
+          + Slideshow App
+          + Web Audio API
+          + Mind Map App
+          + React Flow UI
+     * (BUTTON) Troubleshooting
+          + Common Errors
+          + Remove Attribution
+          + Migrate to v12
+          + Migrate to v11
+          + Migrate to v10
+     * API Reference
+
+   On This Page
+     * Default styles
+     * Built in dark and light mode
+     * Customizing with style props
+     * CSS variables
+     * Overriding built-in classes
+     * Third-party solutions
+     * TailwindCSS
+
+   Edit this page on GitHub
+   Questions? Contact Us
+
+   What's new?
+   React Flow 12.10.1React Flow 12.10.0React Flow UI Components updated to
+   React 19 and Tailwind CSS 4...and more!
+
+React Flow Playground
+
+   Explore different props, options and layout algorithms in our
+   interactive playground
+   (BUTTON) Launch
+   LearnCustomizationTheming
+   (BUTTON) Copy page (BUTTON)
+
+Theming
+
+   React Flow has been built with deep customization in mind. Many of our
+   users fully transform the look and feel of React Flow to match their
+   own brand or design system. This guide will introduce you to the
+   different ways you can customize React Flow's appearance.
+
+Default styles
+
+   React Flow's default styles are enough to get going with the built-in
+   nodes. They provide some sensible defaults for styles like padding,
+   border radius, and animated edges. You can see what they look like
+   below:
+
+   IFRAME:
+   https://example-apps.xyflow.com/react/examples/styling/default-style/in
+   dex.html
+
+   (BUTTON) App.tsx (BUTTON) index.css (BUTTON) index.tsx
+   (BUTTON) (BUTTON) (BUTTON) (BUTTON)
+
+   (BUTTON)
+   import React, { useCallback } from 'react'; import { ReactFlow,
+   Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge,
+   Position, } from '@xyflow/react'; import
+   '@xyflow/react/dist/style.css'; const nodeDefaults = { sourcePosition:
+   Position.Right, targetPosition: Position.Left, }; const initialNodes =
+   [ { id: '1', position: { x: 0, y: 150 }, data: { label: 'default style
+   1' }, ...nodeDefaults, }, { id: '2', position: { x: 250, y: 0 }, data:
+   { label: 'default style 2' }, ...nodeDefaults, }, { id: '3', position:
+   { x: 250, y: 150 }, data: { label: 'default style 3' },
+   ...nodeDefaults, }, { id: '4', position: { x: 250, y: 300 }, data: {
+   label: 'default style 4' }, ...nodeDefaults, }, ]; const initialEdges =
+   [ { id: 'e1-2', source: '1', target: '2', animated: true, }, { id:
+   'e1-3', source: '1', target: '3', }, { id: 'e1-4', source: '1', target:
+   '4', }, ]; const Flow = () => { const [nodes, setNodes, onNodesChange]
+   = useNodesState(initialNodes); const [edges, setEdges, onEdgesChange] =
+   useEdgesState(initialEdges); const onConnect = useCallback( (params) =>
+   setEdges((els) => addEdge(params, els)), [], ); return ( <ReactFlow
+   nodes={nodes} edges={edges} onNodesChange={onNodesChange}
+   onEdgesChange={onEdgesChange} onConnect={onConnect} fitView >
+   <Background /> <Controls /> <MiniMap /> </ReactFlow> ); }; export
+   default Flow;
+
+   You'll typically load these default styles by importing them in you
+   App.jsx file or other entry point:
+
+
+   (BUTTON) (BUTTON)
+   import '@xyflow/react/dist/style.css';
+
+   Without dipping into custom nodes and edges, there are three ways you
+   can style React Flow's basic look:
+     * Passing inline styles through style props
+     * Overriding the built-in classes with custom CSS
+     * Overriding the CSS variables React Flow uses
+
+  Built in dark and light mode
+
+   You can choose one of the built-in color modes by using the colorMode
+   prop (`dark', `light' or `system') as seen in the dark mode example.
+
+
+   (BUTTON) (BUTTON)
+   import ReactFlow from '@xyflow/react'; export default function Flow() {
+   return <ReactFlow colorMode="dark" nodes={[...]} edges={[...]} /> }
+
+   When you use the colorMode prop, React Flow adds a class to the root
+   element (.react-flow) that you can use to style your flow based on the
+   color mode:
+
+
+   (BUTTON) (BUTTON)
+   .dark .react-flow__node { background: #777; color: white; } .light
+   .react-flow__node { background: white; color: #111; }
+
+  Customizing with style props
+
+   The easiest way to start customizing the look and feel of your flows is
+   to use the style prop found on many of React Flow's components to
+   inline your own CSS.
+
+
+   (BUTTON) (BUTTON)
+   import ReactFlow from '@xyflow/react' const styles = { background:
+   'red', width: '100%', height: 300, }; export default function Flow() {
+   return <ReactFlow style={styles} nodes={[...]} edges={[...]} /> }
+
+  CSS variables
+
+   If you don't want to replace the default styles entirely but just want
+   to tweak the overall look and feel, you can override some of the CSS
+   variables we use throughout the library. For an example of how to use
+   these CSS variables, check out our Feature Overview example.
+
+   These variables are mostly self-explanatory. Below is a table of all
+   the variables you might want to tweak and their default values for
+   reference:
+
+   Variable name Default
+   --xy-edge-stroke-default #b1b1b7
+   --xy-edge-stroke-width-default 1
+   --xy-edge-stroke-selected-default #555
+   --xy-connectionline-stroke-default #b1b1b7
+   --xy-connectionline-stroke-width-default 1
+   --xy-attribution-background-color-default rgba(255, 255, 255, 0.5)
+   --xy-minimap-background-color-default #fff
+   --xy-background-pattern-dots-color-default #91919a
+   --xy-background-pattern-line-color-default #eee
+   --xy-background-pattern-cross-color-default #e2e2e2
+   --xy-node-color-default inherit
+   --xy-node-border-default 1px solid #1a192b
+   --xy-node-background-color-default #fff
+   --xy-node-group-background-color-default rgba(240, 240, 240, 0.25)
+   --xy-node-boxshadow-hover-default 0 1px 4px 1px rgba(0, 0, 0, 0.08)
+   --xy-node-boxshadow-selected-default 0 0 0 0.5px #1a192b
+   --xy-handle-background-color-default #1a192b
+   --xy-handle-border-color-default #fff
+   --xy-selection-background-color-default rgba(0, 89, 220, 0.08)
+   --xy-selection-border-default 1px dotted rgba(0, 89, 220, 0.8)
+   --xy-controls-button-background-color-default #fefefe
+   --xy-controls-button-background-color-hover-default #f4f4f4
+   --xy-controls-button-color-default inherit
+   --xy-controls-button-color-hover-default inherit
+   --xy-controls-button-border-color-default #eee
+   --xy-controls-box-shadow-default 0 0 2px 1px rgba(0, 0, 0, 0.08)
+   --xy-resize-background-color-default #3367d9
+
+   These variables are used to define the defaults for the various
+   elements of React Flow. This means they can still be overridden by
+   inline styles or custom classes on a per-element basis. If you want to
+   override these variables, you can do so by adding:
+
+
+   (BUTTON) (BUTTON)
+   .react-flow { --xy-node-background-color-default: #ff5050; }
+
+   Be aware that these variables are defined under .react-flow and under
+   :root.
+
+  Overriding built-in classes
+
+   Some consider heavy use of inline styles to be an anti-pattern. In that
+   case, you can override the built-in classes that React Flow uses with
+   your own CSS. There are many classes attached to all sorts of elements
+   in React Flow, but the ones you'll likely want to override are listed
+   below:
+
+   Class name Description
+   .react-flow The outermost container
+   .react-flow__renderer The inner container
+   .react-flow__zoompane Zoom & pan pane
+   .react-flow__selectionpane Selection pane
+   .react-flow__selection User selection
+   .react-flow__edges The element containing all edges in the flow
+   .react-flow__edge Applied to each Edge in the flow
+   .react-flow__edge.selected Added to an Edge when selected
+   .react-flow__edge.animated Added to an Edge when its animated prop is
+   true
+   .react-flow__edge.updating Added to an Edge while it gets updated via
+   onReconnect
+   .react-flow__edge-path The SVG <path /> element of an Edge
+   .react-flow__edge-text The SVG <text /> element of an Edge label
+   .react-flow__edge-textbg The SVG <text /> element behind an Edge label
+   .react-flow__connection Applied to the current connection line
+   .react-flow__connection-path The SVG <path /> of a connection line
+   .react-flow__nodes The element containing all nodes in the flow
+   .react-flow__node Applied to each Node in the flow
+   .react-flow__node.selected Added to a Node when selected.
+   .react-flow__node-default Added when Node type is "default"
+   .react-flow__node-input Added when Node type is "input"
+   .react-flow__node-output Added when Node type is "output"
+   .react-flow__nodesselection Nodes selection
+   .react-flow__nodesselection-rect Nodes selection rect
+   .react-flow__handle Applied to each <Handle /> component
+   .react-flow__handle-top Applied when a handle's Position is set to
+   "top"
+   .react-flow__handle-right Applied when a handle's Position is set to
+   "right"
+   .react-flow__handle-bottom Applied when a handle's Position is set to
+   "bottom"
+   .react-flow__handle-left Applied when a handle's Position is set to
+   "left"
+   .connectingfrom Added to a Handle when a connection line is above a
+   handle.
+   .connectingto Added to a Handle when a connection line is above a
+   handle.
+   .valid Added to a Handle when a connection line is above and the
+   connection is valid
+   .react-flow__background Applied to the <Background /> component
+   .react-flow__minimap Applied to the <MiniMap /> component
+   .react-flow__controls Applied to the <Controls /> component
+
+   Be careful if you go poking around the source code looking for other
+   classes to override. Some classes are used internally and are required
+   in order for the library to be functional. If you replace them you may
+   end up with unexpected bugs or errors!
+
+Third-party solutions
+
+   You can choose to opt-out of React Flow's default styling altogether
+   and use a third-party styling solution instead. If you want to do this,
+   you must make sure you still import the base styles.
+
+
+   (BUTTON) (BUTTON)
+   import '@xyflow/react/dist/base.css';
+
+   These base styles are required for React Flow to function correctly. If
+   you don't import them or you override them with your own styles, some
+   things might not work as expected!
+
+   IFRAME:
+   https://example-apps.xyflow.com/react/examples/styling/base-style/index
+   .html
+
+   (BUTTON) App.jsx (BUTTON) index.css
+   (BUTTON) (BUTTON) (BUTTON) (BUTTON)
+
+   (BUTTON)
+   import React, { useCallback } from 'react'; import { ReactFlow,
+   Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge,
+   Position, } from '@xyflow/react'; import '@xyflow/react/dist/base.css';
+   const nodeDefaults = { sourcePosition: Position.Right, targetPosition:
+   Position.Left, }; const initialNodes = [ { id: '1', position: { x: 0,
+   y: 150 }, data: { label: 'base style 1' }, ...nodeDefaults, }, { id:
+   '2', position: { x: 250, y: 0 }, data: { label: 'base style 2' },
+   ...nodeDefaults, }, { id: '3', position: { x: 250, y: 150 }, data: {
+   label: 'base style 3' }, ...nodeDefaults, }, { id: '4', position: { x:
+   250, y: 300 }, data: { label: 'base style 4' }, ...nodeDefaults, }, ];
+   const initialEdges = [ { id: 'e1-2', source: '1', target: '2', }, { id:
+   'e1-3', source: '1', target: '3', }, { id: 'e1-4', source: '1', target:
+   '4', }, ]; const Flow = () => { const [nodes, setNodes, onNodesChange]
+   = useNodesState(initialNodes); const [edges, setEdges, onEdgesChange] =
+   useEdgesState(initialEdges); const onConnect = useCallback( (params) =>
+   setEdges((els) => addEdge(params, els)), [], ); return ( <ReactFlow
+   nodes={nodes} edges={edges} onNodesChange={onNodesChange}
+   onEdgesChange={onEdgesChange} onConnect={onConnect} fitView >
+   <Background /> <Controls /> <MiniMap /> </ReactFlow> ); }; export
+   default Flow;
+
+  TailwindCSS
+
+   Custom nodes and edges are just React components, and you can use any
+   styling solution you'd like to style them. For example, you might want
+   to use Tailwind  to style your nodes:
+
+
+   (BUTTON) (BUTTON)
+   function CustomNode({ data }) { return ( <div className="px-4 py-2
+   shadow-md rounded-md bg-white border-2 border-stone-400"> <div
+   className="flex"> <div className="rounded-full w-12 h-12 flex
+   justify-center items-center bg-gray-100"> {data.emoji} </div> <div
+   className="ml-2"> <div className="text-lg font-bold">{data.name}</div>
+   <div className="text-gray-500">{data.job}</div> </div> </div> <Handle
+   type="target" position={Position.Top} className="w-16 !bg-teal-500" />
+   <Handle type="source" position={Position.Bottom} className="w-16
+   !bg-teal-500" /> </div> ); }
+
+   If you want to overwrite default styles, make sure to import Tailwinds
+   entry point after React Flows base styles.
+
+
+   (BUTTON) (BUTTON)
+   import '@xyflow/react/dist/style.css'; import 'tailwind.css';
+
+   For a complete example of using Tailwind with React Flow, check out the
+   example!
+
+   Last updated on February 4, 2026
+
+   Utility ClassesOverview
+
+   A project by the xyflow team
+   We are building and maintaining open source software for node-based UIs
+   since 2019.
+
+   Docs
+   Getting StartedAPI ReferenceExamplesComponentsShowcasePlayground
+
+   Social
+   DiscordGithubX / TwitterBluesky
+
+   xyflow
+   BlogOpen SourceAboutContactCareers
+
+   Legal
+   MIT LicenseCode of ConductImprint
+
+   info@xyflow.com -- Copyright © 2026 webkid GmbH. All rights reserved --
+   website design by Facu Montanaro

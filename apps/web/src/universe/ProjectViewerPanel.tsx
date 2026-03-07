@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Folder, File, Search } from "lucide-react";
 import { useUniverseGraphStore } from "./graphStore";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,17 @@ export function ProjectViewerPanel() {
   const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [viewportWidth, setViewportWidth] = useState(1280);
+  const [mobileOpen, setMobileOpen] = useState(true);
+
+  useEffect(() => {
+    const update = () => setViewportWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const isMobile = viewportWidth < 900;
 
   const byParent = useMemo(() => {
     const map = new Map<string, TreeNode[]>();
@@ -137,11 +148,21 @@ export function ProjectViewerPanel() {
   };
 
   return (
-    <Card className="absolute left-3 top-3 z-20 w-[360px] backdrop-blur-sm">
+    <Card
+      className="absolute left-3 top-3 z-20 w-[360px] max-w-[calc(100vw-1.5rem)] backdrop-blur-sm"
+      style={isMobile ? { maxHeight: mobileOpen ? "78vh" : "auto", overflow: "hidden" } : undefined}
+    >
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle>Project Viewer</CardTitle>
-          <Badge variant={connected ? "default" : "secondary"}>{connected ? "live" : "offline"}</Badge>
+          <div className="flex items-center gap-2">
+            {isMobile && (
+              <Button variant="ghost" size="sm" onClick={() => setMobileOpen((v) => !v)}>
+                {mobileOpen ? "hide" : "show"}
+              </Button>
+            )}
+            <Badge variant={connected ? "default" : "secondary"}>{connected ? "live" : "offline"}</Badge>
+          </div>
         </div>
         <div className="flex gap-2 text-xs text-slate-400">
           <span>{nodes.length} nodes</span>
@@ -150,7 +171,7 @@ export function ProjectViewerPanel() {
         </div>
       </CardHeader>
 
-      <CardContent>
+      {(!isMobile || mobileOpen) && <CardContent>
         <div className="mb-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
           <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
             <span>Project selector</span>
@@ -193,7 +214,7 @@ export function ProjectViewerPanel() {
             visibleRoots.map(renderNode)
           )}
         </div>
-      </CardContent>
+      </CardContent>}
     </Card>
   );
 }
