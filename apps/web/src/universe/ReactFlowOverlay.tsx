@@ -224,26 +224,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     visRoots.sort((a, b) => (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? ""));
 
     const pos = new Map<string, { depth: number; lane: number }>();
-    const branchSign = new Map<string, number>();
     let cursor = 0;
 
-    const classifyTopBranch = (name: string): number => {
-      const n = name.toLowerCase();
-      if (/(web|front|ui|client|app)/.test(n)) return -1;
-      if (/(server|back|api|worker|db|infra)/.test(n)) return 1;
-      return 0;
-    };
-
-    const place = (id: string, depth: number, inheritedSign = 0): number => {
+    const place = (id: string, depth: number): number => {
       const kids = visChildren.get(id) ?? [];
-      const current = byId.get(id);
-
-      let sign = inheritedSign;
-      if (depth === 1 && current) {
-        const classified = classifyTopBranch(current.name);
-        sign = classified !== 0 ? classified : inheritedSign;
-      }
-      branchSign.set(id, sign);
 
       if (kids.length === 0) {
         const lane = cursor;
@@ -252,14 +236,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         return lane;
       }
 
-      const lanes = kids.map((kid) => place(kid, depth + 1, sign));
+      const lanes = kids.map((kid) => place(kid, depth + 1));
       const lane = lanes.reduce((sum, v) => sum + v, 0) / lanes.length;
       pos.set(id, { depth, lane });
       return lane;
     };
 
     for (const rootId of visRoots) {
-      place(rootId, 0, 0);
+      place(rootId, 0);
       cursor += 1;
     }
 
@@ -275,11 +259,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       const lane = (p.lane - laneCenter) * laneSpacing;
       const depth = p.depth * depthSpacing;
 
-      let position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
-      if (isMobile && isPortrait && p.depth > 0) {
-        const sign = branchSign.get(id) ?? 0;
-        if (sign !== 0) position = { x: lane, y: depth * sign };
-      }
+      const position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
 
       return {
         id: node.id,
@@ -332,13 +312,15 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       return Math.abs(sd - td) > 1;
     });
 
-    const engine = chooseLayout({
+    const autoEngine = chooseLayout({
       mode,
       zoom,
       visibleCount: graphSnapshot.nodes.length,
       hasGroups: false,
       hasCrossLinks
     });
+
+    const engine = isMobile ? (hasCrossLinks ? "elk" : "dagre") : autoEngine;
 
     setLayoutEngine(engine);
 
