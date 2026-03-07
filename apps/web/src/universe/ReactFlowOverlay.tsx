@@ -17,12 +17,19 @@ import { useUniverseGraphStore } from "./graphStore";
 
 const MAX_INTERACTIVE_NODES = 2500;
 
-function toFlowNode(node: { id: string; name: string; kind: string; depth: number; expanded: boolean; posCurrent: { x: number; y: number } }): Node {
+function toFlowNode(node: {
+  id: string;
+  name: string;
+  kind: string;
+  depth: number;
+  expanded: boolean;
+  position: { x: number; y: number };
+}): Node {
   const isDir = node.kind === "dir";
   const label = isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
   return {
     id: node.id,
-    position: { x: node.posCurrent.x * 18, y: node.posCurrent.y * 18 },
+    position: node.position,
     data: { label },
     draggable: true,
     selectable: true,
@@ -67,14 +74,39 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const state = useUniverseGraphStore.getState();
     const nodeArray = state.nodeArray.filter((node) => state.isNodeVisible(node)).slice(0, MAX_INTERACTIVE_NODES);
     const visibleNodeIds = new Set(nodeArray.map((node) => node.id));
+
+    const xs = nodeArray.map((n) => n.posCurrent.x);
+    const ys = nodeArray.map((n) => n.posCurrent.y);
+    const minX = xs.length ? Math.min(...xs) : 0;
+    const maxX = xs.length ? Math.max(...xs) : 0;
+    const minY = ys.length ? Math.min(...ys) : 0;
+    const maxY = ys.length ? Math.max(...ys) : 0;
+    const cx = (minX + maxX) * 0.5;
+    const cy = (minY + maxY) * 0.5;
+    const rangeX = Math.max(1, maxX - minX);
+    const rangeY = Math.max(1, maxY - minY);
+    const targetW = 1200;
+    const targetH = 700;
+    const scale = Math.max(6, Math.min(46, Math.min(targetW / rangeX, targetH / rangeY)));
+
     return {
-      nodes: nodeArray.map((node) => toFlowNode({ ...node, expanded: state.expandedNodeIds.has(node.id) })),
+      nodes: nodeArray.map((node) =>
+        toFlowNode({
+          ...node,
+          expanded: state.expandedNodeIds.has(node.id),
+          position: {
+            x: (node.posCurrent.x - cx) * scale,
+            y: (node.posCurrent.y - cy) * scale
+          }
+        })
+      ),
       edges: state.edgeArray
         .filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to))
         .map((edge) => {
           const depth = state.nodes.get(edge.from)?.depth ?? 0;
           return toFlowEdge(edge, depth);
-        })
+        }),
+      transform: { cx, cy, scale }
     };
   }, [version, selectedProjectsKey, expandedKey]);
 
@@ -88,9 +120,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   const handleNodeDragStop = useCallback(
     (_: MouseEvent, node: Node) => {
-      setNodePosition(node.id, { x: node.position.x / 18, y: node.position.y / 18, z: 0 });
+      const { cx, cy, scale } = graphSnapshot.transform;
+      setNodePosition(node.id, {
+        x: node.position.x / scale + cx,
+        y: node.position.y / scale + cy,
+        z: 0
+      });
     },
-    [setNodePosition]
+    [graphSnapshot.transform, setNodePosition]
   );
 
   const onConnect = useCallback<OnConnect>(
