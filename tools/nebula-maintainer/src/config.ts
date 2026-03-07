@@ -15,6 +15,7 @@ export const HARDENING_SKIP_MAP_PATH = path.join(STATE_DIR, 'hardening-skip-map.
 export const NORTH_STAR_PATH = path.join(NEBULA_ROOT, 'docs/upgrades/NORTH_STAR.md');
 
 export const SOURCES_PATH = path.join(NEBULA_ROOT, 'tools/nebula-maintainer/sources/seed_urls.txt');
+export const EXAMPLES_DIR = path.join(NEBULA_ROOT, 'docs/examples');
 
 export const RETENTION_DAYS = Number(process.env.NEBULA_RETENTION_DAYS || 14);
 export const MAX_PATCHES_PER_RUN = Number(process.env.NEBULA_MAX_PATCHES_PER_RUN || 2);

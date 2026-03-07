@@ -18,6 +18,7 @@ import {
   SOURCES_PATH,
   STATE_DIR,
   TZ_LABEL,
+  EXAMPLES_DIR,
 } from './config.js';
 
 type Evidence = { title: string; url: string; sha256: string; file: string };
@@ -37,6 +38,17 @@ type BacklogTask = {
 };
 
 type NorthStar = { exists: boolean; text: string; summary: string };
+
+type ExampleSignal = {
+  key: string;
+  pattern: RegExp;
+  title: string;
+  files: string[];
+  priority: number;
+  severity: 'high' | 'medium' | 'low';
+  impact: 'high' | 'medium' | 'low';
+  effort: 'high' | 'medium' | 'low';
+};
 
 type QueueTask = BacklogTask & { attempts: number; created_at: string; last_error: string | null };
 
@@ -144,6 +156,70 @@ function alignmentForTask(taskId: string): string {
   return map[taskId] || 'Unmapped alignment rationale';
 }
 
+function collectExampleDirectories(): string[] {
+  if (!fs.existsSync(EXAMPLES_DIR)) return [];
+  const out = new Set<string>();
+
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const abs = path.join(dir, entry.name);
+      out.add(path.relative(EXAMPLES_DIR, abs));
+      walk(abs);
+    }
+  };
+
+  walk(EXAMPLES_DIR);
+  return [...out].sort();
+}
+
+function exampleSignalsFromDirs(exampleDirs: string[]): ExampleSignal[] {
+  const catalog: ExampleSignal[] = [
+    {
+      key: 'reactflow.floating-edges',
+      pattern: /floatingedges/i,
+      title: 'Adopt floating edge routing in React Flow overlay',
+      files: ['apps/web/src/universe/ReactFlowOverlay.tsx', 'apps/web/src/universe/FloatingEdge.tsx'],
+      priority: 2,
+      severity: 'medium',
+      impact: 'high',
+      effort: 'medium',
+    },
+    {
+      key: 'reactflow.edge-toolbar',
+      pattern: /edgetoolbar/i,
+      title: 'Add edge action toolbar for edit/delete flow operations',
+      files: ['apps/web/src/universe/ReactFlowOverlay.tsx', 'apps/web/src/universe/ProjectViewerPanel.tsx'],
+      priority: 3,
+      severity: 'low',
+      impact: 'medium',
+      effort: 'medium',
+    },
+    {
+      key: 'reactflow.layouting',
+      pattern: /layouting/i,
+      title: 'Add deterministic layout presets for large project trees',
+      files: ['apps/web/src/universe/graphStore.ts', 'apps/web/src/universe/UniverseScene.tsx'],
+      priority: 3,
+      severity: 'medium',
+      impact: 'high',
+      effort: 'medium',
+    },
+    {
+      key: 'reactflow.stress',
+      pattern: /stress/i,
+      title: 'Introduce stress-mode guardrails for huge graphs',
+      files: ['apps/web/src/universe/ReactFlowOverlay.tsx', 'apps/web/src/universe/EdgeSystem.tsx'],
+      priority: 2,
+      severity: 'medium',
+      impact: 'high',
+      effort: 'low',
+    },
+  ];
+
+  return catalog.filter((signal) => exampleDirs.some((dir) => signal.pattern.test(dir)));
+}
+
 function listWorkspacePackageFiles() {
   const roots = ['apps', 'packages', 'tools'];
   const files: string[] = [];
@@ -158,7 +234,7 @@ function listWorkspacePackageFiles() {
   return files.sort();
 }
 
-function analyzeBacklog(): BacklogTask[] {
+function analyzeBacklog(exampleSignals: ExampleSignal[]): BacklogTask[] {
   const tasks: BacklogTask[] = [];
   const pkgFiles = listWorkspacePackageFiles();
   const missing: Array<{workspace: string; packageJson: string; script: string}> = [];
@@ -219,6 +295,21 @@ function analyzeBacklog(): BacklogTask[] {
     rollback: 'Documentation-only backlog task.',
     alignment: alignmentForTask('web.r3f.performance-audit'),
   });
+
+  for (const signal of exampleSignals) {
+    tasks.push({
+      id: `examples.${signal.key}`,
+      title: `Examples radar: ${signal.title}`,
+      kind: 'manual.review',
+      priority: signal.priority,
+      severity: signal.severity,
+      impact: signal.impact,
+      effort: signal.effort,
+      files: signal.files,
+      rollback: 'Documentation-only backlog task sourced from docs/examples.',
+      alignment: 'Improves product quality by converting vetted examples into feasible Nebula upgrades.',
+    });
+  }
 
   return tasks;
 }
@@ -508,6 +599,15 @@ function harden() {
     ),
   );
 
+  checks.push(
+    runInvariantCheck(
+      'docs.examples:present',
+      () => fs.existsSync(EXAMPLES_DIR),
+      'docs/examples directory present and scannable.',
+      'Regression: docs/examples directory missing',
+    ),
+  );
+
   const summary = {
     pass: checks.filter((x) => x.status === 'pass').length,
     fail: checks.filter((x) => x.status === 'fail').length,
@@ -525,6 +625,8 @@ function writeUpgrade(
   queueBefore: QueueState,
   patchResults: ReturnType<typeof runPatches>,
   hardening: ReturnType<typeof harden>,
+  exampleDirs: string[],
+  exampleSignals: ExampleSignal[],
 ) {
   mkdirp(OUTPUT_DIR);
   const file = path.join(OUTPUT_DIR, `UPGRADE_${id}.md`);
@@ -584,6 +686,12 @@ function writeUpgrade(
 - heading: ${northStar.summary}
 - policy: safe patches are queued only when an explicit north-star alignment rationale exists.
 
+## Examples Radar (docs/examples)
+- examples_dir_exists: ${fs.existsSync(EXAMPLES_DIR) ? 'yes' : 'no'}
+- example_directories_detected: ${exampleDirs.length}
+- mapped_feasible_signals: ${exampleSignals.length}
+${exampleSignals.length ? exampleSignals.map((s) => `- ${s.key}: ${s.title}`).join('\n') : '- None mapped this run.'}
+
 ## Prioritized Backlog
 ${backlogSection}
 
@@ -641,12 +749,14 @@ withLock(
     const id = hourId();
     const northStar = loadNorthStar();
     const evidence = collectEvidence(id);
-    const backlog = analyzeBacklog();
+    const exampleDirs = collectExampleDirectories();
+    const exampleSignals = exampleSignalsFromDirs(exampleDirs);
+    const backlog = analyzeBacklog(exampleSignals);
     const queueBefore = upsertQueueTasks(backlog, new Date().toISOString());
     const patchResults = runPatches(Math.max(0, MAX_PATCHES_PER_RUN));
     const hardening = harden();
 
-    const out = writeUpgrade(id, northStar, evidence, backlog, queueBefore, patchResults, hardening);
+    const out = writeUpgrade(id, northStar, evidence, backlog, queueBefore, patchResults, hardening, exampleDirs, exampleSignals);
     pruneOld();
     console.log(`nebula-hourly: wrote ${out}`);
   },
