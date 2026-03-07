@@ -259,7 +259,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       const lane = (p.lane - laneCenter) * laneSpacing;
       const depth = p.depth * depthSpacing;
 
-      const position = isMobile && isPortrait ? { x: lane, y: depth } : { x: depth, y: lane };
+      const position = { x: depth, y: lane };
 
       return {
         id: node.id,
@@ -276,9 +276,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     for (const s of summaryNodes) {
       const parentPos = flowNodes.find((n) => n.id === s.id.replace("summary:", ""))?.position;
       if (parentPos) {
-        s.position = isMobile && isPortrait
-          ? { x: parentPos.x + 46, y: parentPos.y + 72 }
-          : { x: parentPos.x + 150, y: parentPos.y + 28 };
+        s.position = { x: parentPos.x + 140, y: parentPos.y + 26 };
       }
       flowNodes.push(s);
       depthById.set(s.id, s.depth);
@@ -320,7 +318,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       hasCrossLinks
     });
 
-    const engine = isMobile ? (hasCrossLinks ? "elk" : "dagre") : autoEngine;
+    const engine = isMobile ? "elk" : autoEngine;
 
     setLayoutEngine(engine);
 
@@ -337,7 +335,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         return;
       }
 
-      const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile && isPortrait ? "DOWN" : "RIGHT");
+      const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile ? undefined : isPortrait ? "DOWN" : "RIGHT");
       if (!cancelled) setLaidOut(out);
     };
 

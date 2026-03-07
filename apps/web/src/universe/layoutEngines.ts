@@ -65,15 +65,24 @@ export function layoutWithDagre(nodes: Node[], edges: Edge[], direction: "TB" | 
   };
 }
 
-export async function layoutWithElk(nodes: Node[], edges: Edge[], direction: "RIGHT" | "DOWN" = "RIGHT"): Promise<{ nodes: Node[]; edges: Edge[] }> {
+export async function layoutWithElk(
+  nodes: Node[],
+  edges: Edge[],
+  direction?: "RIGHT" | "DOWN"
+): Promise<{ nodes: Node[]; edges: Edge[] }> {
+  const layoutOptions: Record<string, string> = {
+    "elk.algorithm": "layered",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "96",
+    "elk.spacing.nodeNode": "40"
+  };
+
+  if (direction) {
+    layoutOptions["elk.direction"] = direction;
+  }
+
   const graph = {
     id: "root",
-    layoutOptions: {
-      "elk.algorithm": "layered",
-      "elk.direction": direction,
-      "elk.layered.spacing.nodeNodeBetweenLayers": "96",
-      "elk.spacing.nodeNode": "40"
-    },
+    layoutOptions,
     children: nodes.map((n) => ({
       id: n.id,
       width: n.width ?? 180,
