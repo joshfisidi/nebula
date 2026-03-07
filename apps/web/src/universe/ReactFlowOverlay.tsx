@@ -13,6 +13,14 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
+import {
+  chooseLayout,
+  layoutWithDagre,
+  layoutWithElk,
+  layoutWithRadial,
+  type LayoutEngine,
+  type LayoutMode
+} from "./layoutEngines";
 
 type VisibleNode = {
   id: string;
@@ -49,7 +57,7 @@ function toFlowNode(node: VisibleNode): Node {
   return {
     id: node.id,
     position: node.position,
-    data: { label },
+    data: { label, depth: node.depth },
     draggable: false,
     selectable: true,
     style: {
@@ -101,7 +109,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   const [viewport, setViewport] = useState({ width: 1280, height: 720 });
   const [zoom, setZoom] = useState(0.9);
+  const [mode, setMode] = useState<LayoutMode>("auto");
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
+  const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("dagre");
+  const [laidOut, setLaidOut] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
 
   useEffect(() => {
     const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -309,6 +320,51 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     };
   }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, isPortrait, zoom]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const hasCrossLinks = graphSnapshot.edges.some((e) => {
+      const s = graphSnapshot.nodes.find((n) => n.id === e.source);
+      const t = graphSnapshot.nodes.find((n) => n.id === e.target);
+      if (!s || !t) return false;
+      const sd = Number((s.data as any)?.depth ?? 0);
+      const td = Number((t.data as any)?.depth ?? 0);
+      return Math.abs(sd - td) > 1;
+    });
+
+    const engine = chooseLayout({
+      mode,
+      zoom,
+      visibleCount: graphSnapshot.nodes.length,
+      hasGroups: false,
+      hasCrossLinks
+    });
+
+    setLayoutEngine(engine);
+
+    const run = async () => {
+      if (engine === "radial") {
+        const out = layoutWithRadial(graphSnapshot.nodes, graphSnapshot.edges);
+        if (!cancelled) setLaidOut(out);
+        return;
+      }
+
+      if (engine === "dagre") {
+        const out = layoutWithDagre(graphSnapshot.nodes, graphSnapshot.edges, isMobile && isPortrait ? "TB" : "LR");
+        if (!cancelled) setLaidOut(out);
+        return;
+      }
+
+      const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile && isPortrait ? "DOWN" : "RIGHT");
+      if (!cancelled) setLaidOut(out);
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [graphSnapshot.nodes, graphSnapshot.edges, isMobile, isPortrait, mode, zoom]);
+
   const onConnect = useCallback<OnConnect>(
     (connection: Connection) => {
       const source = connection.source;
@@ -356,7 +412,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [rf, enabled, graphSnapshot.nodes.length, graphSnapshot.edges.length, expandedKey, selectedProjectsKey, isMobile]);
+  }, [rf, enabled, laidOut.nodes.length, laidOut.edges.length, expandedKey, selectedProjectsKey, isMobile, layoutEngine]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
     setZoom(view.zoom);
@@ -372,9 +428,29 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         pointerEvents: enabled ? "auto" : "none"
       }}
     >
+      <div style={{ position: "absolute", right: 84, top: isMobile ? 12 : 12, zIndex: 9, display: "flex", gap: 6 }}>
+        {(["auto", "overview", "focus"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            style={{
+              fontSize: 11,
+              borderRadius: 8,
+              padding: "4px 8px",
+              border: "1px solid rgba(120,160,255,0.35)",
+              background: mode === m ? "rgba(37,99,235,0.35)" : "rgba(10,16,30,0.75)",
+              color: "#dbeafe"
+            }}
+          >
+            {m}
+          </button>
+        ))}
+        <span style={{ fontSize: 10, color: "#9fb5d7", alignSelf: "center" }}>{layoutEngine}</span>
+      </div>
+
       <ReactFlow
-        nodes={graphSnapshot.nodes}
-        edges={graphSnapshot.edges}
+        nodes={laidOut.nodes.length ? laidOut.nodes : graphSnapshot.nodes}
+        edges={laidOut.edges.length ? laidOut.edges : graphSnapshot.edges}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         onInit={setRf}
