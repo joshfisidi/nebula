@@ -22,6 +22,7 @@ interface UniverseGraphState {
   setNodePosition: (id: string, pos: Vec3) => void;
   addEdge: (params: { source: string; target: string }) => void;
   toggleProjectSelection: (projectId: string) => void;
+  setProjectSelection: (projectId: string | null) => void;
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
   isNodeVisible: (node: RenderNode) => boolean;
@@ -177,6 +178,14 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       else next.add(projectId);
       return { selectedProjectIds: next };
     });
+  },
+
+  setProjectSelection(projectId) {
+    if (!projectId) {
+      set({ selectedProjectIds: new Set<string>() });
+      return;
+    }
+    set({ selectedProjectIds: new Set<string>([projectId]) });
   },
 
   clearProjectSelection() {

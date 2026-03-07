@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 type TreeNode = {
   id: string;
@@ -23,7 +24,7 @@ export function ProjectViewerPanel() {
   const edges = useUniverseGraphStore((s) => s.edgeArray);
   const connected = useUniverseGraphStore((s) => s.connected);
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
-  const toggleProjectSelection = useUniverseGraphStore((s) => s.toggleProjectSelection);
+  const setProjectSelection = useUniverseGraphStore((s) => s.setProjectSelection);
   const selectAllProjects = useUniverseGraphStore((s) => s.selectAllProjects);
   const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
   const [query, setQuery] = useState("");
@@ -71,6 +72,11 @@ export function ProjectViewerPanel() {
     () => rootNodes.filter((node) => selectedProjectIds.has(node.projectId)),
     [rootNodes, selectedProjectIds]
   );
+
+  const selectedProjectValue = useMemo(() => {
+    if (selectedProjectIds.size !== 1) return "";
+    return [...selectedProjectIds][0] ?? "";
+  }, [selectedProjectIds]);
 
   const visibleSet = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -147,23 +153,28 @@ export function ProjectViewerPanel() {
       <CardContent>
         <div className="mb-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
           <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-            <span>Projects (select to load)</span>
+            <span>Project selector</span>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={selectAllProjects}>all</Button>
               <Button variant="ghost" size="sm" onClick={clearProjectSelection}>none</Button>
             </div>
           </div>
-          <div className="max-h-28 overflow-auto space-y-1">
+
+          <NativeSelect
+            value={selectedProjectValue}
+            onChange={(event) => setProjectSelection(event.target.value || null)}
+            className="mb-2"
+          >
+            <NativeSelectOption value="">Select project</NativeSelectOption>
             {projects.map((project) => (
-              <label key={project.id} className="flex items-center gap-2 text-xs text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={selectedProjectIds.has(project.projectId)}
-                  onChange={() => toggleProjectSelection(project.projectId)}
-                />
-                <span className="truncate">{project.name}</span>
-              </label>
+              <NativeSelectOption key={project.id} value={project.projectId}>
+                {project.name}
+              </NativeSelectOption>
             ))}
+          </NativeSelect>
+
+          <div className="text-[11px] text-slate-400">
+            Choose a project to load it. Use <span className="text-slate-300">all</span> for multi-project view.
           </div>
         </div>
 
