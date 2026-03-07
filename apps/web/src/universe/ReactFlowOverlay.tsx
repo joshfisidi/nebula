@@ -115,6 +115,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [laidOut, setLaidOut] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
+  const focusUnlockTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -356,33 +357,47 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     [addEdgeToGraph]
   );
 
+  const focusNode = useCallback(
+    (nodeId: string, options?: { duration?: number; padding?: number; maxZoom?: number }) => {
+      if (!nodeId) return;
+
+      setFocusId(nodeId);
+      focusNodeRef.current = nodeId;
+      focusLockRef.current = true;
+
+      if (focusUnlockTimerRef.current) {
+        window.clearTimeout(focusUnlockTimerRef.current);
+      }
+
+      if (rf) {
+        rf.fitView({
+          nodes: [{ id: nodeId }],
+          duration: options?.duration ?? 240,
+          padding: options?.padding ?? (isMobile ? 0.46 : 0.34),
+          includeHiddenNodes: false,
+          maxZoom: options?.maxZoom ?? (isMobile ? 0.9 : 1.1)
+        });
+      }
+
+      focusUnlockTimerRef.current = window.setTimeout(() => {
+        focusLockRef.current = false;
+      }, 280);
+    },
+    [isMobile, rf, setFocusId]
+  );
+
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
       if (node.id.startsWith("summary:")) return;
-      setFocusId(node.id);
-      focusNodeRef.current = node.id;
-      focusLockRef.current = true;
 
       const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
       if (runtime?.kind === "dir") {
         toggleExpandedNode(node.id);
       }
 
-      if (rf) {
-        rf.fitView({
-          nodes: [{ id: node.id }],
-          duration: 260,
-          padding: isMobile ? 0.44 : 0.32,
-          includeHiddenNodes: false,
-          maxZoom: isMobile ? 0.9 : 1.1
-        });
-      }
-
-      window.setTimeout(() => {
-        focusLockRef.current = false;
-      }, 320);
+      focusNode(node.id, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
     },
-    [isMobile, rf, setFocusId, toggleExpandedNode]
+    [focusNode, isMobile, toggleExpandedNode]
   );
 
   useEffect(() => {
@@ -421,6 +436,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     setZoom(view.zoom);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (focusUnlockTimerRef.current) {
+        window.clearTimeout(focusUnlockTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       style={{
@@ -437,26 +460,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
             key={m}
             onClick={() => {
               setMode(m);
-
               const focused = focusNodeRef.current ?? focusId ?? graphSnapshot.focus ?? laidOut.nodes[0]?.id ?? graphSnapshot.nodes[0]?.id;
               if (focused) {
-                focusNodeRef.current = focused;
-                focusLockRef.current = true;
-                setFocusId(focused);
-
-                if (rf) {
-                  rf.fitView({
-                    nodes: [{ id: focused }],
-                    duration: 240,
-                    padding: isMobile ? 0.48 : 0.34,
-                    includeHiddenNodes: false,
-                    maxZoom: isMobile ? 0.92 : 1.12
-                  });
-                }
-
-                window.setTimeout(() => {
-                  focusLockRef.current = false;
-                }, 280);
+                focusNode(focused, { duration: 240, padding: isMobile ? 0.48 : 0.34, maxZoom: isMobile ? 0.92 : 1.12 });
               }
             }}
             style={{

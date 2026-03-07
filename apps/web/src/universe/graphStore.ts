@@ -20,10 +20,7 @@ interface UniverseGraphState {
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
   applyPatch: (ops: PatchOp[]) => void;
-  tick: (alpha: number) => void;
-  setNodePosition: (id: string, pos: Vec3) => void;
   addEdge: (params: { source: string; target: string }) => void;
-  toggleProjectSelection: (projectId: string) => void;
   setProjectSelection: (projectId: string | null) => void;
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
@@ -196,28 +193,6 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: state.version + 1 });
   },
 
-  tick(alpha) {
-    const state = get();
-    for (const node of state.nodes.values()) {
-      node.posCurrent.x += (node.posTarget.x - node.posCurrent.x) * alpha;
-      node.posCurrent.y += (node.posTarget.y - node.posCurrent.y) * alpha;
-      node.posCurrent.z += (node.posTarget.z - node.posCurrent.z) * alpha;
-    }
-  },
-
-  setNodePosition(id, pos) {
-    const state = get();
-    const nodes = new Map(state.nodes);
-    const node = nodes.get(id);
-    if (!node) return;
-
-    node.posTarget = { ...pos };
-    node.posCurrent = { ...pos };
-    node.pos = { ...pos };
-
-    set({ nodes, nodeArray: [...nodes.values()], version: state.version + 1 });
-  },
-
   addEdge({ source, target }) {
     const state = get();
     if (!state.nodes.has(source) || !state.nodes.has(target) || source === target) {
@@ -236,15 +211,6 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     });
 
     set({ edges, edgeArray: [...edges.values()], version: state.version + 1 });
-  },
-
-  toggleProjectSelection(projectId) {
-    set((state) => {
-      const next = new Set(state.selectedProjectIds);
-      if (next.has(projectId)) next.delete(projectId);
-      else next.add(projectId);
-      return { selectedProjectIds: next };
-    });
   },
 
   setProjectSelection(projectId) {
