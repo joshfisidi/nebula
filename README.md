@@ -53,11 +53,11 @@ By default, `pnpm dev` watches the current Nebula repository (`./`) and streams 
 Set `UNIVERSE_WATCH_ROOT` to watch a different path:
 
 ```bash
-UNIVERSE_WATCH_ROOT=/absolute/path/to/repos node dist/index.js
+cd apps/server && UNIVERSE_WATCH_ROOT=/absolute/path/to/repos pnpm start
 ```
 
 Set websocket port if needed:
 
 ```bash
-UNIVERSE_WS_PORT=18891 node dist/index.js
+cd apps/server && UNIVERSE_WS_PORT=18891 pnpm start
 ```

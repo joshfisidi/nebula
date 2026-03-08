@@ -1,4 +1,4 @@
-import type { NodePhysicsMeta } from "@nebula/physics";
+import type { NodePhysicsMeta } from "../../../../packages/physics/src/index.js";
 
 export type NodeKind = "dir" | "file";
 export type EdgeKind = "contains";

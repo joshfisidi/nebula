@@ -1,4 +1,4 @@
-import type { IntegratorConfig } from "@nebula/physics";
+import type { IntegratorConfig } from "../../../../packages/physics/src/index.js";
 
 function envNumber(name: string, fallback: number): number {
   const raw = process.env[name];

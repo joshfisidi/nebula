@@ -10,7 +10,7 @@ import {
   type IntegratorConfig,
   type NodePhysicsMeta,
   type SpringConstraint
-} from "@nebula/physics";
+} from "../../../../packages/physics/src/index.js";
 import { edgeId, nodeId, normalizePath } from "./ids.js";
 import { computeLayout } from "./layout.js";
 import type { GraphEdge, GraphNode, PatchOp, UniverseSnapshotMessage, Vec3 } from "./types.js";

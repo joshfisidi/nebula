@@ -29,7 +29,7 @@ Build a fully working real-time 3D file-system universe visualizer with isolated
   - Live event ingestion
 
 ### Run
-1. `cd apps/server && pnpm build && node dist/index.js`
+1. `cd apps/server && pnpm build && pnpm start`
 2. `cd apps/web && pnpm dev`
 3. Open `http://localhost:3000`
 
