@@ -97,16 +97,18 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
     isSummary;
 
   const label = isSummary ? node.name : isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
-  const width = Math.round(
+  const widthPx = Math.round(
     Math.max(isBubbleGroup ? 64 : 88, Math.min(isBubbleGroup ? 160 : 220, label.length * (isBubbleGroup ? 6.2 : 6.8) + (isBubbleGroup ? 26 : 24)))
   );
-  const height = isBubbleGroup ? 30 : 34;
+  const heightPx = isBubbleGroup ? 30 : 34;
+  const width = `${(widthPx / 16).toFixed(3)}rem`;
+  const height = `${(heightPx / 16).toFixed(3)}rem`;
 
   return {
     id: node.id,
     position: node.position,
-    width,
-    height,
+    width: widthPx,
+    height: heightPx,
     connectable: node.kind !== "summary",
     focusable: true,
     selectable: true,
@@ -136,9 +138,9 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
           : `1px solid rgba(148,163,184,${Math.min(0.82, 0.36 + node.salience * 0.08)})`,
       borderRadius: isBubbleGroup ? 999 : 10,
       boxShadow: isSummary ? "none" : `0 0 ${8 + node.salience * 7}px rgba(96,165,250,${Math.min(0.28, node.salience * 0.05)})`,
-      fontSize: isBubbleGroup ? 10.5 : 11,
+      fontSize: isBubbleGroup ? "0.656rem" : "0.688rem",
       lineHeight: 1.2,
-      padding: isBubbleGroup ? "6px 12px" : "6px 8px",
+      padding: isBubbleGroup ? "0.375rem 0.75rem" : "0.375rem 0.5rem",
       width,
       height,
       minWidth: width,
@@ -455,12 +457,11 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   useEffect(() => {
     let cancelled = false;
 
+    const depthById = new Map(graphSnapshot.nodes.map((node) => [node.id, Number(node.data.depth ?? 0)]));
     const hasCrossLinks = graphSnapshot.edges.some((edge) => {
-      const source = graphSnapshot.nodes.find((node) => node.id === edge.source);
-      const target = graphSnapshot.nodes.find((node) => node.id === edge.target);
-      if (!source || !target) return false;
-      const sourceDepth = Number(source.data.depth ?? 0);
-      const targetDepth = Number(target.data.depth ?? 0);
+      const sourceDepth = depthById.get(edge.source);
+      const targetDepth = depthById.get(edge.target);
+      if (sourceDepth == null || targetDepth == null) return false;
       return Math.abs(sourceDepth - targetDepth) > 1;
     });
 

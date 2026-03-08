@@ -122,7 +122,7 @@ export function UniverseScene() {
 
   return (
     <UniverseLiveProvider>
-      <div style={{ position: "relative", width: "100%", height: "100vh", background: "#070b14" }}>
+      <div style={{ position: "relative", width: "100%", height: "100dvh", background: "#070b14" }}>
         <StatusBar mobile={mobile} />
         <ProjectViewerPanel />
         <ReactFlowOverlay enabled />

@@ -145,7 +145,7 @@ export function ProjectViewerPanel() {
       <aside
         id="project-drawer"
         className={cn(
-          "absolute bottom-3 left-3 top-3 z-30 flex w-[360px] max-w-[calc(100vw-1.5rem)] flex-col rounded-3xl border border-slate-700/70 bg-slate-950/88 shadow-[0_24px_80px_rgba(0,0,0,0.4)] backdrop-blur-xl transition duration-200",
+          "absolute bottom-3 left-3 top-3 z-30 flex w-[22.5rem] max-w-[calc(100vw-1.5rem)] flex-col rounded-3xl border border-slate-700/70 bg-slate-950/88 shadow-[0_1.5rem_5rem_rgba(0,0,0,0.4)] backdrop-blur-xl transition duration-200",
           drawerOpen ? "translate-x-0 opacity-100" : "-translate-x-[calc(100%+1rem)] opacity-0 pointer-events-none"
         )}
       >
