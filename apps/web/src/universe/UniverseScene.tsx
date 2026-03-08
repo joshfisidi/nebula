@@ -17,9 +17,11 @@ function StatusBar({ mobile }: { mobile: boolean }) {
   const interactionMode = useUniverseGraphStore((s) => s.interactionMode);
   const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
   const layoutEngine = useUniverseGraphStore((s) => s.layoutEngine);
+  const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
   const setInteractionMode = useUniverseGraphStore((s) => s.setInteractionMode);
   const setLayoutMode = useUniverseGraphStore((s) => s.setLayoutMode);
+  const setShowHiddenNodes = useUniverseGraphStore((s) => s.setShowHiddenNodes);
   const [flashVisible, setFlashVisible] = useState(true);
 
   useEffect(() => {
@@ -106,6 +108,17 @@ function StatusBar({ mobile }: { mobile: boolean }) {
       <div className="flex items-center gap-1 rounded-full border border-slate-800/80 bg-slate-900/70 p-1" role="group" aria-label="Interaction mode">
         {(["browse", "pan", "edit"] as const).map(renderModeButton)}
       </div>
+
+      <Button
+        type="button"
+        variant={showHiddenNodes ? "default" : "ghost"}
+        size="sm"
+        className="h-7 rounded-full px-2.5 text-[11px]"
+        onClick={() => setShowHiddenNodes(!showHiddenNodes)}
+        aria-pressed={showHiddenNodes}
+      >
+        hidden
+      </Button>
     </div>
   );
 }

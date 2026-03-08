@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { LayoutEngine, LayoutMode } from "./layoutEngines";
 import type { GraphEdge, GraphNode, PatchOp, UniverseSnapshotMessage, Vec3 } from "./patch";
+import { isNaturallyHiddenNode } from "./visibility";
 
 interface RenderNode extends GraphNode {
   projectId: string;
@@ -20,6 +21,7 @@ interface UniverseGraphState {
   expandedNodeIds: Set<string>;
   focusId: string | null;
   searchQuery: string;
+  showHiddenNodes: boolean;
   interactionMode: InteractionMode;
   drawerOpen: boolean;
   layoutMode: LayoutMode;
@@ -36,6 +38,7 @@ interface UniverseGraphState {
   setFocusId: (nodeId: string | null) => void;
   revealNode: (nodeId: string) => void;
   setSearchQuery: (query: string) => void;
+  setShowHiddenNodes: (show: boolean) => void;
   setInteractionMode: (mode: InteractionMode) => void;
   setDrawerOpen: (open: boolean) => void;
   setLayoutMode: (mode: LayoutMode) => void;
@@ -142,6 +145,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   expandedNodeIds: new Set<string>(),
   focusId: null,
   searchQuery: "",
+  showHiddenNodes: false,
   interactionMode: "browse",
   drawerOpen: false,
   layoutMode: "focus",
@@ -297,6 +301,10 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     set({ searchQuery: query });
   },
 
+  setShowHiddenNodes(showHiddenNodes) {
+    set({ showHiddenNodes });
+  },
+
   setInteractionMode(interactionMode) {
     set({ interactionMode });
   },
@@ -317,6 +325,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     const state = get();
     const selected = state.selectedProjectIds;
     if (selected.size === 0 || !selected.has(node.projectId)) return false;
+    if (!state.showHiddenNodes && isNaturallyHiddenNode(node)) return false;
 
     if (node.id === node.projectId) return true;
 

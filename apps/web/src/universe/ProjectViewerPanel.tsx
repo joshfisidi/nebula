@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useUniverseGraphStore } from "./graphStore";
+import { isNaturallyHiddenNode } from "./visibility";
 
 type TreeNode = {
   id: string;
@@ -23,12 +24,14 @@ export function ProjectViewerPanel() {
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
   const focusId = useUniverseGraphStore((s) => s.focusId);
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
+  const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
   const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setProjectSelection = useUniverseGraphStore((s) => s.setProjectSelection);
   const selectAllProjects = useUniverseGraphStore((s) => s.selectAllProjects);
   const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
   const revealNode = useUniverseGraphStore((s) => s.revealNode);
   const setSearchQuery = useUniverseGraphStore((s) => s.setSearchQuery);
+  const setShowHiddenNodes = useUniverseGraphStore((s) => s.setShowHiddenNodes);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
   const [viewportWidth, setViewportWidth] = useState(1280);
 
@@ -41,11 +44,16 @@ export function ProjectViewerPanel() {
 
   const isMobile = viewportWidth < 900;
 
-  const byId = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
+  const visibleNodes = useMemo(
+    () => nodes.filter((node) => showHiddenNodes || !isNaturallyHiddenNode(node)),
+    [nodes, showHiddenNodes]
+  );
+
+  const byId = useMemo(() => new Map(visibleNodes.map((node) => [node.id, node])), [visibleNodes]);
 
   const byParent = useMemo(() => {
     const map = new Map<string, TreeNode[]>();
-    for (const node of nodes) {
+    for (const node of visibleNodes) {
       const entry: TreeNode = {
         id: node.id,
         name: node.name,
@@ -70,7 +78,7 @@ export function ProjectViewerPanel() {
     }
 
     return map;
-  }, [nodes]);
+  }, [visibleNodes]);
 
   const rootNodes = useMemo(() => byParent.get("__root__") ?? [], [byParent]);
 
@@ -118,7 +126,7 @@ export function ProjectViewerPanel() {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return [];
 
-    return nodes
+    return visibleNodes
       .filter((node) => selectedProjectIds.size > 0 && selectedProjectIds.has(node.projectId))
       .filter((node) => `${node.name} ${node.path}`.toLowerCase().includes(query))
       .sort((a, b) => {
@@ -126,7 +134,7 @@ export function ProjectViewerPanel() {
         return a.path.localeCompare(b.path);
       })
       .slice(0, 40);
-  }, [nodes, searchQuery, selectedProjectIds]);
+  }, [searchQuery, selectedProjectIds, showHiddenNodes, visibleNodes]);
 
   const allSelected = projects.length > 0 && selectedProjectIds.size === projects.length;
   const noneSelected = selectedProjectIds.size === 0;
@@ -213,8 +221,20 @@ export function ProjectViewerPanel() {
               placeholder="Search files and folders"
             />
           </div>
-          <div className="mt-2 text-[11px] text-slate-500">
-            Search reveals matching branches on the canvas and keeps this drawer scoped to the active project.
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="text-[11px] text-slate-500">
+              Search reveals matching branches on the canvas and keeps this drawer scoped to the active project.
+            </div>
+            <Button
+              type="button"
+              variant={showHiddenNodes ? "default" : "outline"}
+              size="sm"
+              className="h-8 shrink-0 rounded-full px-3 text-[11px]"
+              onClick={() => setShowHiddenNodes(!showHiddenNodes)}
+              aria-pressed={showHiddenNodes}
+            >
+              {showHiddenNodes ? "hide bloat" : "show hidden"}
+            </Button>
           </div>
         </div>
 

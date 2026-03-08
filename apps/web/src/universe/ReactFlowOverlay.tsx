@@ -21,6 +21,7 @@ import {
   layoutWithRadial,
   type LayoutEngine
 } from "./layoutEngines";
+import { isNaturallyHiddenNode } from "./visibility";
 
 type VisibleNodeKind = "dir" | "file" | "summary";
 
@@ -173,6 +174,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const expandedKey = useUniverseGraphStore((s) => [...s.expandedNodeIds].sort().join("|"));
   const focusId = useUniverseGraphStore((s) => s.focusId);
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
+  const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
   const interactionMode = useUniverseGraphStore((s) => s.interactionMode);
   const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
@@ -207,6 +209,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const search = state.searchQuery.trim().toLowerCase();
     const selectedNodes = state.nodeArray
       .filter((node) => state.selectedProjectIds.size > 0 && state.selectedProjectIds.has(node.projectId))
+      .filter((node) => state.showHiddenNodes || !isNaturallyHiddenNode(node))
       .slice(0, MAX_INTERACTIVE_NODES);
 
     const byId = new Map(selectedNodes.map((node) => [node.id, node]));
@@ -333,18 +336,24 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
         if (currentNode.kind === "dir") {
           const allChildren = children.get(currentNode.id) ?? [];
-          const ranked = allChildren
-            .slice()
-            .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
-          const budget = currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
-          const kept = ranked.slice(0, budget);
+          const isExpanded = state.expandedNodeIds.has(currentNode.id);
 
-          for (const child of kept) {
-            if (visible.size >= maxVisible) break;
-            visible.add(child.id);
+          if (isExpanded) {
+            const ranked = allChildren
+              .slice()
+              .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+            const budget = currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
+            const kept = ranked.slice(0, budget);
+
+            for (const child of kept) {
+              if (visible.size >= maxVisible) break;
+              visible.add(child.id);
+            }
+
+            addSummaryNode(currentNode.id, currentNode.depth ?? 0, Math.max(0, allChildren.length - kept.length));
+          } else {
+            addSummaryNode(currentNode.id, currentNode.depth ?? 0, allChildren.length);
           }
-
-          addSummaryNode(currentNode.id, currentNode.depth ?? 0, Math.max(0, allChildren.length - kept.length));
         }
       }
     } else {
@@ -452,7 +461,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       primaryRootId: primaryRootId ?? null,
       rootCount: roots.length
     };
-  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, layoutMode, searchQuery, zoom]);
+  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, layoutMode, searchQuery, showHiddenNodes, zoom]);
 
   useEffect(() => {
     let cancelled = false;
@@ -562,6 +571,12 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
       const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
       if (!runtime) return;
+
+      if (node.data.kind === "dir" && node.id === useUniverseGraphStore.getState().focusId) {
+        toggleExpandedNode(node.id);
+        focusNode(node.id, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
+        return;
+      }
 
       revealNode(node.id);
       focusNode(node.id, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
