@@ -21,14 +21,12 @@ type TreeNode = {
 export function ProjectViewerPanel() {
   const nodes = useUniverseGraphStore((s) => s.nodeArray);
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
-  const expandedNodeIds = useUniverseGraphStore((s) => s.expandedNodeIds);
   const focusId = useUniverseGraphStore((s) => s.focusId);
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
   const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setProjectSelection = useUniverseGraphStore((s) => s.setProjectSelection);
   const selectAllProjects = useUniverseGraphStore((s) => s.selectAllProjects);
   const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
-  const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
   const revealNode = useUniverseGraphStore((s) => s.revealNode);
   const setSearchQuery = useUniverseGraphStore((s) => s.setSearchQuery);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
@@ -100,14 +98,6 @@ export function ProjectViewerPanel() {
     return selectedRoots[0] ?? null;
   }, [byId, focusId, selectedRoots]);
 
-  const branchRoot = useMemo(() => {
-    if (!focusedNode) return null;
-    if (focusedNode.kind === "file" && focusedNode.parentId) {
-      return byId.get(focusedNode.parentId) ?? focusedNode;
-    }
-    return focusedNode;
-  }, [byId, focusedNode]);
-
   const breadcrumbs = useMemo(() => {
     if (!focusedNode) return [];
     const trail: TreeNode[] = [];
@@ -119,15 +109,10 @@ export function ProjectViewerPanel() {
     return trail;
   }, [byId, focusedNode]);
 
-  const focusTrail = useMemo(() => {
-    const trail = new Set<string>();
-    let cursor: string | null = focusId;
-    while (cursor) {
-      trail.add(cursor);
-      cursor = byId.get(cursor)?.parentId ?? null;
-    }
-    return trail;
-  }, [byId, focusId]);
+  const focusedChildren = useMemo(() => {
+    if (!focusedNode || focusedNode.kind !== "dir") return [];
+    return byParent.get(focusedNode.id) ?? [];
+  }, [byParent, focusedNode]);
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -145,55 +130,6 @@ export function ProjectViewerPanel() {
 
   const allSelected = projects.length > 0 && selectedProjectIds.size === projects.length;
   const noneSelected = selectedProjectIds.size === 0;
-
-  const renderBranchNode = (node: TreeNode, depth: number) => {
-    const children = byParent.get(node.id) ?? [];
-    const canExpand = node.kind === "dir" && children.length > 0;
-    const expanded = branchRoot?.id === node.id || expandedNodeIds.has(node.id) || focusTrail.has(node.id);
-    const isFocused = focusId === node.id;
-
-    return (
-      <div key={node.id}>
-        <div className="flex items-center gap-1 py-1" style={{ paddingLeft: depth * 14 }}>
-          {canExpand ? (
-            <button
-              type="button"
-              className="rounded p-1 text-slate-400 transition hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-              onClick={() => toggleExpandedNode(node.id)}
-              aria-label={expanded ? `Collapse ${node.name}` : `Expand ${node.name}`}
-            >
-              {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-            </button>
-          ) : (
-            <span className="w-6" aria-hidden="true" />
-          )}
-
-          <button
-            type="button"
-            className={cn(
-              "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-slate-200 transition hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
-              isFocused && "bg-slate-800 text-white"
-            )}
-            onClick={() => revealNode(node.id)}
-            aria-current={isFocused ? "true" : undefined}
-          >
-            {node.kind === "dir" ? <Folder size={14} className="shrink-0 text-cyan-300" /> : <File size={13} className="shrink-0 text-slate-300" />}
-            <span className="truncate" title={node.path}>
-              {node.name}
-            </span>
-          </button>
-
-          {canExpand ? (
-            <span className="rounded-full border border-slate-700/80 px-2 py-0.5 text-[10px] text-slate-400">
-              {children.length}
-            </span>
-          ) : null}
-        </div>
-
-        {canExpand && expanded ? children.map((child) => renderBranchNode(child, depth + 1)) : null}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -283,7 +219,7 @@ export function ProjectViewerPanel() {
         </div>
 
         <div className="border-b border-slate-800/80 px-4 py-3">
-          <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">Focused Branch</div>
+          <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">Path</div>
           {breadcrumbs.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
               {breadcrumbs.map((node, index) => (
@@ -302,7 +238,7 @@ export function ProjectViewerPanel() {
               ))}
             </div>
           ) : (
-            <div className="text-sm text-slate-500">Choose a project to browse its structure.</div>
+            <div className="text-sm text-slate-500">Choose a project to start exploring one node at a time.</div>
           )}
         </div>
 
@@ -338,21 +274,92 @@ export function ProjectViewerPanel() {
                 </div>
               )}
             </div>
-          ) : branchRoot ? (
+          ) : focusedNode ? (
             <div className="space-y-3">
               <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Local Subtree</div>
-                <div className="mt-1 text-sm text-slate-300">
-                  {branchRoot.path}
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Current Node</div>
+                <button
+                  type="button"
+                  className={cn(
+                    "mt-2 flex w-full items-start gap-3 rounded-2xl border border-slate-800/80 bg-slate-950/60 px-3 py-3 text-left transition hover:border-slate-600 hover:bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+                    focusId === focusedNode.id && "border-cyan-400/30"
+                  )}
+                  onClick={() => revealNode(focusedNode.id)}
+                  aria-current="page"
+                >
+                  <span className="mt-0.5 shrink-0">
+                    {focusedNode.kind === "dir" ? <Folder size={15} className="text-cyan-300" /> : <File size={14} className="text-slate-300" />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-slate-100">{focusedNode.name}</span>
+                    <span className="mt-1 block truncate text-xs text-slate-400">{focusedNode.path}</span>
+                  </span>
+                  {focusedNode.kind === "dir" ? (
+                    <span className="rounded-full border border-slate-700/80 px-2 py-0.5 text-[10px] text-slate-400">
+                      {focusedChildren.length}
+                    </span>
+                  ) : null}
+                </button>
+                <div className="mt-2 text-xs text-slate-500">
+                  Tap a child to move deeper. Use the path chips above to climb back up.
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-2">
-                {renderBranchNode(branchRoot, 0)}
-              </div>
+              {focusedNode.kind === "dir" ? (
+                focusedChildren.length > 0 ? (
+                  <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-2">
+                    <div className="mb-2 px-2 pt-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">Next Nodes</div>
+                    <div className="space-y-1">
+                      {focusedChildren.map((child) => {
+                        const childChildren = byParent.get(child.id) ?? [];
+                        const isFocused = focusId === child.id;
+                        const canExplore = child.kind === "dir" && childChildren.length > 0;
+
+                        return (
+                          <button
+                            key={child.id}
+                            type="button"
+                            className={cn(
+                              "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm text-slate-200 transition hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+                              isFocused && "bg-slate-800 text-white"
+                            )}
+                            onClick={() => revealNode(child.id)}
+                            aria-current={isFocused ? "true" : undefined}
+                          >
+                            {canExplore ? <ChevronRight size={13} className="shrink-0 text-slate-400" /> : <span className="w-[13px] shrink-0" aria-hidden="true" />}
+                            {child.kind === "dir" ? (
+                              <Folder size={14} className="shrink-0 text-cyan-300" />
+                            ) : (
+                              <File size={13} className="shrink-0 text-slate-300" />
+                            )}
+                            <span className="min-w-0 flex-1 truncate" title={child.path}>
+                              {child.name}
+                            </span>
+                            {canExplore ? (
+                              <span className="rounded-full border border-slate-700/80 px-2 py-0.5 text-[10px] text-slate-400">
+                                {childChildren.length}
+                              </span>
+                            ) : (
+                              <ChevronDown size={13} className="shrink-0 rotate-[-90deg] text-slate-600" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+                    This folder is empty.
+                  </div>
+                )
+              ) : (
+                <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+                  This file is a leaf node. Use the path chips above to jump back to a parent folder.
+                </div>
+              )}
             </div>
           ) : (
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
-              No focused branch available.
+              No focused node available.
             </div>
           )}
         </div>

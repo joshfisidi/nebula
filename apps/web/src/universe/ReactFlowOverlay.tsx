@@ -277,6 +277,27 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }
     };
 
+    const addSummaryNode = (parentId: string, parentDepth: number, hiddenCount: number) => {
+      if (hiddenCount <= 0 || visible.size >= maxVisible) return;
+
+      const summaryId = `summary:${parentId}`;
+      visible.add(summaryId);
+      summaryNodes.push({
+        id: summaryId,
+        name: `+${hiddenCount} hidden`,
+        kind: "summary",
+        parentId,
+        depth: parentDepth + 1,
+        expanded: false,
+        expandable: false,
+        childCount: hiddenCount,
+        salience: 0.8,
+        z: 0,
+        position: { x: 0, y: 0 }
+      });
+      summaryEdges.push({ id: `edge:${parentId}:${summaryId}`, from: parentId, to: summaryId, depth: parentDepth });
+    };
+
     if (layoutMode === "overview") {
       for (const root of roots) {
         visible.add(root.id);
@@ -291,67 +312,79 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       queued.add(primaryRootId);
     }
 
-    includeAncestors(focus);
+    if (search) {
+      includeAncestors(focus);
 
-    for (const matchedId of matchedIds) {
-      includeAncestors(matchedId);
+      for (const matchedId of matchedIds) {
+        includeAncestors(matchedId);
+      }
     }
 
-    while (queue.length > 0 && visible.size < maxVisible) {
-      const id = queue.shift()!;
-      const node = byId.get(id);
-      if (!node || node.kind !== "dir") continue;
+    const drillDownMode = layoutMode !== "overview" && !search;
 
-      const allChildren = children.get(id) ?? [];
-      const branchFocused = focusTrail.has(id);
-      const branchMatched = matchedBranchIds.has(id);
-      const showFiles = branchMatched || state.expandedNodeIds.has(id) || id === focus;
+    if (drillDownMode) {
+      const currentId = focus ?? primaryRootId;
+      const currentNode = currentId ? byId.get(currentId) : null;
 
-      const ranked = allChildren
-        .filter((child) => child.kind === "dir" || showFiles || matchedIds.has(child.id) || child.id === focus)
-        .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+      if (currentNode) {
+        visible.add(currentNode.id);
 
-      const budget = id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
-      const kept = ranked.slice(0, budget);
-      const hiddenCount = Math.max(0, allChildren.length - kept.length);
+        if (currentNode.kind === "dir") {
+          const allChildren = children.get(currentNode.id) ?? [];
+          const ranked = allChildren
+            .slice()
+            .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+          const budget = currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
+          const kept = ranked.slice(0, budget);
 
-      for (const child of kept) {
-        if (visible.size >= maxVisible) break;
-        visible.add(child.id);
+          for (const child of kept) {
+            if (visible.size >= maxVisible) break;
+            visible.add(child.id);
+          }
 
-        const shouldExploreChild =
-          child.kind === "dir" &&
-          (state.expandedNodeIds.has(child.id) ||
-            focusTrail.has(child.id) ||
-            branchFocused ||
-            branchMatched ||
-            matchedBranchIds.has(child.id) ||
-            id === primaryRootId ||
-            layoutMode === "overview");
-
-        if (shouldExploreChild && !queued.has(child.id)) {
-          queue.push(child.id);
-          queued.add(child.id);
+          addSummaryNode(currentNode.id, currentNode.depth ?? 0, Math.max(0, allChildren.length - kept.length));
         }
       }
+    } else {
+      while (queue.length > 0 && visible.size < maxVisible) {
+        const id = queue.shift()!;
+        const node = byId.get(id);
+        if (!node || node.kind !== "dir") continue;
 
-      if (hiddenCount > 0 && visible.size < maxVisible) {
-        const summaryId = `summary:${id}`;
-        visible.add(summaryId);
-        summaryNodes.push({
-          id: summaryId,
-          name: `+${hiddenCount} hidden`,
-          kind: "summary",
-          parentId: id,
-          depth: (node.depth ?? 0) + 1,
-          expanded: false,
-          expandable: false,
-          childCount: hiddenCount,
-          salience: 0.8,
-          z: 0,
-          position: { x: 0, y: 0 }
-        });
-        summaryEdges.push({ id: `edge:${id}:${summaryId}`, from: id, to: summaryId, depth: node.depth ?? 0 });
+        const allChildren = children.get(id) ?? [];
+        const branchFocused = focusTrail.has(id);
+        const branchMatched = matchedBranchIds.has(id);
+        const showFiles = branchMatched || state.expandedNodeIds.has(id) || id === focus;
+
+        const ranked = allChildren
+          .filter((child) => child.kind === "dir" || showFiles || matchedIds.has(child.id) || child.id === focus)
+          .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+
+        const budget = id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
+        const kept = ranked.slice(0, budget);
+        const hiddenCount = Math.max(0, allChildren.length - kept.length);
+
+        for (const child of kept) {
+          if (visible.size >= maxVisible) break;
+          visible.add(child.id);
+
+          const shouldExploreChild =
+            child.kind === "dir" &&
+            (state.expandedNodeIds.has(child.id) ||
+              focusTrail.has(child.id) ||
+              branchFocused ||
+              branchMatched ||
+              matchedBranchIds.has(child.id) ||
+              id === primaryRootId ||
+              layoutMode === "overview");
+
+          if (shouldExploreChild && !queued.has(child.id)) {
+            queue.push(child.id);
+            queued.add(child.id);
+          }
+        }
+
+        addSummaryNode(id, node.depth ?? 0, hiddenCount);
       }
     }
 
@@ -530,13 +563,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       if (!runtime) return;
 
       revealNode(node.id);
-      if (runtime.kind === "dir" && focusId === node.id) {
-        toggleExpandedNode(node.id);
-      }
-
       focusNode(node.id, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
     },
-    [focusId, focusNode, isMobile, revealNode, toggleExpandedNode]
+    [focusNode, isMobile, revealNode, toggleExpandedNode]
   );
 
   const viewportIntentKey = `${selectedProjectsKey}|${focusId ?? ""}|${layoutMode}|${searchQuery.trim()}|${enabled ? 1 : 0}`;
