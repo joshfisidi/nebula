@@ -186,6 +186,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
   const focusUnlockTimerRef = useRef<number | null>(null);
+  const viewportCommandTimerRef = useRef<number | null>(null);
+  const userNavigatedViewportRef = useRef(false);
+  const viewportIntentKeyRef = useRef<string | null>(null);
+  const viewportCommandActiveRef = useRef(false);
 
   useEffect(() => {
     const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -473,6 +477,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }
 
       if (rf) {
+        viewportCommandActiveRef.current = true;
         rf.fitView({
           nodes: [{ id: nodeId }],
           duration: options?.duration ?? 240,
@@ -480,6 +485,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
           includeHiddenNodes: false,
           maxZoom: options?.maxZoom ?? (isMobile ? 0.9 : 1.1)
         });
+
+        if (viewportCommandTimerRef.current) {
+          window.clearTimeout(viewportCommandTimerRef.current);
+        }
+
+        viewportCommandTimerRef.current = window.setTimeout(() => {
+          viewportCommandActiveRef.current = false;
+        }, (options?.duration ?? 240) + 120);
       }
 
       focusUnlockTimerRef.current = window.setTimeout(() => {
@@ -526,11 +539,23 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     [focusId, focusNode, isMobile, revealNode, toggleExpandedNode]
   );
 
+  const viewportIntentKey = `${selectedProjectsKey}|${focusId ?? ""}|${layoutMode}|${searchQuery.trim()}|${enabled ? 1 : 0}`;
+
   useEffect(() => {
     if (!rf || !enabled || graphSnapshot.nodes.length === 0) return;
     if (focusLockRef.current) return;
 
+    const previousIntentKey = viewportIntentKeyRef.current;
+    const intentChanged = previousIntentKey !== viewportIntentKey;
+    viewportIntentKeyRef.current = viewportIntentKey;
+
+    if (!intentChanged && userNavigatedViewportRef.current) {
+      return;
+    }
+
     const frame = requestAnimationFrame(() => {
+      viewportCommandActiveRef.current = true;
+
       const focused = focusNodeRef.current;
       if (focused && laidOut.nodes.some((node) => node.id === focused)) {
         rf.fitView({
@@ -540,22 +565,32 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
           includeHiddenNodes: false,
           maxZoom: isMobile ? 0.9 : 1.1
         });
-        return;
+      } else {
+        rf.fitView({
+          duration: 240,
+          padding: isMobile ? 0.34 : 0.2,
+          includeHiddenNodes: false,
+          minZoom: 0.22,
+          maxZoom: isMobile ? 0.9 : 1.15
+        });
       }
 
-      rf.fitView({
-        duration: 240,
-        padding: isMobile ? 0.34 : 0.2,
-        includeHiddenNodes: false,
-        minZoom: 0.22,
-        maxZoom: isMobile ? 0.9 : 1.15
-      });
+      if (viewportCommandTimerRef.current) {
+        window.clearTimeout(viewportCommandTimerRef.current);
+      }
+
+      viewportCommandTimerRef.current = window.setTimeout(() => {
+        viewportCommandActiveRef.current = false;
+      }, 360);
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [enabled, graphSnapshot.nodes.length, isMobile, laidOut.nodes, layoutEngine, rf, searchQuery, selectedProjectsKey]);
+  }, [enabled, graphSnapshot.nodes.length, isMobile, laidOut.nodes, layoutEngine, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
+    if (!viewportCommandActiveRef.current) {
+      userNavigatedViewportRef.current = true;
+    }
     setZoom(view.zoom);
   }, []);
 
@@ -563,6 +598,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     return () => {
       if (focusUnlockTimerRef.current) {
         window.clearTimeout(focusUnlockTimerRef.current);
+      }
+      if (viewportCommandTimerRef.current) {
+        window.clearTimeout(viewportCommandTimerRef.current);
       }
     };
   }, []);
@@ -597,7 +635,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         elementsSelectable
         selectionOnDrag={false}
         selectNodesOnDrag={false}
-        panOnDrag={interactionMode === "pan"}
+        panOnDrag={interactionMode !== "edit"}
         nodesFocusable
         edgesFocusable={false}
         zoomOnScroll
