@@ -15,6 +15,7 @@
     "typecheck": "npm run -ws typecheck",
     "nebula:audit:snapshot": "bash scripts/automation/nebula-audit-snapshot.sh",
     "nebula:hourly": "npm run -w nebula-maintainer run",
+    "nebula:north-star:gate": "bash scripts/automation/nebula-north-star-gate.sh",
     "nebula:cron:run": "node scripts/automation/nebula-cron-run.cjs",
     "nebula:cron:health": "node scripts/automation/nebula-health-check.cjs",
     "nebula:github:sync": "node scripts/automation/nebula-github-sync.cjs"

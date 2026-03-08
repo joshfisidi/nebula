@@ -99,6 +99,11 @@ if (auditOk) {
 
 const upgradeOk = steps.find((s) => s.name === 'hourly_upgrade')?.ok === true;
 if (upgradeOk) {
+  steps.push(runStep('north_star_gate', 'npm', ['run', 'nebula:north-star:gate']));
+}
+
+const gateOk = steps.find((s) => s.name === 'north_star_gate')?.ok === true;
+if (gateOk) {
   // Keep pushes on main by default for this repo.
   steps.push(
     runStep('github_sync', 'npm', ['run', 'nebula:github:sync'], {
