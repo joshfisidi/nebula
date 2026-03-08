@@ -10,6 +10,8 @@ export interface NodePhysicsMeta {
   salience: number;
   subtreeMass: number;
   depth: number;
+  collisionRadius: number;
+  anchorRadius: number;
 }
 
 export interface Vec3 {

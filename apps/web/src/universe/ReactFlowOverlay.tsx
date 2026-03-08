@@ -185,7 +185,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [viewport, setViewport] = useState({ width: 1280, height: 720 });
   const [zoom, setZoom] = useState(0.9);
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
-  const [layoutEngine, setLocalLayoutEngine] = useState<LayoutEngine>("radial");
+  const [layoutEngine, setLocalLayoutEngine] = useState<LayoutEngine>("living-lite");
   const [laidOut, setLaidOut] = useState<{ nodes: Node<FlowNodeData>[]; edges: Edge[] }>({ nodes: [], edges: [] });
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
@@ -459,7 +459,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       edges: flowEdges,
       focus,
       primaryRootId: primaryRootId ?? null,
-      rootCount: roots.length
+      rootCount: roots.length,
+      layoutKey: `${[...visibleEdgeIds].sort().join("|")}::${flowEdges.map((edge) => edge.id).sort().join("|")}`
     };
   }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, layoutMode, searchQuery, showHiddenNodes, zoom]);
 
@@ -486,6 +487,11 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     setLayoutEngine(engine);
 
     const run = async () => {
+      if (engine === "living-lite") {
+        if (!cancelled) setLaidOut({ nodes: [], edges: [] });
+        return;
+      }
+
       if (engine === "radial") {
         const out = layoutWithRadial(graphSnapshot.nodes, graphSnapshot.edges, graphSnapshot.primaryRootId ?? undefined);
         if (!cancelled) setLaidOut(out);
@@ -506,7 +512,10 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     return () => {
       cancelled = true;
     };
-  }, [graphSnapshot.edges, graphSnapshot.nodes, graphSnapshot.primaryRootId, graphSnapshot.rootCount, isMobile, layoutMode, setLayoutEngine, zoom]);
+  }, [graphSnapshot.layoutKey, graphSnapshot.primaryRootId, graphSnapshot.rootCount, isMobile, layoutMode, setLayoutEngine, zoom]);
+
+  const renderedNodes = layoutEngine === "living-lite" ? graphSnapshot.nodes : laidOut.nodes.length ? laidOut.nodes : graphSnapshot.nodes;
+  const renderedEdges = layoutEngine === "living-lite" ? graphSnapshot.edges : laidOut.edges.length ? laidOut.edges : graphSnapshot.edges;
 
   const focusNode = useCallback(
     (nodeId: string, options?: { duration?: number; padding?: number; maxZoom?: number }) => {
@@ -587,7 +596,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const viewportIntentKey = `${selectedProjectsKey}|${focusId ?? ""}|${layoutMode}|${searchQuery.trim()}|${enabled ? 1 : 0}`;
 
   useEffect(() => {
-    if (!rf || !enabled || graphSnapshot.nodes.length === 0) return;
+    if (!rf || !enabled || renderedNodes.length === 0) return;
     if (focusLockRef.current) return;
 
     const previousIntentKey = viewportIntentKeyRef.current;
@@ -602,7 +611,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       viewportCommandActiveRef.current = true;
 
       const focused = focusNodeRef.current;
-      if (focused && laidOut.nodes.some((node) => node.id === focused)) {
+      if (focused && renderedNodes.some((node) => node.id === focused)) {
         rf.fitView({
           nodes: [{ id: focused }],
           duration: 180,
@@ -630,7 +639,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [enabled, graphSnapshot.nodes.length, isMobile, laidOut.nodes, layoutEngine, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
+  }, [enabled, graphSnapshot.layoutKey, renderedNodes.length, isMobile, layoutEngine, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
     if (!viewportCommandActiveRef.current) {
@@ -668,8 +677,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       </div>
 
       <ReactFlow
-        nodes={laidOut.nodes.length ? laidOut.nodes : graphSnapshot.nodes}
-        edges={laidOut.edges.length ? laidOut.edges : graphSnapshot.edges}
+        nodes={renderedNodes}
+        edges={renderedEdges}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         onInit={setRf}

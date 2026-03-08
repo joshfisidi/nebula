@@ -2,11 +2,13 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import {
   applyCentralGravity,
+  constrainToAnchors,
   applyHierarchyGravity,
   applySemanticSpringConstraints,
   applyChargeRepulsion,
   applyOrnsteinUhlenbeckDrift,
   integrateVerlet,
+  solveCollisionConstraints,
   type IntegratorConfig,
   type NodePhysicsMeta,
   type SpringConstraint
@@ -249,12 +251,14 @@ export class UniverseGraph {
     const subtreeMass = new Float32Array(ids.length);
     const depths = new Float32Array(ids.length);
     const ouVelocity = new Float32Array(ids.length * 3);
+    const collisionRadii = new Float32Array(ids.length);
+    const anchorRadii = new Float32Array(ids.length);
 
     for (let i = 0; i < ids.length; i += 1) {
       const id = ids[i];
       const node = this.nodes.get(id)!;
       const anchor = this.anchors.get(id) ?? { x: 0, y: 0, z: 0 };
-      const runtime = this.runtime.get(id)!;
+      const runtime = this.ensureRuntimeState(node, anchor);
       const position = node.pos ?? anchor;
       const physics = node.physics ?? buildNodePhysicsMeta(node, 1, Date.now());
       const o = i * 3;
@@ -277,6 +281,8 @@ export class UniverseGraph {
       salience[i] = physics.salience;
       subtreeMass[i] = physics.subtreeMass;
       depths[i] = physics.depth;
+      collisionRadii[i] = physics.collisionRadius;
+      anchorRadii[i] = physics.anchorRadius;
 
       ouVelocity[o] = runtime.drift.x;
       ouVelocity[o + 1] = runtime.drift.y;
@@ -309,7 +315,9 @@ export class UniverseGraph {
       salience,
       subtreeMass,
       depths,
-      ouVelocity
+      ouVelocity,
+      collisionRadii,
+      anchorRadii
     };
 
     applySemanticSpringConstraints(ctx);
@@ -318,6 +326,8 @@ export class UniverseGraph {
     applyHierarchyGravity(ctx);
     applyOrnsteinUhlenbeckDrift(ctx, time);
     integrateVerlet(ctx);
+    constrainToAnchors(ctx);
+    solveCollisionConstraints(ctx);
 
     const ops: PatchOp[] = [];
     for (let i = 0; i < ids.length; i += 1) {
@@ -363,19 +373,21 @@ export class UniverseGraph {
     this.children.set(parentId, set);
   }
 
-  private ensureRuntimeState(node: GraphNode, anchor: Vec3): void {
+  private ensureRuntimeState(node: GraphNode, anchor: Vec3): RuntimeState {
     const existing = this.runtime.get(node.id);
     if (existing) {
       if (!node.pos) node.pos = jitteredAnchor(anchor, node.id, node.depth);
-      return;
+      return existing;
     }
 
     const initial = node.pos ?? jitteredAnchor(anchor, node.id, node.depth);
     node.pos = initial;
-    this.runtime.set(node.id, {
+    const runtimeState = {
       previous: { ...initial },
       drift: { x: 0, y: 0, z: 0 }
-    });
+    };
+    this.runtime.set(node.id, runtimeState);
+    return runtimeState;
   }
 }
 
@@ -408,6 +420,9 @@ function buildNodePhysicsMeta(node: GraphNode, subtreeMass: number, nowMs: numbe
   const restLengthScale = clamp((node.kind === "dir" ? 1.14 : 0.92) + node.depth * 0.03, 0.85, 1.8);
   const stiffnessScale = clamp((node.kind === "dir" ? 1.12 : 0.88) + recency * 0.14, 0.7, 1.5);
   const volatility = clamp((node.kind === "file" ? 0.5 : 0.26) + recency * 0.22, 0.16, 1.05);
+  const labelWidth = clamp(node.name.length * 0.052, 0.42, 1.7);
+  const collisionRadius = clamp((node.kind === "dir" ? 1.4 : 1.08) + labelWidth + subtreeMass * 0.02, 1.24, 4.6);
+  const anchorRadius = clamp((node.kind === "dir" ? 0.92 : 0.62) + recency * 0.12 - node.depth * 0.018, 0.34, 1.08);
 
   return {
     mass,
@@ -417,7 +432,9 @@ function buildNodePhysicsMeta(node: GraphNode, subtreeMass: number, nowMs: numbe
     volatility,
     salience,
     subtreeMass,
-    depth: node.depth
+    depth: node.depth,
+    collisionRadius,
+    anchorRadius
   };
 }
 
@@ -431,7 +448,9 @@ function samePhysics(a: NodePhysicsMeta | undefined, b: NodePhysicsMeta): boolea
     almostEqual(a.volatility, b.volatility) &&
     almostEqual(a.salience, b.salience) &&
     almostEqual(a.subtreeMass, b.subtreeMass) &&
-    almostEqual(a.depth, b.depth)
+    almostEqual(a.depth, b.depth) &&
+    almostEqual(a.collisionRadius, b.collisionRadius) &&
+    almostEqual(a.anchorRadius, b.anchorRadius)
   );
 }
 
@@ -440,7 +459,7 @@ function almostEqual(a: number, b: number, epsilon = 0.0001): boolean {
 }
 
 function jitteredAnchor(anchor: Vec3, seed: string, depth: number): Vec3 {
-  const wobble = 0.35 + depth * 0.08;
+  const wobble = 0.2 + depth * 0.035;
   return {
     x: anchor.x + seeded(seed, 1) * wobble,
     y: anchor.y + seeded(seed, 2) * wobble,
@@ -466,7 +485,9 @@ function defaultPhysics(depth: number): NodePhysicsMeta {
     volatility: 0.25,
     salience: 1,
     subtreeMass: 1,
-    depth
+    depth,
+    collisionRadius: 1.2,
+    anchorRadius: 0.5
   };
 }
 

@@ -2,7 +2,7 @@ import dagre from "dagre";
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { Edge, Node } from "reactflow";
 
-export type LayoutEngine = "radial" | "dagre" | "elk";
+export type LayoutEngine = "living-lite" | "radial" | "dagre" | "elk";
 export type LayoutMode = "focus" | "overview";
 
 const elk = new ELK();
@@ -14,6 +14,10 @@ export function chooseLayout(ctx: {
   hasCrossLinks: boolean;
   rootCount: number;
 }): LayoutEngine {
+  if (ctx.mode === "focus" && ctx.rootCount === 1 && !ctx.hasCrossLinks && ctx.visibleCount <= 240) {
+    return "living-lite";
+  }
+
   if (ctx.mode === "focus" && ctx.rootCount === 1 && !ctx.hasCrossLinks && ctx.visibleCount <= 260) {
     return "radial";
   }

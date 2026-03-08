@@ -149,7 +149,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   interactionMode: "browse",
   drawerOpen: false,
   layoutMode: "focus",
-  layoutEngine: "radial",
+  layoutEngine: "living-lite",
   version: 0,
 
   setConnected(connected) {

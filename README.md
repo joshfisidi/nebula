@@ -16,7 +16,7 @@ pnpm install
 pnpm dev
 ```
 
-This starts both apps with hot reload:
+This starts both apps with hot reload through a single supervisor script (`scripts/dev/stack.cjs`):
 - Universe WebSocket server on `:18891`
 - Next.js web app on `:3000` (bound to `0.0.0.0`)
 - Default watch root: current `nebula/` repository
@@ -39,6 +39,7 @@ pnpm dev:stop    # stop
 ```
 
 Logs are written to `.nebula-dev.log` in repo root.
+Detached process state is tracked in `.openclaw/state/nebula/dev-stack.json`, and `pnpm dev:status` reports server and web health separately.
 
 ## WebSocket URL (remote access)
 Web app auto-connects to:

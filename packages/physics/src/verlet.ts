@@ -14,6 +14,8 @@ export interface NodePhysicsMeta {
   salience: number;
   subtreeMass: number;
   depth: number;
+  collisionRadius: number;
+  anchorRadius: number;
 }
 
 export interface IntegratorConfig {
@@ -44,6 +46,8 @@ export interface IntegratorContext {
   subtreeMass?: Float32Array;
   depths?: Float32Array;
   ouVelocity?: Float32Array;
+  collisionRadii?: Float32Array;
+  anchorRadii?: Float32Array;
 }
 
 const EPSILON = 0.000001;
@@ -68,6 +72,23 @@ function applyForce(ctx: IntegratorContext, index: number, fx: number, fy: numbe
   ctx.accelerations[o] += fx / mass;
   ctx.accelerations[o + 1] += fy / mass;
   ctx.accelerations[o + 2] += fz / mass;
+}
+
+function translateBody(
+  positions: Float32Array,
+  previousPositions: Float32Array,
+  index: number,
+  tx: number,
+  ty: number,
+  tz: number
+): void {
+  const o = vecOffset(index);
+  positions[o] += tx;
+  positions[o + 1] += ty;
+  positions[o + 2] += tz;
+  previousPositions[o] += tx;
+  previousPositions[o + 1] += ty;
+  previousPositions[o + 2] += tz;
 }
 
 export function applySemanticSpringConstraints(ctx: IntegratorContext): void {
@@ -124,6 +145,57 @@ export function applyChargeRepulsion(ctx: IntegratorContext): void {
 
       applyForce(ctx, i, -nx * force, -ny * force, -nz * force);
       applyForce(ctx, j, nx * force, ny * force, nz * force);
+    }
+  }
+}
+
+export function solveCollisionConstraints(ctx: IntegratorContext, iterations = 2): void {
+  const { nodeCount, positions, previousPositions } = ctx;
+
+  for (let iter = 0; iter < iterations; iter += 1) {
+    for (let i = 0; i < nodeCount; i += 1) {
+      const a = vecOffset(i);
+      const radiusA = scalarAt(ctx.collisionRadii, i, 0);
+      if (radiusA <= 0) continue;
+
+      for (let j = i + 1; j < nodeCount; j += 1) {
+        const b = vecOffset(j);
+        const radiusB = scalarAt(ctx.collisionRadii, j, 0);
+        if (radiusB <= 0) continue;
+
+        let dx = positions[b] - positions[a];
+        let dy = positions[b + 1] - positions[a + 1];
+        let dz = positions[b + 2] - positions[a + 2];
+        let distSq = dx * dx + dy * dy + dz * dz;
+
+        if (distSq < EPSILON) {
+          dx = hashNoise(i * 131 + j * 17 + iter + 1) * 2 - 1;
+          dy = hashNoise(i * 151 + j * 19 + iter + 2) * 2 - 1;
+          dz = hashNoise(i * 173 + j * 23 + iter + 3) * 2 - 1;
+          distSq = dx * dx + dy * dy + dz * dz + EPSILON;
+        }
+
+        const minDist = radiusA + radiusB;
+        if (distSq >= minDist * minDist) continue;
+
+        const dist = Math.sqrt(Math.max(EPSILON, distSq));
+        const overlap = minDist - dist;
+        if (overlap <= 0) continue;
+
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const nz = dz / dist;
+        const invMassA = 1 / Math.max(EPSILON, scalarAt(ctx.masses, i, 1));
+        const invMassB = 1 / Math.max(EPSILON, scalarAt(ctx.masses, j, 1));
+        const invMassTotal = invMassA + invMassB;
+        if (invMassTotal <= EPSILON) continue;
+
+        const pushA = overlap * (invMassA / invMassTotal);
+        const pushB = overlap * (invMassB / invMassTotal);
+
+        translateBody(positions, previousPositions, i, -nx * pushA, -ny * pushA, -nz * pushA);
+        translateBody(positions, previousPositions, j, nx * pushB, ny * pushB, nz * pushB);
+      }
     }
   }
 }
@@ -248,6 +320,34 @@ export function integrateVerlet(ctx: IntegratorContext): void {
   }
 }
 
+export function constrainToAnchors(ctx: IntegratorContext): void {
+  const { nodeCount, positions, previousPositions, centers } = ctx;
+
+  for (let i = 0; i < nodeCount; i += 1) {
+    const maxOffset = scalarAt(ctx.anchorRadii, i, 0);
+    if (maxOffset <= 0) continue;
+
+    const o = vecOffset(i);
+    const dx = positions[o] - centers[o];
+    const dy = positions[o + 1] - centers[o + 1];
+    const dz = positions[o + 2] - centers[o + 2];
+    const distSq = dx * dx + dy * dy + dz * dz;
+
+    if (distSq <= maxOffset * maxOffset) continue;
+
+    const dist = Math.sqrt(Math.max(EPSILON, distSq));
+    const scale = maxOffset / dist;
+    const nextX = centers[o] + dx * scale;
+    const nextY = centers[o + 1] + dy * scale;
+    const nextZ = centers[o + 2] + dz * scale;
+    const tx = nextX - positions[o];
+    const ty = nextY - positions[o + 1];
+    const tz = nextZ - positions[o + 2];
+
+    translateBody(positions, previousPositions, i, tx, ty, tz);
+  }
+}
+
 export function stepHybridGraphField(ctx: IntegratorContext, time: number): void {
   applySemanticSpringConstraints(ctx);
   applyChargeRepulsion(ctx);
@@ -255,4 +355,6 @@ export function stepHybridGraphField(ctx: IntegratorContext, time: number): void
   applyHierarchyGravity(ctx);
   applyOrnsteinUhlenbeckDrift(ctx, time);
   integrateVerlet(ctx);
+  constrainToAnchors(ctx);
+  solveCollisionConstraints(ctx);
 }

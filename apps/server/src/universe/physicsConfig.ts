@@ -9,14 +9,14 @@ function envNumber(name: string, fallback: number): number {
 
 export function resolveUniversePhysicsConfig(): IntegratorConfig {
   return {
-    damping: envNumber("NEBULA_PHYSICS_DAMPING", 0.84),
-    noise: envNumber("NEBULA_PHYSICS_NOISE", 0.48),
-    gravity: envNumber("NEBULA_PHYSICS_GRAVITY", 0.024),
+    damping: envNumber("NEBULA_PHYSICS_DAMPING", 0.88),
+    noise: envNumber("NEBULA_PHYSICS_NOISE", 0.16),
+    gravity: envNumber("NEBULA_PHYSICS_GRAVITY", 0.042),
     repulsion: envNumber("NEBULA_PHYSICS_REPULSION", 8.5),
-    hierarchyGravity: envNumber("NEBULA_PHYSICS_HIERARCHY_GRAVITY", 0.036),
-    rootGravity: envNumber("NEBULA_PHYSICS_ROOT_GRAVITY", 0.03),
-    ouTheta: envNumber("NEBULA_PHYSICS_OU_THETA", 1.8),
-    ouSigma: envNumber("NEBULA_PHYSICS_OU_SIGMA", 0.72),
-    maxSpeed: envNumber("NEBULA_PHYSICS_MAX_SPEED", 2.8)
+    hierarchyGravity: envNumber("NEBULA_PHYSICS_HIERARCHY_GRAVITY", 0.052),
+    rootGravity: envNumber("NEBULA_PHYSICS_ROOT_GRAVITY", 0.042),
+    ouTheta: envNumber("NEBULA_PHYSICS_OU_THETA", 2.25),
+    ouSigma: envNumber("NEBULA_PHYSICS_OU_SIGMA", 0.24),
+    maxSpeed: envNumber("NEBULA_PHYSICS_MAX_SPEED", 1.2)
   };
 }
