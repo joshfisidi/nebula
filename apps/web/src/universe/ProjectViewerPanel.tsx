@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Folder, File, Search } from "lucide-react";
-import { useUniverseGraphStore } from "./graphStore";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronRight, File, Folder, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { cn } from "@/lib/utils";
+import { useUniverseGraphStore } from "./graphStore";
 
 type TreeNode = {
   id: string;
@@ -21,16 +20,19 @@ type TreeNode = {
 
 export function ProjectViewerPanel() {
   const nodes = useUniverseGraphStore((s) => s.nodeArray);
-  const edges = useUniverseGraphStore((s) => s.edgeArray);
-  const connected = useUniverseGraphStore((s) => s.connected);
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
+  const expandedNodeIds = useUniverseGraphStore((s) => s.expandedNodeIds);
+  const focusId = useUniverseGraphStore((s) => s.focusId);
+  const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
+  const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setProjectSelection = useUniverseGraphStore((s) => s.setProjectSelection);
   const selectAllProjects = useUniverseGraphStore((s) => s.selectAllProjects);
   const clearProjectSelection = useUniverseGraphStore((s) => s.clearProjectSelection);
-  const [query, setQuery] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
+  const revealNode = useUniverseGraphStore((s) => s.revealNode);
+  const setSearchQuery = useUniverseGraphStore((s) => s.setSearchQuery);
+  const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
   const [viewportWidth, setViewportWidth] = useState(1280);
-  const [mobileOpen, setMobileOpen] = useState(true);
 
   useEffect(() => {
     const update = () => setViewportWidth(window.innerWidth);
@@ -41,26 +43,29 @@ export function ProjectViewerPanel() {
 
   const isMobile = viewportWidth < 900;
 
+  const byId = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
+
   const byParent = useMemo(() => {
     const map = new Map<string, TreeNode[]>();
-    for (const n of nodes) {
-      const node: TreeNode = {
-        id: n.id,
-        name: n.name,
-        kind: n.kind,
-        parentId: n.parentId,
-        depth: n.depth,
-        path: n.path,
-        projectId: n.projectId
+    for (const node of nodes) {
+      const entry: TreeNode = {
+        id: node.id,
+        name: node.name,
+        kind: node.kind,
+        parentId: node.parentId,
+        depth: node.depth,
+        path: node.path,
+        projectId: node.projectId
       };
-      const key = n.parentId ?? "__root__";
-      const arr = map.get(key) ?? [];
-      arr.push(node);
-      map.set(key, arr);
+
+      const key = node.parentId ?? "__root__";
+      const siblings = map.get(key) ?? [];
+      siblings.push(entry);
+      map.set(key, siblings);
     }
 
-    for (const arr of map.values()) {
-      arr.sort((a, b) => {
+    for (const siblings of map.values()) {
+      siblings.sort((a, b) => {
         if (a.kind !== b.kind) return a.kind === "dir" ? -1 : 1;
         return a.name.localeCompare(b.name);
       });
@@ -79,112 +84,173 @@ export function ProjectViewerPanel() {
     [rootNodes]
   );
 
-  const visibleRoots = useMemo(
-    () => rootNodes.filter((node) => selectedProjectIds.has(node.projectId)),
-    [rootNodes, selectedProjectIds]
-  );
-
   const selectedProjectValue = useMemo(() => {
     if (selectedProjectIds.size !== 1) return "";
     return [...selectedProjectIds][0] ?? "";
   }, [selectedProjectIds]);
 
-  const visibleSet = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return null;
+  const selectedRoots = useMemo(
+    () => rootNodes.filter((node) => selectedProjectIds.has(node.projectId)),
+    [rootNodes, selectedProjectIds]
+  );
 
-    const byId = new Map(nodes.map((n) => [n.id, n]));
-    const matched = new Set<string>();
+  const focusedNode = useMemo(() => {
+    if (focusId && byId.has(focusId)) return byId.get(focusId) ?? null;
+    if (selectedRoots.length === 1) return selectedRoots[0];
+    return selectedRoots[0] ?? null;
+  }, [byId, focusId, selectedRoots]);
 
-    for (const n of nodes) {
-      if (`${n.name} ${n.path}`.toLowerCase().includes(q)) {
-        matched.add(n.id);
-        let p = n.parentId;
-        while (p) {
-          matched.add(p);
-          p = byId.get(p)?.parentId;
-        }
-      }
+  const branchRoot = useMemo(() => {
+    if (!focusedNode) return null;
+    if (focusedNode.kind === "file" && focusedNode.parentId) {
+      return byId.get(focusedNode.parentId) ?? focusedNode;
     }
+    return focusedNode;
+  }, [byId, focusedNode]);
 
-    return matched;
-  }, [nodes, query]);
+  const breadcrumbs = useMemo(() => {
+    if (!focusedNode) return [];
+    const trail: TreeNode[] = [];
+    let cursor: TreeNode | undefined | null = focusedNode;
+    while (cursor) {
+      trail.unshift(cursor);
+      cursor = cursor.parentId ? byId.get(cursor.parentId) ?? null : null;
+    }
+    return trail;
+  }, [byId, focusedNode]);
 
-  const renderNode = (node: TreeNode) => {
-    if (visibleSet && !visibleSet.has(node.id)) return null;
+  const focusTrail = useMemo(() => {
+    const trail = new Set<string>();
+    let cursor: string | null = focusId;
+    while (cursor) {
+      trail.add(cursor);
+      cursor = byId.get(cursor)?.parentId ?? null;
+    }
+    return trail;
+  }, [byId, focusId]);
 
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    return nodes
+      .filter((node) => selectedProjectIds.size > 0 && selectedProjectIds.has(node.projectId))
+      .filter((node) => `${node.name} ${node.path}`.toLowerCase().includes(query))
+      .sort((a, b) => {
+        if (a.kind !== b.kind) return a.kind === "dir" ? -1 : 1;
+        return a.path.localeCompare(b.path);
+      })
+      .slice(0, 40);
+  }, [nodes, searchQuery, selectedProjectIds]);
+
+  const allSelected = projects.length > 0 && selectedProjectIds.size === projects.length;
+  const noneSelected = selectedProjectIds.size === 0;
+
+  const renderBranchNode = (node: TreeNode, depth: number) => {
     const children = byParent.get(node.id) ?? [];
-    const isCollapsed = collapsed.has(node.id);
-    const canCollapse = node.kind === "dir" && children.length > 0;
+    const canExpand = node.kind === "dir" && children.length > 0;
+    const expanded = branchRoot?.id === node.id || expandedNodeIds.has(node.id) || focusTrail.has(node.id);
+    const isFocused = focusId === node.id;
 
     return (
       <div key={node.id}>
-        <div className="flex items-center gap-1 py-0.5 text-xs" style={{ paddingLeft: node.depth * 10 }}>
-          {canCollapse ? (
+        <div className="flex items-center gap-1 py-1" style={{ paddingLeft: depth * 14 }}>
+          {canExpand ? (
             <button
-              className="rounded p-0.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              onClick={() => {
-                setCollapsed((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(node.id)) next.delete(node.id);
-                  else next.add(node.id);
-                  return next;
-                });
-              }}
+              type="button"
+              className="rounded p-1 text-slate-400 transition hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              onClick={() => toggleExpandedNode(node.id)}
+              aria-label={expanded ? `Collapse ${node.name}` : `Expand ${node.name}`}
             >
-              {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
             </button>
           ) : (
-            <span className="w-4" />
+            <span className="w-6" aria-hidden="true" />
           )}
 
-          {node.kind === "dir" ? <Folder size={13} className="text-cyan-300" /> : <File size={12} className="text-slate-300" />}
-          <span className="truncate text-slate-200" title={node.path}>{node.name}</span>
+          <button
+            type="button"
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-slate-200 transition hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+              isFocused && "bg-slate-800 text-white"
+            )}
+            onClick={() => revealNode(node.id)}
+            aria-current={isFocused ? "true" : undefined}
+          >
+            {node.kind === "dir" ? <Folder size={14} className="shrink-0 text-cyan-300" /> : <File size={13} className="shrink-0 text-slate-300" />}
+            <span className="truncate" title={node.path}>
+              {node.name}
+            </span>
+          </button>
+
+          {canExpand ? (
+            <span className="rounded-full border border-slate-700/80 px-2 py-0.5 text-[10px] text-slate-400">
+              {children.length}
+            </span>
+          ) : null}
         </div>
 
-        {!isCollapsed && children.map(renderNode)}
+        {canExpand && expanded ? children.map((child) => renderBranchNode(child, depth + 1)) : null}
       </div>
     );
   };
 
   return (
-    <Card
-      className="absolute left-3 top-3 z-20 w-[360px] max-w-[calc(100vw-1.5rem)] backdrop-blur-sm"
-      style={isMobile ? { maxHeight: mobileOpen ? "78vh" : "auto", overflow: "hidden" } : undefined}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle>Project Viewer</CardTitle>
-          <div className="flex items-center gap-2">
-            {isMobile && (
-              <Button variant="ghost" size="sm" onClick={() => setMobileOpen((v) => !v)}>
-                {mobileOpen ? "hide" : "show"}
-              </Button>
-            )}
-            <Badge variant={connected ? "default" : "secondary"}>{connected ? "live" : "offline"}</Badge>
-          </div>
-        </div>
-        <div className="flex gap-2 text-xs text-slate-400">
-          <span>{nodes.length} nodes</span>
-          <span>•</span>
-          <span>{edges.length} edges</span>
-        </div>
-      </CardHeader>
+    <>
+      {isMobile && drawerOpen ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-20 bg-slate-950/70"
+          onClick={() => setDrawerOpen(false)}
+          aria-label="Close project navigator"
+        />
+      ) : null}
 
-      {(!isMobile || mobileOpen) && <CardContent>
-        <div className="mb-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
+      <aside
+        id="project-drawer"
+        className={cn(
+          "absolute bottom-3 left-3 top-3 z-30 flex w-[360px] max-w-[calc(100vw-1.5rem)] flex-col rounded-3xl border border-slate-700/70 bg-slate-950/88 shadow-[0_24px_80px_rgba(0,0,0,0.4)] backdrop-blur-xl transition duration-200",
+          drawerOpen ? "translate-x-0 opacity-100" : "-translate-x-[calc(100%+1rem)] opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Navigator</div>
+            <div className="text-base font-semibold text-slate-50">Project Browser</div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setDrawerOpen(false)}
+            aria-controls="project-drawer"
+            aria-expanded={drawerOpen}
+            aria-label="Collapse project navigator"
+          >
+            <X size={16} />
+          </Button>
+        </div>
+
+        <div className="border-b border-slate-800/80 px-4 py-4">
           <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-            <span>Project selector</span>
+            <span>Projects</span>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={selectAllProjects}>all</Button>
-              <Button variant="ghost" size="sm" onClick={clearProjectSelection}>none</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={selectAllProjects} aria-pressed={allSelected} aria-label="Select all projects">
+                all
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={clearProjectSelection} aria-pressed={noneSelected} aria-label="Clear project selection">
+                none
+              </Button>
             </div>
           </div>
 
+          <label htmlFor="project-selector" className="sr-only">
+            Project selector
+          </label>
           <NativeSelect
+            id="project-selector"
             value={selectedProjectValue}
             onChange={(event) => setProjectSelection(event.target.value || null)}
-            className="mb-2"
           >
             <NativeSelectOption value="">Select project</NativeSelectOption>
             {projects.map((project) => (
@@ -193,28 +259,104 @@ export function ProjectViewerPanel() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
+        </div>
 
-          <div className="text-[11px] text-slate-400">
-            Choose a project to load it. Use <span className="text-slate-300">all</span> for multi-project view.
+        <div className="border-b border-slate-800/80 px-4 py-4">
+          <label htmlFor="project-search" className="sr-only">
+            Search files and folders
+          </label>
+          <div className="relative">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Input
+              id="project-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              aria-controls="project-drawer-tree"
+              className="pl-9"
+              placeholder="Search files and folders"
+            />
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500">
+            Search reveals matching branches on the canvas and keeps this drawer scoped to the active project.
           </div>
         </div>
 
-        <div className="mb-3 flex items-center gap-2">
-          <Search size={14} className="text-slate-400" />
-          <Input placeholder="Search files/folders..." value={query} onChange={(e) => setQuery(e.target.value)} />
-          <Button variant="outline" size="sm" onClick={() => setCollapsed(new Set())}>expand</Button>
-        </div>
-
-        <div className="max-h-[62vh] overflow-auto rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
-          {rootNodes.length === 0 ? (
-            <div className="px-2 py-6 text-center text-xs text-slate-400">Waiting for graph data...</div>
-          ) : selectedProjectIds.size === 0 ? (
-            <div className="px-2 py-6 text-center text-xs text-slate-400">Select at least one project above to load it.</div>
+        <div className="border-b border-slate-800/80 px-4 py-3">
+          <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">Focused Branch</div>
+          {breadcrumbs.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+              {breadcrumbs.map((node, index) => (
+                <button
+                  key={node.id}
+                  type="button"
+                  className={cn(
+                    "rounded-full border border-slate-700/80 px-2 py-1 transition hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+                    index === breadcrumbs.length - 1 && "border-cyan-400/40 text-cyan-100"
+                  )}
+                  onClick={() => revealNode(node.id)}
+                  aria-current={index === breadcrumbs.length - 1 ? "page" : undefined}
+                >
+                  {node.name}
+                </button>
+              ))}
+            </div>
           ) : (
-            visibleRoots.map(renderNode)
+            <div className="text-sm text-slate-500">Choose a project to browse its structure.</div>
           )}
         </div>
-      </CardContent>}
-    </Card>
+
+        <div id="project-drawer-tree" className="min-h-0 flex-1 overflow-auto px-4 py-4">
+          {rootNodes.length === 0 ? (
+            <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+              Waiting for graph data.
+            </div>
+          ) : selectedProjectIds.size === 0 ? (
+            <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+              Select a project to open the navigator.
+            </div>
+          ) : searchQuery.trim() ? (
+            <div className="space-y-2">
+              {searchResults.length > 0 ? (
+                searchResults.map((node) => (
+                  <button
+                    key={node.id}
+                    type="button"
+                    className="block w-full rounded-2xl border border-slate-800/80 bg-slate-900/50 px-3 py-3 text-left transition hover:border-slate-600 hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                    onClick={() => revealNode(node.id)}
+                  >
+                    <div className="mb-1 flex items-center gap-2 text-sm text-slate-100">
+                      {node.kind === "dir" ? <Folder size={14} className="text-cyan-300" /> : <File size={13} className="text-slate-300" />}
+                      <span className="truncate">{node.name}</span>
+                    </div>
+                    <div className="truncate text-xs text-slate-400">{node.path}</div>
+                  </button>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+                  No matches in the selected project scope.
+                </div>
+              )}
+            </div>
+          ) : branchRoot ? (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-3">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Local Subtree</div>
+                <div className="mt-1 text-sm text-slate-300">
+                  {branchRoot.path}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-2">
+                {renderBranchNode(branchRoot, 0)}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+              No focused branch available.
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

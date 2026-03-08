@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { LayoutEngine, LayoutMode } from "./layoutEngines";
 import type { GraphEdge, GraphNode, PatchOp, UniverseSnapshotMessage, Vec3 } from "./patch";
 
 interface RenderNode extends GraphNode {
@@ -6,6 +7,8 @@ interface RenderNode extends GraphNode {
   posCurrent: Vec3;
   posTarget: Vec3;
 }
+
+export type InteractionMode = "browse" | "pan" | "edit";
 
 interface UniverseGraphState {
   connected: boolean;
@@ -16,6 +19,11 @@ interface UniverseGraphState {
   selectedProjectIds: Set<string>;
   expandedNodeIds: Set<string>;
   focusId: string | null;
+  searchQuery: string;
+  interactionMode: InteractionMode;
+  drawerOpen: boolean;
+  layoutMode: LayoutMode;
+  layoutEngine: LayoutEngine;
   version: number;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
@@ -26,6 +34,12 @@ interface UniverseGraphState {
   selectAllProjects: () => void;
   toggleExpandedNode: (nodeId: string) => void;
   setFocusId: (nodeId: string | null) => void;
+  revealNode: (nodeId: string) => void;
+  setSearchQuery: (query: string) => void;
+  setInteractionMode: (mode: InteractionMode) => void;
+  setDrawerOpen: (open: boolean) => void;
+  setLayoutMode: (mode: LayoutMode) => void;
+  setLayoutEngine: (engine: LayoutEngine) => void;
   isNodeVisible: (node: RenderNode) => boolean;
 }
 
@@ -127,6 +141,11 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   selectedProjectIds: new Set<string>(),
   expandedNodeIds: new Set<string>(),
   focusId: null,
+  searchQuery: "",
+  interactionMode: "browse",
+  drawerOpen: false,
+  layoutMode: "focus",
+  layoutEngine: "radial",
   version: 0,
 
   setConnected(connected) {
@@ -221,7 +240,13 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
       return;
     }
-    set({ selectedProjectIds: new Set<string>([projectId]), expandedNodeIds: new Set<string>(), focusId: projectId });
+    set({
+      selectedProjectIds: new Set<string>([projectId]),
+      expandedNodeIds: new Set<string>(),
+      focusId: projectId,
+      drawerOpen: true,
+      layoutMode: "focus"
+    });
   },
 
   clearProjectSelection() {
@@ -234,7 +259,12 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       for (const node of state.nodeArray) {
         if (node.projectId) all.add(node.projectId);
       }
-      return { selectedProjectIds: all, expandedNodeIds: new Set<string>(), focusId: null };
+      return {
+        selectedProjectIds: all,
+        expandedNodeIds: new Set<string>(),
+        focusId: null,
+        layoutMode: all.size > 1 ? "overview" : state.layoutMode
+      };
     });
   },
 
@@ -249,6 +279,38 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
 
   setFocusId(nodeId) {
     set({ focusId: nodeId });
+  },
+
+  revealNode(nodeId) {
+    set((state) => {
+      const next = new Set(state.expandedNodeIds);
+      let cursor = state.nodes.get(nodeId)?.parentId;
+      while (cursor) {
+        next.add(cursor);
+        cursor = state.nodes.get(cursor)?.parentId;
+      }
+      return { expandedNodeIds: next, focusId: nodeId };
+    });
+  },
+
+  setSearchQuery(query) {
+    set({ searchQuery: query });
+  },
+
+  setInteractionMode(interactionMode) {
+    set({ interactionMode });
+  },
+
+  setDrawerOpen(drawerOpen) {
+    set({ drawerOpen });
+  },
+
+  setLayoutMode(layoutMode) {
+    set({ layoutMode });
+  },
+
+  setLayoutEngine(layoutEngine) {
+    set({ layoutEngine });
   },
 
   isNodeVisible(node) {
