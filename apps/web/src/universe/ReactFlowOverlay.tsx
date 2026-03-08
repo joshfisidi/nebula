@@ -13,16 +13,7 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useUniverseGraphStore } from "./graphStore";
-import {
-  chooseLayout,
-  finalizeLayout,
-  layoutWithDagre,
-  layoutWithElk,
-  layoutWithRadial,
-  type LayoutEngine,
-  type LayoutMode
-} from "./layoutEngines";
-import { RoutedEdge } from "./RoutedEdge";
+import { chooseLayout, layoutWithDagre, layoutWithElk, type LayoutEngine, type LayoutMode } from "./layoutEngines";
 
 type VisibleNode = {
   id: string;
@@ -37,7 +28,6 @@ type VisibleNode = {
 };
 
 const MAX_INTERACTIVE_NODES = 2500;
-const edgeTypes = { routed: RoutedEdge };
 
 function scoreNode(name: string, kind: "dir" | "file", search: string): number {
   let score = kind === "dir" ? 25 : 5;
@@ -104,7 +94,7 @@ function toFlowEdge(edge: { id: string; from: string; to: string }, depth: numbe
     id: edge.id,
     source: edge.from,
     target: edge.to,
-    type: "routed",
+    type: "smoothstep",
     style: { stroke: `hsla(${hue} 82% 64% / 0.34)`, strokeWidth: 1 }
   };
 }
@@ -122,7 +112,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [zoom, setZoom] = useState(0.9);
   const [mode, setMode] = useState<LayoutMode>("auto");
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
-  const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("field");
+  const [layoutEngine, setLayoutEngine] = useState<LayoutEngine>("dagre");
   const [laidOut, setLaidOut] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
@@ -276,10 +266,6 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   useEffect(() => {
     let cancelled = false;
-    const hasRuntimePositions = graphSnapshot.nodes.some((node) => {
-      const data = node.position;
-      return Math.abs(data.x) > 0.001 || Math.abs(data.y) > 0.001;
-    });
 
     const hasCrossLinks = graphSnapshot.edges.some((e) => {
       const s = graphSnapshot.nodes.find((n) => n.id === e.source);
@@ -294,28 +280,13 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       mode,
       zoom,
       visibleCount: graphSnapshot.nodes.length,
-      hasGroups: false,
-      hasCrossLinks,
-      hasRuntimePositions
+      hasCrossLinks
     });
 
-    const engine = isMobile && autoEngine !== "field" ? "elk" : autoEngine;
-
+    const engine: LayoutEngine = isMobile ? "elk" : autoEngine;
     setLayoutEngine(engine);
 
     const run = async () => {
-      if (engine === "field") {
-        const out = finalizeLayout(graphSnapshot.nodes, graphSnapshot.edges);
-        if (!cancelled) setLaidOut(out);
-        return;
-      }
-
-      if (engine === "radial") {
-        const out = layoutWithRadial(graphSnapshot.nodes, graphSnapshot.edges);
-        if (!cancelled) setLaidOut(out);
-        return;
-      }
-
       if (engine === "dagre") {
         const out = layoutWithDagre(graphSnapshot.nodes, graphSnapshot.edges, "LR");
         if (!cancelled) setLaidOut(out);
@@ -479,7 +450,6 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         zoomOnScroll
         panOnDrag
         proOptions={{ hideAttribution: true }}
-        edgeTypes={edgeTypes}
       >
         <Background color="rgba(80,120,180,0.12)" gap={isMobile ? 18 : 22} size={1} />
         <Controls showInteractive={false} position={isMobile ? "top-right" : "bottom-right"} />
