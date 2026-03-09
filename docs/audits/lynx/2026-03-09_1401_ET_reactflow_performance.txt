@@ -1,0 +1,496 @@
+   Skip to Content
+
+   React Flow
+
+   LearnReferenceExamplesUIShowcase (BUTTON) More
+
+   (BUTTON) SearchReact FlowPro (BUTTON)
+     * (BUTTON) Learn
+          + Quick Start
+          + (BUTTON) Core Concepts
+               o Overview
+               o Building a Flow
+               o Adding Interactivity
+               o The Viewport
+               o Built-In Components
+          + (BUTTON) Customization
+               o Nodes
+               o Handles
+               o Edges
+               o Edge Labels
+               o Utility Classes
+               o Theming
+          + (BUTTON) Layouting
+               o Overview
+               o Sub Flows
+          + (BUTTON) Advanced Use
+               o Hooks and Providers
+               o Accessibility
+               o Testing
+               o TypeScript
+               o Uncontrolled Flow
+               o Performance
+               o State Management
+               o Computing Flows
+               o Server Side Rendering
+               o Devtools
+               o Multiplayer
+               o Whiteboard Features
+          + (BUTTON) Tutorials
+               o Slideshow App
+               o Web Audio API
+               o Mind Map App
+               o React Flow UI
+          + (BUTTON) Troubleshooting
+               o Common Errors
+               o Remove Attribution
+               o Migrate to v12
+               o Migrate to v11
+               o Migrate to v10
+          + API Reference
+     * (BUTTON) Reference
+          + API Reference
+          + <ReactFlow />
+          + <ReactFlowProvider />
+          + Components
+               o <Background />
+               o <BaseEdge />
+               o <ControlButton />
+               o <Controls />
+               o <EdgeLabelRenderer />
+               o <EdgeText />
+               o <EdgeToolbar />
+               o <Handle />
+               o <MiniMap />
+               o <NodeResizeControl />
+               o <NodeResizer />
+               o <NodeToolbar />
+               o <Panel />
+               o <ViewportPortal />
+          + Hooks
+               o useConnection()
+               o useEdges()
+               o useEdgesState()
+               o useHandleConnections()
+               o useInternalNode()
+               o useKeyPress()
+               o useNodeConnections()
+               o useNodeId()
+               o useNodes()
+               o useNodesData()
+               o useNodesInitialized()
+               o useNodesState()
+               o useOnSelectionChange()
+               o useOnViewportChange()
+               o useReactFlow()
+               o useStore()
+               o useStoreApi()
+               o useUpdateNodeInternals()
+               o useViewport()
+          + Types
+               o Align
+               o AriaLabelConfig
+               o BackgroundVariant
+               o ColorMode
+               o Connection
+               o ConnectionLineComponent
+               o ConnectionLineComponentProps
+               o ConnectionLineType
+               o ConnectionMode
+               o ConnectionState
+               o CoordinateExtent
+               o DefaultEdgeOptions
+               o DeleteElements
+               o Edge
+               o EdgeChange
+               o EdgeMarker
+               o EdgeMouseHandler
+               o EdgeProps
+               o EdgeTypes
+               o FitViewOptions
+               o Handle
+               o HandleConnection
+               o InternalNode
+               o IsValidConnection
+               o KeyCode
+               o MarkerType
+               o MiniMapNodeProps
+               o Node
+               o NodeChange
+               o NodeConnection
+               o NodeHandle
+               o NodeMouseHandler
+               o NodeOrigin
+               o NodeProps
+               o NodeTypes
+               o OnBeforeDelete
+               o OnConnect
+               o OnConnectEnd
+               o OnConnectStart
+               o OnDelete
+               o OnEdgesChange
+               o OnEdgesDelete
+               o OnError
+               o OnInit
+               o OnMove
+               o OnNodeDrag
+               o OnNodesChange
+               o OnNodesDelete
+               o OnReconnect
+               o OnSelectionChangeFunc
+               o PanOnScrollMode
+               o PanelPosition
+               o Position
+               o ProOptions
+               o ReactFlowInstance
+               o ReactFlowJsonObject
+               o Rect
+               o ResizeParams
+               o SelectionDragHandler
+               o SelectionMode
+               o SnapGrid
+               o Viewport
+               o XYPosition
+               o ZIndexMode
+          + Utils
+               o addEdge()
+               o applyEdgeChanges()
+               o applyNodeChanges()
+               o getBezierPath()
+               o getConnectedEdges()
+               o getIncomers()
+               o getNodesBounds()
+               o getOutgoers()
+               o getSimpleBezierPath()
+               o getSmoothStepPath()
+               o getStraightPath()
+               o getViewportForBounds()
+               o isEdge()
+               o isNode()
+               o reconnectEdge()
+     * (BUTTON) Examples
+          + Examples
+          + Feature Overview
+          + (BUTTON) Nodes
+               o Add Node on Edge Drop
+               o Connection Limit
+               o Custom Node
+               o Delete Middle Node
+               o Drag Handle
+               o Easy Connect
+               o Intersections
+               o Node Resizer
+               o Node Toolbar
+               o Proximity Connect
+               o Rotatable Node
+               o Node Position Animation
+               o Stress
+               o Update Node
+               o Shapes
+          + (BUTTON) Edges
+               o Animating Edges
+               o Custom Connection Line
+               o Custom Edges
+               o Delete Edge on Drop
+               o Edge Label Renderer
+               o Edge Intersection
+               o Edge Toolbar
+               o Edge Types
+               o Floating Edges
+               o Markers
+               o Multi Connection Line
+               o Reconnect Edge
+               o Simple Floating Edges
+               o Temporary Edges
+               o Editable Edge
+          + (BUTTON) Interaction
+               o Computing Flows
+               o Connection Events
+               o Context Menu
+               o Contextual Zoom
+               o Drag and Drop
+               o Prevent Cycles
+               o Save and Restore
+               o Touch Device
+               o Validation
+               o Helper Lines
+               o Collaborative
+               o Copy Paste
+               o Undo Redo
+          + (BUTTON) Subflows & Grouping
+               o Selection Grouping
+               o Parent Child Relation
+               o Sub Flows
+          + (BUTTON) Layout
+               o Dagre
+               o Elkjs
+               o Elkjs Multiple Handles
+               o Horizontal
+               o Expand Collapse
+               o Auto Layout
+               o Force Layout
+               o Dynamic Layouting
+               o Node Collisions
+          + (BUTTON) Styling
+               o Base Style
+               o Dark Mode
+               o Tailwind
+               o Turbo Flow
+          + (BUTTON) Whiteboard
+               o Eraser
+               o Lasso Selection
+               o Rectangle
+               o Freehand Draw
+          + (BUTTON) Misc
+               o Download Image
+               o Server Side Image Creation
+     * (BUTTON) UI
+          + Introduction
+          + (BUTTON) Templates
+               o AI Workflow Editor
+               o Workflow Editor
+          + (BUTTON) Components
+               o Node Utilities
+               o Base Node
+               o Status Indicator
+               o Appendix
+               o Tooltip
+               o Custom Nodes
+               o Database Schema
+               o Placeholder
+               o Labeled Group
+               o Handles
+               o Base Handle
+               o Labeled Handle
+               o Button Handle
+               o Custom Edges
+               o Edge with Button
+               o Edge with Node Data
+               o Animated SVG Edge
+               o Controls
+               o Node Search
+               o Zoom Slider
+               o Zoom Select
+               o Misc
+               o DevTools
+          +
+              _________________________________________________________
+
+          + Request a Component
+     * Showcase
+     * (BUTTON) More
+          + Changelog
+          + Blog
+          + Contact Us
+          + Playground
+
+     * Quick Start
+     * (BUTTON) Core Concepts
+          + Overview
+          + Building a Flow
+          + Adding Interactivity
+          + The Viewport
+          + Built-In Components
+     * (BUTTON) Customization
+          + Nodes
+          + Handles
+          + Edges
+          + Edge Labels
+          + Utility Classes
+          + Theming
+     * (BUTTON) Layouting
+          + Overview
+          + Sub Flows
+     * (BUTTON) Advanced Use
+          + Hooks and Providers
+          + Accessibility
+          + Testing
+          + TypeScript
+          + Uncontrolled Flow
+          + Performance
+          + State Management
+          + Computing Flows
+          + Server Side Rendering
+          + Devtools
+          + Multiplayer
+          + Whiteboard Features
+     * (BUTTON) Tutorials
+          + Slideshow App
+          + Web Audio API
+          + Mind Map App
+          + React Flow UI
+     * (BUTTON) Troubleshooting
+          + Common Errors
+          + Remove Attribution
+          + Migrate to v12
+          + Migrate to v11
+          + Migrate to v10
+     * API Reference
+
+   On This Page
+     * Use memoization
+     * Memoize components
+     * Memoize functions
+     * Avoid accessing nodes in components
+     * Inefficient example
+     * Optimized solution
+     * Collapse large node trees
+     * Simplify node and edge styles
+     * Additional resources
+
+   Edit this page on GitHub
+   Questions? Contact Us
+
+   What's new?
+   React Flow 12.10.1React Flow 12.10.0React Flow UI Components updated to
+   React 19 and Tailwind CSS 4...and more!
+
+React Flow Playground
+
+   Explore different props, options and layout algorithms in our
+   interactive playground
+   (BUTTON) Launch
+   LearnAdvanced UsePerformance
+   (BUTTON) Copy page (BUTTON)
+
+Performance
+
+   When dealing with a large number of nodes or complex components,
+   managing performance can be challenging. Here are a few effective
+   strategies to optimize the performance of React Flow.
+
+Use memoization
+
+   One of the main reasons for performance issues in React Flow is
+   unnecessary re-renders. Since node movements trigger frequent state
+   updates, this can lead to performance bottlenecks, especially in larger
+   diagrams.
+
+Memoize components
+
+   Components provided as props to the <ReactFlow> component, including
+   custom node and edge components, should either be memoized using
+   React.memo or declared outside the parent component. This ensures that
+   React does not create a new reference for the component on every
+   render, which would otherwise trigger unnecessary re-renders.
+
+   (BUTTON) (BUTTON)
+   const NodeComponent = memo(() => { return <div>{data.label}</div>; });
+
+  Memoize functions
+
+   Similarly, functions passed as props to <ReactFlow> should be memoized
+   using useCallback. This prevents React from creating a new function
+   reference on every render, which could also trigger unnecessary
+   re-renders. Additionally, arrays and objects like defaultEdgeOptions or
+   snapGrid should be memoized using useMemo to prevent unnecessary
+   re-renders.
+
+
+   (BUTTON) (BUTTON)
+   import React, { useCallback } from 'react'; const MyDiagram = () => {
+   const onNodeClick = useCallback((event, node) => { console.log('Node
+   clicked:', node); }, []); return <ReactFlow onNodeClick={onNodeClick}
+   />; }; export default MyDiagram;
+
+Avoid accessing nodes in components
+
+   One of the most common performance pitfalls in React Flow is directly
+   accessing the nodes or edges in the components or the viewport. These
+   objects change frequently during operations like dragging, panning, or
+   zooming, which can cause unnecessary re-renders of components that
+   depend on them.
+
+   For example, if you fetch the entire nodes array from the store and
+   filter it to display selected node IDs, this approach can lead to
+   performance degradation. Every update to the nodes array triggers a
+   re-render of all dependent components, even if the change is unrelated
+   to the selected nodes.
+
+  Inefficient example
+
+
+   (BUTTON) (BUTTON)
+   const SelectedNodeIds = () => { // This will cause unnecessary
+   re-renders! const nodes = useStore((state) => state.nodes); const
+   selectedNodeIds = nodes.filter((node) => node.selected).map((node) =>
+   node.id); return ( <div> {selectedNodeIds.map((id) => ( <div
+   key={id}>{id}</div> ))} </div> ); };
+
+   In this example, every update to the nodes array causes
+   the SelectedNodeIds component to re-render, even if the selection
+   hasn't changed.
+
+  Optimized solution
+
+   To avoid unnecessary re-renders, store the selected nodes in a separate
+   field in your state (using Zustand, Redux, or any other state
+   management solution). This ensures that the component only re-renders
+   when the selection changes.
+
+
+   (BUTTON) (BUTTON)
+   const SelectedNodeIds = () => { const selectedNodeIds =
+   useStore((state) => state.selectedNodeIds); return ( <div>
+   {selectedNodeIds.map((id) => ( <div key={id}>{id}</div> ))} </div> );
+   };
+
+   By decoupling the selected nodes from the nodes array, you prevent
+   unnecessary updates and improve performance. For more information, view
+   our State Management guide.
+
+Collapse large node trees
+
+   If your node tree is deeply nested, rendering all nodes at once can be
+   inefficient. Instead, show only a limited number of nodes and allow
+   users to expand them as needed. You can do this by modifying the node's
+   hidden property dynamically to toggle visibility.
+
+
+   (BUTTON) (BUTTON)
+   const handleNodeClick = (targetNode) => { if (targetNode.data.children)
+   { setNodes((prevNodes) => prevNodes.map((node) =>
+   targetNode.data.children.includes(node.id) ? { ...node, hidden:
+   !node.hidden } : node, ), ); } };
+
+   By hiding nodes initially and rendering them only when expanded, we
+   optimize performance while maintaining usability.
+
+Simplify node and edge styles
+
+   If you've optimized performance in every other way, and you are still
+   finding performance issues with large numbers of nodes, complex CSS
+   styles, particularly those involving animations, shadows, or gradients,
+   can significantly impact performance. Consider reducing complexity on
+   your node styles in these cases.
+
+Additional resources
+
+   Here are a few helpful resources on performance in React Flow that you
+   can check out:
+     * Guide to Optimize React Flow Project Performance
+     * Tuning Edge Animations ReactFlow Optimal Performance
+     * 5 Ways to Optimize React Flow in 10 minutes
+
+   Last updated on February 4, 2026
+
+   Uncontrolled FlowState Management
+
+   A project by the xyflow team
+   We are building and maintaining open source software for node-based UIs
+   since 2019.
+
+   Docs
+   Getting StartedAPI ReferenceExamplesComponentsShowcasePlayground
+
+   Social
+   DiscordGithubX / TwitterBluesky
+
+   xyflow
+   BlogOpen SourceAboutContactCareers
+
+   Legal
+   MIT LicenseCode of ConductImprint
+
+   info@xyflow.com -- Copyright © 2026 webkid GmbH. All rights reserved --
+   website design by Facu Montanaro
