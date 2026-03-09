@@ -530,13 +530,25 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
       if (rf) {
         viewportCommandActiveRef.current = true;
-        rf.fitView({
-          nodes: [{ id: nodeId }],
-          duration: options?.duration ?? 240,
-          padding: options?.padding ?? (isMobile ? 0.46 : 0.34),
-          includeHiddenNodes: false,
-          maxZoom: options?.maxZoom ?? (isMobile ? 0.9 : 1.1)
-        });
+        const duration = options?.duration ?? 240;
+        const maxZoom = options?.maxZoom ?? (isMobile ? 0.9 : 1.1);
+        const currentZoom = rf.getZoom?.() ?? maxZoom;
+        const nextZoom = Math.min(maxZoom, Math.max(currentZoom, isMobile ? 0.72 : 0.82));
+
+        const node = rf.getNode?.(nodeId);
+        if (node) {
+          const x = node.position.x + ((node.width ?? 180) / 2);
+          const y = node.position.y + ((node.height ?? 40) / 2);
+          rf.setCenter(x, y, { zoom: nextZoom, duration });
+        } else {
+          rf.fitView({
+            nodes: [{ id: nodeId }],
+            duration,
+            padding: options?.padding ?? (isMobile ? 0.46 : 0.34),
+            includeHiddenNodes: false,
+            maxZoom
+          });
+        }
 
         if (viewportCommandTimerRef.current) {
           window.clearTimeout(viewportCommandTimerRef.current);
@@ -544,7 +556,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
         viewportCommandTimerRef.current = window.setTimeout(() => {
           viewportCommandActiveRef.current = false;
-        }, (options?.duration ?? 240) + 120);
+        }, duration + 120);
       }
 
       focusUnlockTimerRef.current = window.setTimeout(() => {
@@ -612,13 +624,23 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
       const focused = focusNodeRef.current;
       if (focused && renderedNodes.some((node) => node.id === focused)) {
-        rf.fitView({
-          nodes: [{ id: focused }],
-          duration: 180,
-          padding: isMobile ? 0.46 : 0.3,
-          includeHiddenNodes: false,
-          maxZoom: isMobile ? 0.9 : 1.1
-        });
+        const node = rf.getNode?.(focused);
+        if (node) {
+          const x = node.position.x + ((node.width ?? 180) / 2);
+          const y = node.position.y + ((node.height ?? 40) / 2);
+          rf.setCenter(x, y, {
+            zoom: Math.min(isMobile ? 0.9 : 1.1, Math.max(rf.getZoom?.() ?? 0.85, isMobile ? 0.72 : 0.82)),
+            duration: 180
+          });
+        } else {
+          rf.fitView({
+            nodes: [{ id: focused }],
+            duration: 180,
+            padding: isMobile ? 0.46 : 0.3,
+            includeHiddenNodes: false,
+            maxZoom: isMobile ? 0.9 : 1.1
+          });
+        }
       } else {
         rf.fitView({
           duration: 240,
