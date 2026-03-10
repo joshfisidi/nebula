@@ -107,7 +107,7 @@ if (gateOk) {
   // Keep pushes on main by default for this repo.
   steps.push(
     runStep('github_sync', 'npm', ['run', 'nebula:github:sync'], {
-      NEBULA_PUSH_BRANCH: process.env.NEBULA_PUSH_BRANCH || 'main',
+      NEBULA_PUSH_BRANCH: process.env.NEBULA_PUSH_BRANCH || 'agent',
     }),
   );
 }
