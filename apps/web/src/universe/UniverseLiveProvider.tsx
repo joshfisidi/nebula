@@ -18,9 +18,6 @@ function resolveWsUrl(): string {
   return `${protocol}://${host}:${port}`;
 }
 
-<<<<<<< HEAD
-export function UniverseLiveProvider({ children, enabled = true }: { children: React.ReactNode; enabled?: boolean }) {
-=======
 export function UniverseLiveProvider({
   children,
   enabled = true,
@@ -30,7 +27,6 @@ export function UniverseLiveProvider({
   enabled?: boolean;
   onStatus?: (status: UniverseConnectionStatus) => void;
 }) {
->>>>>>> agent
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
   const applyPatch = useUniverseGraphStore((s) => s.applyPatch);
   const setConnected = useUniverseGraphStore((s) => s.setConnected);
@@ -38,18 +34,12 @@ export function UniverseLiveProvider({
   useEffect(() => {
     if (!enabled) {
       setConnected(false);
-<<<<<<< HEAD
-      return;
-    }
-
-=======
       onStatus?.({ phase: "idle" });
       return;
     }
 
     onStatus?.({ phase: "connecting", message: "Connecting to live graph…" });
 
->>>>>>> agent
     const disconnect = connectUniverseWs({
       url: resolveWsUrl(),
       onConnected(connected) {
@@ -69,11 +59,7 @@ export function UniverseLiveProvider({
     });
 
     return () => disconnect();
-<<<<<<< HEAD
-  }, [enabled, applyPatch, applySnapshot, setConnected]);
-=======
   }, [applyPatch, applySnapshot, enabled, onStatus, setConnected]);
->>>>>>> agent
 
   return <>{children}</>;
 }

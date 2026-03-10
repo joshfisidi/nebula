@@ -1,6 +1,6 @@
 import dagre from "dagre";
 import ELK from "elkjs/lib/elk.bundled.js";
-import type { Edge, Node } from "reactflow";
+import type { Edge, Node, XYPosition } from "reactflow";
 
 export type LayoutEngine = "living-lite" | "radial" | "dagre" | "elk";
 export type LayoutMode = "focus" | "overview";
@@ -89,7 +89,13 @@ export async function layoutWithElk(nodes: Node[], edges: Edge[], direction?: "R
   const pos = new Map((out.children ?? []).map((c: any) => [c.id, { x: c.x ?? 0, y: c.y ?? 0 }]));
 
   return {
-    nodes: nodes.map((n) => ({ ...n, position: pos.get(n.id) ?? n.position })),
+    nodes: nodes.map((n) => {
+      const fallback: XYPosition = {
+        x: (n.position as XYPosition | undefined)?.x ?? 0,
+        y: (n.position as XYPosition | undefined)?.y ?? 0,
+      };
+      return { ...n, position: pos.get(n.id) ?? fallback };
+    }),
     edges
   };
 }

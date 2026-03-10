@@ -24,22 +24,6 @@ function baseIgnore(absPath: string): boolean {
   const segments = split(absPath);
   if (segments.length === 0) return false;
 
-<<<<<<< HEAD
-  const blockedDirs = new Set([
-    "node_modules",
-    ".pnpm-store",
-    ".git",
-    ".next",
-    "dist",
-    "build",
-    ".cache",
-    ".turbo",
-    ".parcel-cache",
-    "coverage"
-  ]);
-
-=======
->>>>>>> agent
   if (segments.some((segment) => blockedDirs.has(segment))) {
     return true;
   }

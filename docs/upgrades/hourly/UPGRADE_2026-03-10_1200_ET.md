@@ -33,7 +33,7 @@ evidence:
 - Analyze: 2 prioritized backlog tasks produced.
 - Localize: all tasks mapped to explicit repo/state files.
 - Patch: executed 1 safe diffs (max 2).
-- Harden: pass=6, fail=5, skip=10.
+- Harden: pass=11, fail=0, skip=10.
 
 ## North Star Gate
 - source: docs/upgrades/NORTH_STAR.md
@@ -76,12 +76,12 @@ evidence:
 - None.
 
 ## Risk + Rollback
-- run risk: **medium**
+- run risk: **low**
 - rollback strategy: each patch includes file-level rollback note; no destructive git operations were used.
 
 ## Validation Summary
-- pass: 6
-- fail: 5
+- pass: 11
+- fail: 0
 - skip: 10
 
 ## Harden Output
@@ -106,45 +106,25 @@ Skipped: @nebula/server has no "test" script
 ```
 
 ### @nebula/server:typecheck
-- status: fail
-- classification: command_failed
+- status: pass
+- classification: success
 - command: `npm run typecheck`
 - cwd: `apps/server`
 
 ```
 > @nebula/server@1.0.0 typecheck
 > tsc -p tsconfig.json --noEmit
-
-src/index.ts(95,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(97,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(99,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(434,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(436,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(450,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(27,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(41,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(42,1): error TS1185: Merge conflict marker encountered.
 ```
 
 ### @nebula/server:build
-- status: fail
-- classification: command_failed
+- status: pass
+- classification: success
 - command: `npm run build`
 - cwd: `apps/server`
 
 ```
 > @nebula/server@1.0.0 build
 > rm -rf dist && tsc -p tsconfig.json
-
-src/index.ts(95,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(97,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(99,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(434,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(436,1): error TS1185: Merge conflict marker encountered.
-src/index.ts(450,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(27,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(41,1): error TS1185: Merge conflict marker encountered.
-src/universe/ignore.ts(42,1): error TS1185: Merge conflict marker encountered.
 ```
 
 ### @nebula/web:lint
@@ -168,64 +148,19 @@ Skipped: @nebula/web has no "test" script
 ```
 
 ### @nebula/web:typecheck
-- status: fail
-- classification: command_failed
+- status: pass
+- classification: success
 - command: `npm run typecheck`
 - cwd: `apps/web`
 
 ```
 > @nebula/web@1.0.0 typecheck
 > tsc -p tsconfig.typecheck.json --noEmit --incremental false
-
-src/universe/ProjectViewerPanel.tsx(143,1): error TS1185: Merge conflict marker encountered.
-src/universe/ProjectViewerPanel.tsx(166,1): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,2): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,3): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,4): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,5): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,6): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(166,7): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
-src/universe/ProjectViewerPanel.tsx(254,15): error TS1005: '</' expected.
-src/universe/ProjectViewerPanel.tsx(256,1): error TS1185: Merge conflict marker encountered.
-src/universe/ProjectViewerPanel.tsx(257,9): error TS2657: JSX expressions must have one parent element.
-src/universe/ProjectViewerPanel.tsx(276,1): error TS1185: Merge conflict marker encountered.
-src/universe/ProjectViewerPanel.tsx(288,1): error TS1185: Merge conflict marker encountered.
-src/universe/ProjectViewerPanel.tsx(415,7): error TS1128: Declaration or statement expected.
-src/universe/ProjectViewerPanel.tsx(416,5): error TS1109: Expression expected.
-src/universe/ProjectViewerPanel.tsx(416,7): error TS1109: Expression expected.
-src/universe/ProjectViewerPanel.tsx(417,3): error TS1109: Expression expected.
-src/universe/ReactFlowOverlay.tsx(486,1): error TS1185: Merge conflict marker encountered.
-src/universe/ReactFlowOverlay.tsx(488,1): error TS1185: Merge conflict marker encountered.
-src/universe/ReactFlowOverlay.tsx(490,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(13,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(14,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(17,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(25,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(29,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(42,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(52,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(58,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(84,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(91,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(93,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(95,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(100,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(102,1): error TS1185: Merge conflict marker encountered.
-src/universe/sourceApi.ts(104,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(21,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(23,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(33,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(41,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(45,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(52,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(72,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(74,1): error TS1185: Merge conflict marker encountered.
-src/universe/UniverseLiveProvider.tsx(76,1): error TS1185: Merge conflict marker encountered.
 ```
 
 ### @nebula/web:build
-- status: fail
-- classification: command_failed
+- status: pass
+- classification: success
 - command: `npm run build`
 - cwd: `apps/web`
 
@@ -238,6 +173,27 @@ src/universe/UniverseLiveProvider.tsx(76,1): error TS1185: Merge conflict marker
     · externalDir
 
    Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    523 kB          611 kB
+└ ○ /_not-found                          876 B          88.4 kB
++ First Load JS shared by all            87.6 kB
+  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.6 kB
+  ├ chunks/749-5b2cf24b8e7aba0a.js       31.9 kB
+  └ other shared chunks (total)          2.01 kB
+
+
+○  (Static)  prerendered as static content
 ```
 
 ### @nebula/physics:lint
@@ -367,8 +323,8 @@ Skipped: nebula-maintainer has no "test" script
 ```
 
 ### @nebula/web:build:production
-- status: fail
-- classification: command_failed
+- status: pass
+- classification: success
 - command: `npm run -w @nebula/web build`
 - cwd: `.`
 
@@ -381,6 +337,27 @@ Skipped: nebula-maintainer has no "test" script
     · externalDir
 
    Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    523 kB          611 kB
+└ ○ /_not-found                          876 B          88.4 kB
++ First Load JS shared by all            87.6 kB
+  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.6 kB
+  ├ chunks/749-5b2cf24b8e7aba0a.js       31.9 kB
+  └ other shared chunks (total)          2.01 kB
+
+
+○  (Static)  prerendered as static content
 ```
 
 ## Next Actions
