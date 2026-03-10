@@ -1,11 +1,15 @@
 import { create } from "zustand";
+import type { LayoutEngine, LayoutMode } from "./layoutEngines";
 import type { GraphEdge, GraphNode, PatchOp, UniverseSnapshotMessage, Vec3 } from "./patch";
+import { isNaturallyHiddenNode } from "./visibility";
 
 interface RenderNode extends GraphNode {
   projectId: string;
   posCurrent: Vec3;
   posTarget: Vec3;
 }
+
+export type InteractionMode = "browse" | "pan" | "edit";
 
 interface UniverseGraphState {
   connected: boolean;
@@ -14,17 +18,31 @@ interface UniverseGraphState {
   nodeArray: RenderNode[];
   edgeArray: GraphEdge[];
   selectedProjectIds: Set<string>;
+  expandedNodeIds: Set<string>;
+  focusId: string | null;
+  searchQuery: string;
+  showHiddenNodes: boolean;
+  interactionMode: InteractionMode;
+  drawerOpen: boolean;
+  layoutMode: LayoutMode;
+  layoutEngine: LayoutEngine;
   version: number;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
   applyPatch: (ops: PatchOp[]) => void;
-  tick: (alpha: number) => void;
-  setNodePosition: (id: string, pos: Vec3) => void;
   addEdge: (params: { source: string; target: string }) => void;
-  toggleProjectSelection: (projectId: string) => void;
   setProjectSelection: (projectId: string | null) => void;
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
+  toggleExpandedNode: (nodeId: string) => void;
+  setFocusId: (nodeId: string | null) => void;
+  revealNode: (nodeId: string) => void;
+  setSearchQuery: (query: string) => void;
+  setShowHiddenNodes: (show: boolean) => void;
+  setInteractionMode: (mode: InteractionMode) => void;
+  setDrawerOpen: (open: boolean) => void;
+  setLayoutMode: (mode: LayoutMode) => void;
+  setLayoutEngine: (engine: LayoutEngine) => void;
   isNodeVisible: (node: RenderNode) => boolean;
 }
 
@@ -57,6 +75,66 @@ function assignProjectIds(nodes: Map<string, RenderNode>) {
   }
 }
 
+function applyDeterministicTreeLayout(nodes: Map<string, RenderNode>) {
+  const children = new Map<string, RenderNode[]>();
+  const roots: RenderNode[] = [];
+
+  for (const node of nodes.values()) {
+    if (!node.parentId || !nodes.has(node.parentId)) {
+      roots.push(node);
+      continue;
+    }
+
+    const arr = children.get(node.parentId) ?? [];
+    arr.push(node);
+    children.set(node.parentId, arr);
+  }
+
+  for (const arr of children.values()) arr.sort((a, b) => a.name.localeCompare(b.name));
+  roots.sort((a, b) => a.name.localeCompare(b.name));
+
+  const yById = new Map<string, number>();
+  let laneCursor = 0;
+
+  const place = (node: RenderNode, depth: number) => {
+    const kids = children.get(node.id) ?? [];
+    node.depth = depth;
+
+    if (kids.length === 0) {
+      yById.set(node.id, laneCursor);
+      laneCursor += 1;
+      return;
+    }
+
+    const start = laneCursor;
+    for (const child of kids) place(child, depth + 1);
+    const end = Math.max(start, laneCursor - 1);
+    yById.set(node.id, (start + end) / 2);
+  };
+
+  for (const root of roots) {
+    place(root, 0);
+    laneCursor += 2;
+  }
+
+  const ys = [...yById.values()];
+  const minY = ys.length ? Math.min(...ys) : 0;
+  const maxY = ys.length ? Math.max(...ys) : 0;
+  const centerY = (minY + maxY) * 0.5;
+
+  const X_SPACING = 1.0;
+  const Y_SPACING = 0.85;
+
+  for (const node of nodes.values()) {
+    if (node.pos) continue;
+    const laneY = (yById.get(node.id) ?? 0) - centerY;
+    const target: Vec3 = { x: node.depth * X_SPACING, y: laneY * Y_SPACING, z: 0 };
+    node.pos = target;
+    node.posTarget = { ...target };
+    node.posCurrent = { ...target };
+  }
+}
+
 export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   connected: false,
   nodes: new Map(),
@@ -64,6 +142,14 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   nodeArray: [],
   edgeArray: [],
   selectedProjectIds: new Set<string>(),
+  expandedNodeIds: new Set<string>(),
+  focusId: null,
+  searchQuery: "",
+  showHiddenNodes: false,
+  interactionMode: "browse",
+  drawerOpen: false,
+  layoutMode: "focus",
+  layoutEngine: "radial",
   version: 0,
 
   setConnected(connected) {
@@ -78,6 +164,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     }
 
     assignProjectIds(nodes);
+    applyDeterministicTreeLayout(nodes);
 
     const edges = new Map<string, GraphEdge>();
     for (const edge of snapshot.graph.edges) {
@@ -96,12 +183,13 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       switch (op.op) {
         case "upsertNode": {
           const existing = nodes.get(op.node.id);
-          const target = toVec(op.node.pos);
+          const target = op.node.pos ? toVec(op.node.pos) : existing?.posTarget ?? existing?.posCurrent ?? { x: 0, y: 0, z: 0 };
           nodes.set(op.node.id, {
             ...op.node,
             projectId: existing?.projectId ?? op.node.id,
-            posCurrent: existing?.posCurrent ?? { ...target },
-            posTarget: target
+            pos: { ...target },
+            posCurrent: { ...target },
+            posTarget: { ...target }
           });
           break;
         }
@@ -117,6 +205,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
         case "setPos": {
           const node = nodes.get(op.id);
           if (node) {
+            node.pos = { ...op.pos };
             node.posTarget = op.pos;
             node.posCurrent = { ...op.pos };
           }
@@ -126,29 +215,8 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     }
 
     assignProjectIds(nodes);
+    applyDeterministicTreeLayout(nodes);
     set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: state.version + 1 });
-  },
-
-  tick(alpha) {
-    const state = get();
-    for (const node of state.nodes.values()) {
-      node.posCurrent.x += (node.posTarget.x - node.posCurrent.x) * alpha;
-      node.posCurrent.y += (node.posTarget.y - node.posCurrent.y) * alpha;
-      node.posCurrent.z += (node.posTarget.z - node.posCurrent.z) * alpha;
-    }
-  },
-
-  setNodePosition(id, pos) {
-    const state = get();
-    const nodes = new Map(state.nodes);
-    const node = nodes.get(id);
-    if (!node) return;
-
-    node.posTarget = { ...pos };
-    node.posCurrent = { ...pos };
-    node.pos = { ...pos };
-
-    set({ nodes, nodeArray: [...nodes.values()], version: state.version + 1 });
   },
 
   addEdge({ source, target }) {
@@ -171,25 +239,22 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     set({ edges, edgeArray: [...edges.values()], version: state.version + 1 });
   },
 
-  toggleProjectSelection(projectId) {
-    set((state) => {
-      const next = new Set(state.selectedProjectIds);
-      if (next.has(projectId)) next.delete(projectId);
-      else next.add(projectId);
-      return { selectedProjectIds: next };
+  setProjectSelection(projectId) {
+    if (!projectId) {
+      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
+      return;
+    }
+    set({
+      selectedProjectIds: new Set<string>([projectId]),
+      expandedNodeIds: new Set<string>(),
+      focusId: projectId,
+      drawerOpen: true,
+      layoutMode: "focus"
     });
   },
 
-  setProjectSelection(projectId) {
-    if (!projectId) {
-      set({ selectedProjectIds: new Set<string>() });
-      return;
-    }
-    set({ selectedProjectIds: new Set<string>([projectId]) });
-  },
-
   clearProjectSelection() {
-    set({ selectedProjectIds: new Set<string>() });
+    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
   },
 
   selectAllProjects() {
@@ -198,13 +263,86 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       for (const node of state.nodeArray) {
         if (node.projectId) all.add(node.projectId);
       }
-      return { selectedProjectIds: all };
+      return {
+        selectedProjectIds: all,
+        expandedNodeIds: new Set<string>(),
+        focusId: null,
+        layoutMode: all.size > 1 ? "overview" : state.layoutMode
+      };
     });
   },
 
+  toggleExpandedNode(nodeId) {
+    set((state) => {
+      const next = new Set(state.expandedNodeIds);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return { expandedNodeIds: next };
+    });
+  },
+
+  setFocusId(nodeId) {
+    set({ focusId: nodeId });
+  },
+
+  revealNode(nodeId) {
+    set((state) => {
+      const next = new Set(state.expandedNodeIds);
+      let cursor = state.nodes.get(nodeId)?.parentId;
+      while (cursor) {
+        next.add(cursor);
+        cursor = state.nodes.get(cursor)?.parentId;
+      }
+      return { expandedNodeIds: next, focusId: nodeId };
+    });
+  },
+
+  setSearchQuery(query) {
+    set({ searchQuery: query });
+  },
+
+  setShowHiddenNodes(showHiddenNodes) {
+    set({ showHiddenNodes });
+  },
+
+  setInteractionMode(interactionMode) {
+    set({ interactionMode });
+  },
+
+  setDrawerOpen(drawerOpen) {
+    set({ drawerOpen });
+  },
+
+  setLayoutMode(layoutMode) {
+    set({ layoutMode });
+  },
+
+  setLayoutEngine(layoutEngine) {
+    set({ layoutEngine });
+  },
+
   isNodeVisible(node) {
-    const selected = get().selectedProjectIds;
-    return selected.size > 0 && selected.has(node.projectId);
+    const state = get();
+    const selected = state.selectedProjectIds;
+    if (selected.size === 0 || !selected.has(node.projectId)) return false;
+    if (!state.showHiddenNodes && isNaturallyHiddenNode(node)) return false;
+
+    if (node.id === node.projectId) return true;
+
+    const parentId = node.parentId;
+    if (!parentId) return false;
+
+    let cursor: string | undefined = parentId;
+    while (cursor) {
+      if (cursor === node.projectId) {
+        return state.expandedNodeIds.has(cursor);
+      }
+
+      if (!state.expandedNodeIds.has(cursor)) return false;
+      cursor = state.nodes.get(cursor)?.parentId;
+    }
+
+    return false;
   }
 }));
 
