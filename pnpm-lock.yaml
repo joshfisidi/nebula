@@ -20,6 +20,9 @@ importers:
       chokidar:
         specifier: ^4.0.1
         version: 4.0.3
+      ignore:
+        specifier: ^7.0.5
+        version: 7.0.5
       ws:
         specifier: ^8.18.0
         version: 8.19.0
@@ -976,6 +979,10 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  ignore@7.0.5:
+    resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
+    engines: {node: '>= 4'}
 
   is-extendable@0.1.1:
     resolution: {integrity: sha512-5BMULNob1vgFX6EjQw5izWDxrecWK9AM72rugNr0TFldMOi0fj6Jk+zeKIt0xGj4cEfQIJth4w3OKWOJ4f+AFw==}
@@ -2147,6 +2154,8 @@ snapshots:
   get-value@2.0.6: {}
 
   graceful-fs@4.2.11: {}
+
+  ignore@7.0.5: {}
 
   is-extendable@0.1.1: {}
 

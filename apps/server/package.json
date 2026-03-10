@@ -12,6 +12,7 @@
   "dependencies": {
     "@nebula/protocol": "workspace:*",
     "chokidar": "^4.0.1",
+    "ignore": "^7.0.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {

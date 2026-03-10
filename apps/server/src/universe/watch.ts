@@ -1,6 +1,6 @@
 import path from "node:path";
 import chokidar from "chokidar";
-import { shouldIgnore } from "./ignore.js";
+import { createIgnoreMatcher } from "./ignore.js";
 import { normalizePath } from "./ids.js";
 import type { PatchOp } from "./types.js";
 import { UniverseGraph } from "./graph.js";
@@ -16,6 +16,7 @@ export function startUniverseWatcher(params: {
   logger?: (record: Record<string, unknown>) => void;
 }): UniverseWatcher {
   const rootPath = normalizePath(params.rootPath);
+  const isIgnored = createIgnoreMatcher(rootPath);
 
   const log = (event: string, extra: Record<string, unknown> = {}) =>
     params.logger?.({ scope: "universe", event, rootPath, ...extra });
@@ -24,13 +25,13 @@ export function startUniverseWatcher(params: {
     ignoreInitial: false,
     awaitWriteFinish: { stabilityThreshold: 120, pollInterval: 20 },
     ignored(candidate) {
-      return shouldIgnore(String(candidate));
+      return isIgnored(String(candidate));
     }
   });
 
   const onUpsert = async (rawPath: string, kind: "file" | "dir"): Promise<void> => {
     const absPath = normalizePath(path.resolve(rawPath));
-    if (shouldIgnore(absPath)) return;
+    if (isIgnored(absPath)) return;
 
     const ops = await params.graph.upsertPath(absPath, kind);
     if (ops.length > 0) {
@@ -41,7 +42,7 @@ export function startUniverseWatcher(params: {
 
   const onRemove = (rawPath: string): void => {
     const absPath = normalizePath(path.resolve(rawPath));
-    if (shouldIgnore(absPath)) return;
+    if (isIgnored(absPath)) return;
     const ops = params.graph.removePath(absPath);
     if (ops.length > 0) {
       log("fs_remove", { path: absPath, ops: ops.length });
