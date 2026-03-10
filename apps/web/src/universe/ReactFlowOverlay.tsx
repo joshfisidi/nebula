@@ -36,6 +36,8 @@ type VisibleNode = {
   expandable: boolean;
   childCount?: number;
   salience: number;
+  focusRole: "focus" | "parent" | "context" | "default";
+  mindmapMode: boolean;
   z: number;
   position: { x: number; y: number };
 };
@@ -72,6 +74,20 @@ function scoreNode(
   return score;
 }
 
+function compareRankedNodes(
+  a: { id: string; name: string; kind: "dir" | "file"; path?: string },
+  b: { id: string; name: string; kind: "dir" | "file"; path?: string },
+  search: string,
+  focusId: string | null,
+  matchedIds: Set<string>
+): number {
+  return (
+    scoreNode(b, search, focusId, matchedIds) - scoreNode(a, search, focusId, matchedIds) ||
+    a.name.localeCompare(b.name) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
 function buildNodeAriaLabel(node: VisibleNode): string {
   if (node.kind === "summary") {
     return `Collapsed branch summary, ${node.childCount ?? 0} hidden items`;
@@ -90,6 +106,10 @@ function buildEdgeAriaLabel(sourceLabel: string, targetLabel: string): string {
 function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
   const isDir = node.kind === "dir";
   const isSummary = node.kind === "summary";
+  const isMindmapNode = node.mindmapMode && !isSummary;
+  const isFocusNode = node.focusRole === "focus";
+  const isFocusParent = node.focusRole === "parent";
+  const isFocusContext = node.focusRole === "context";
   const normalizedName = node.name.toLowerCase();
   const normalizedPath = (node.path ?? "").toLowerCase();
   const isBubbleGroup =
@@ -98,10 +118,14 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
     isSummary;
 
   const label = isSummary ? node.name : isDir ? `${node.expanded ? "▾" : "▸"} ${node.name}` : node.name;
-  const widthPx = Math.round(
-    Math.max(isBubbleGroup ? 64 : 88, Math.min(isBubbleGroup ? 160 : 220, label.length * (isBubbleGroup ? 6.2 : 6.8) + (isBubbleGroup ? 26 : 24)))
-  );
-  const heightPx = isBubbleGroup ? 30 : 34;
+  const bubbleSize = isFocusNode ? 118 : isFocusParent ? 90 : isFocusContext ? 78 : 70;
+  const widthPx =
+    isMindmapNode && isDir
+      ? bubbleSize
+      : Math.round(
+          Math.max(isBubbleGroup ? 64 : 88, Math.min(isBubbleGroup ? 160 : 220, label.length * (isBubbleGroup ? 6.2 : 6.8) + (isBubbleGroup ? 26 : 24)))
+        );
+  const heightPx = isMindmapNode && isDir ? bubbleSize : isBubbleGroup ? 30 : 34;
   const width = `${(widthPx / 16).toFixed(3)}rem`;
   const height = `${(heightPx / 16).toFixed(3)}rem`;
 
@@ -126,30 +150,55 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
       expanded: node.expanded
     },
     style: {
-      background: isBubbleGroup
-        ? "rgba(20,35,70,0.95)"
-        : isDir
-          ? "rgba(15,27,56,0.95)"
-          : "rgba(12,20,40,0.92)",
+      background: isFocusNode
+        ? "rgba(248,154,58,0.96)"
+        : isFocusParent
+          ? "rgba(198,77,68,0.95)"
+          : isMindmapNode && isDir
+            ? "rgba(53,111,170,0.95)"
+            : isBubbleGroup
+              ? "rgba(20,35,70,0.95)"
+              : isDir
+                ? "rgba(15,27,56,0.95)"
+                : "rgba(12,20,40,0.92)",
       color: "#dbeafe",
-      border: isBubbleGroup
-        ? "1px solid rgba(125,211,252,0.88)"
-        : isDir
-          ? `1px solid hsla(${(node.depth * 43) % 360} 80% ${68 + Math.min(14, node.salience * 4)}% / 0.78)`
-          : `1px solid rgba(148,163,184,${Math.min(0.82, 0.36 + node.salience * 0.08)})`,
-      borderRadius: isBubbleGroup ? 999 : 10,
-      boxShadow: isSummary ? "none" : `0 0 ${8 + node.salience * 7}px rgba(96,165,250,${Math.min(0.28, node.salience * 0.05)})`,
-      fontSize: isBubbleGroup ? "0.656rem" : "0.688rem",
+      border: isFocusNode
+        ? "2px solid rgba(255,255,255,0.96)"
+        : isFocusParent
+          ? "2px solid rgba(255,228,214,0.92)"
+          : isMindmapNode && isDir
+            ? "2px solid rgba(255,255,255,0.86)"
+            : isBubbleGroup
+              ? "1px solid rgba(125,211,252,0.88)"
+              : isDir
+                ? `1px solid hsla(${(node.depth * 43) % 360} 80% ${68 + Math.min(14, node.salience * 4)}% / 0.78)`
+                : `1px solid rgba(148,163,184,${Math.min(0.82, 0.36 + node.salience * 0.08)})`,
+      borderRadius: isMindmapNode && isDir ? 999 : isBubbleGroup ? 999 : 10,
+      boxShadow: isSummary
+        ? "none"
+        : isFocusNode
+          ? "0 0 0 8px rgba(248,154,58,0.16), 0 24px 64px rgba(248,154,58,0.22)"
+          : isFocusParent
+            ? "0 0 0 5px rgba(198,77,68,0.12), 0 18px 48px rgba(198,77,68,0.16)"
+            : isMindmapNode && isDir
+              ? "0 10px 32px rgba(53,111,170,0.18)"
+              : `0 0 ${8 + node.salience * 7}px rgba(96,165,250,${Math.min(0.28, node.salience * 0.05)})`,
+      fontSize: isFocusNode ? "0.78rem" : isBubbleGroup ? "0.656rem" : "0.688rem",
+      fontWeight: isFocusNode || isFocusParent ? 700 : 600,
       lineHeight: 1.2,
-      padding: isBubbleGroup ? "0.375rem 0.75rem" : "0.375rem 0.5rem",
+      padding: isMindmapNode && isDir ? "0.5rem" : isBubbleGroup ? "0.375rem 0.75rem" : "0.375rem 0.5rem",
       width,
       height,
       minWidth: width,
       maxWidth: width,
       overflow: "hidden",
       textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
-      opacity: isSummary ? 0.9 : Math.max(0.78, 1 - Math.abs(node.z) * 0.02)
+      whiteSpace: isMindmapNode && isDir ? "normal" : "nowrap",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      opacity: isSummary ? 0.9 : isFocusContext ? 0.94 : Math.max(0.78, 1 - Math.abs(node.z) * 0.02)
     }
   };
 }
@@ -252,6 +301,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
     const matchedIds = new Set<string>();
     const matchedBranchIds = new Set<string>();
+    const focusParentId = focus ? byId.get(focus)?.parentId ?? null : null;
 
     if (search) {
       for (const node of selectedNodes) {
@@ -297,6 +347,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         expandable: false,
         childCount: hiddenCount,
         salience: 0.8,
+        focusRole: "default",
+        mindmapMode: false,
         z: 0,
         position: { x: 0, y: 0 }
       });
@@ -341,7 +393,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
           if (isExpanded) {
             const ranked = allChildren
               .slice()
-              .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+              .sort((a, b) => compareRankedNodes(a, b, search, focus, matchedIds));
             const budget = currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
             const kept = ranked.slice(0, budget);
 
@@ -369,7 +421,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
         const ranked = allChildren
           .filter((child) => child.kind === "dir" || showFiles || matchedIds.has(child.id) || child.id === focus)
-          .sort((a, b) => scoreNode(b, search, focus, matchedIds) - scoreNode(a, search, focus, matchedIds));
+          .sort((a, b) => compareRankedNodes(a, b, search, focus, matchedIds));
 
         const budget = id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
         const kept = ranked.slice(0, budget);
@@ -406,11 +458,20 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const centerX = xs.length ? (Math.min(...xs) + Math.max(...xs)) * 0.5 : 0;
     const centerY = ys.length ? (Math.min(...ys) + Math.max(...ys)) * 0.5 : 0;
     const fieldScale = isMobile ? 34 : 42;
+    const mindmapMode = layoutMode === "focus" && !search;
 
     const flowNodes: VisibleNode[] = visibleRealNodes.map((id) => {
       const node = byId.get(id)!;
       const live = node.posCurrent ?? node.posTarget ?? node.pos ?? { x: 0, y: 0, z: 0 };
       const childCount = children.get(node.id)?.length ?? 0;
+      const focusRole =
+        node.id === focus
+          ? "focus"
+          : node.id === focusParentId
+            ? "parent"
+            : mindmapMode && focusTrail.has(node.id)
+              ? "context"
+              : "default";
 
       return {
         id: node.id,
@@ -423,6 +484,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         expandable: node.kind === "dir" && childCount > 0,
         childCount,
         salience: node.physics?.salience ?? 1,
+        focusRole,
+        mindmapMode,
         z: live.z,
         position: {
           x: (live.x - centerX) * fieldScale,

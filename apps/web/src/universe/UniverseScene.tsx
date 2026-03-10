@@ -410,7 +410,7 @@ export function UniverseScene() {
         const current = await fetchSourceCurrent();
         if (cancelled) return;
         setWsEnabled(Boolean(current.currentRoot));
-        setSourceModalOpen(Boolean(current.requireSource && !current.currentRoot));
+        setSourceModalOpen(!current.currentRoot);
       } catch {
         if (!cancelled) setSourceModalOpen(true);
       }

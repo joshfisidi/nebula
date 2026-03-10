@@ -14,12 +14,14 @@ export function chooseLayout(ctx: {
   hasCrossLinks: boolean;
   rootCount: number;
 }): LayoutEngine {
-  if (ctx.mode === "focus" && ctx.rootCount === 1 && !ctx.hasCrossLinks && ctx.visibleCount <= 240) {
-    return "living-lite";
-  }
-
-  if (ctx.mode === "focus" && ctx.rootCount === 1 && !ctx.hasCrossLinks && ctx.visibleCount <= 260) {
-    return "radial";
+  if (ctx.mode === "focus") {
+    if (ctx.rootCount <= 1 && ctx.visibleCount <= 320) {
+      return "radial";
+    }
+    if (!ctx.hasCrossLinks && ctx.visibleCount <= 220) {
+      return "radial";
+    }
+    return ctx.visibleCount > 420 || ctx.hasCrossLinks ? "elk" : "dagre";
   }
 
   if (ctx.hasCrossLinks) return "elk";
@@ -96,6 +98,14 @@ type RadialNodeData = {
   parentId?: string;
 };
 
+function compareRadialNodes(a: Node, b: Node): number {
+  const aData = a.data as { name?: string; label?: string; path?: string } | undefined;
+  const bData = b.data as { name?: string; label?: string; path?: string } | undefined;
+  const aKey = `${aData?.name ?? aData?.label ?? aData?.path ?? a.id}`.toLowerCase();
+  const bKey = `${bData?.name ?? bData?.label ?? bData?.path ?? b.id}`.toLowerCase();
+  return aKey.localeCompare(bKey) || a.id.localeCompare(b.id);
+}
+
 export function layoutWithRadial(nodes: Node[], edges: Edge[], rootId?: string) {
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const children = new Map<string, Node[]>();
@@ -114,8 +124,10 @@ export function layoutWithRadial(nodes: Node[], edges: Edge[], rootId?: string) 
   }
 
   for (const siblings of children.values()) {
-    siblings.sort((a, b) => a.id.localeCompare(b.id));
+    siblings.sort(compareRadialNodes);
   }
+
+  roots.sort(compareRadialNodes);
 
   const primaryRoot = (rootId && byId.get(rootId)) ?? roots[0] ?? nodes[0];
   if (!primaryRoot) {

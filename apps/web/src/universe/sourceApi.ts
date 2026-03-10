@@ -7,6 +7,7 @@ export interface SourceCurrent {
   currentRoot: string | null;
   requireSource: boolean;
   allowedRoots: string[];
+  autoSelectDefaultRoot?: boolean;
 }
 
 function resolveApiBase(): string {
@@ -16,18 +17,31 @@ function resolveApiBase(): string {
   return `${protocol}//${host}:${port}`;
 }
 
+async function readJson<T>(response: Response, fallbackLabel: string): Promise<T> {
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === "object" && "message" in payload && typeof payload.message === "string"
+        ? payload.message
+        : `${fallbackLabel} failed (${response.status})`;
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
 export async function fetchSourceCurrent(): Promise<SourceCurrent> {
   const response = await fetch(`${resolveApiBase()}/source/current`);
-  if (!response.ok) throw new Error(`source/current failed (${response.status})`);
-  return response.json();
+  return readJson<SourceCurrent>(response, "source/current");
 }
 
 export async function fetchSourceList(root?: string): Promise<{ base: string; folders: SourceFolder[] }> {
   const url = new URL(`${resolveApiBase()}/source/list`);
   if (root) url.searchParams.set("root", root);
   const response = await fetch(url.toString());
-  if (!response.ok) throw new Error(`source/list failed (${response.status})`);
-  return response.json();
+  return readJson<{ base: string; folders: SourceFolder[] }>(response, "source/list");
 }
 
 export async function selectSource(path: string): Promise<{ ok: boolean; currentRoot: string | null }> {
@@ -36,9 +50,5 @@ export async function selectSource(path: string): Promise<{ ok: boolean; current
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path })
   });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`source/select failed (${response.status}) ${text}`);
-  }
-  return response.json();
+  return readJson<{ ok: boolean; currentRoot: string | null }>(response, "source/select");
 }
