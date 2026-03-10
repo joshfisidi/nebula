@@ -4,6 +4,8 @@ const NATURALLY_HIDDEN_SEGMENTS = new Set([
   "docs",
   "dist",
   "build",
+  "node_modules",
+  ".pnpm-store",
   ".next",
   ".cache",
   ".turbo",

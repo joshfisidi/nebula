@@ -13,7 +13,12 @@ export function shouldIgnore(absPath: string): boolean {
     ".pnpm-store",
     ".git",
     ".next",
-    "dist"
+    "dist",
+    "build",
+    ".cache",
+    ".turbo",
+    ".parcel-cache",
+    "coverage"
   ]);
 
   if (segments.some((segment) => blockedDirs.has(segment))) {
