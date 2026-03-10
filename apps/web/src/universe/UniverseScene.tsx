@@ -6,9 +6,161 @@ import { cn } from "@/lib/utils";
 import { UniverseLiveProvider } from "./UniverseLiveProvider";
 import { ProjectViewerPanel } from "./ProjectViewerPanel";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
+import { fetchSourceCurrent, fetchSourceList, selectSource, type SourceFolder } from "./sourceApi";
 import { useUniverseGraphStore, type InteractionMode } from "./graphStore";
 
-function StatusBar({ mobile }: { mobile: boolean }) {
+function SourceModal({
+  open,
+  onClose,
+  onSelected
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSelected: (path: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [allowedRoots, setAllowedRoots] = useState<string[]>([]);
+  const [selectedRoot, setSelectedRoot] = useState<string>("");
+  const [folders, setFolders] = useState<SourceFolder[]>([]);
+  const [selectedPath, setSelectedPath] = useState<string>("");
+  const [manualPath, setManualPath] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setError(null);
+        const current = await fetchSourceCurrent();
+        if (cancelled) return;
+        const roots = current.allowedRoots ?? [];
+        setAllowedRoots(roots);
+        const root = roots[0] ?? "";
+        setSelectedRoot(root);
+
+        if (current.currentRoot) {
+          setSelectedPath(current.currentRoot);
+          setManualPath(current.currentRoot);
+        }
+
+        if (root) {
+          const listing = await fetchSourceList(root);
+          if (cancelled) return;
+          setFolders(listing.folders ?? []);
+        }
+      } catch (e) {
+        if (!cancelled) setError(String(e));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const refreshList = useMemo(
+    () =>
+      async (base: string) => {
+        try {
+          setError(null);
+          const listing = await fetchSourceList(base);
+          setFolders(listing.folders ?? []);
+        } catch (e) {
+          setError(String(e));
+        }
+      },
+    []
+  );
+
+  const submit = async () => {
+    const path = manualPath.trim() || selectedPath;
+    if (!path) {
+      setError("Select a folder or paste a path");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await selectSource(path);
+      if (res.currentRoot) {
+        onSelected(res.currentRoot);
+      }
+      onClose();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-2xl border border-slate-700/80 bg-slate-950 p-4 text-slate-100 shadow-2xl">
+        <div className="mb-3 text-lg font-semibold">Select folder source</div>
+        <div className="mb-2 text-sm text-slate-400">Pick any allowed root folder to spawn the project mind map.</div>
+
+        <label className="mb-2 block text-xs text-slate-400">Root</label>
+        <select
+          className="mb-3 h-9 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm"
+          value={selectedRoot}
+          onChange={(e) => {
+            const next = e.target.value;
+            setSelectedRoot(next);
+            void refreshList(next);
+          }}
+        >
+          {allowedRoots.map((root) => (
+            <option key={root} value={root}>
+              {root}
+            </option>
+          ))}
+        </select>
+
+        <label className="mb-2 block text-xs text-slate-400">Folder</label>
+        <select
+          className="mb-3 h-9 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm"
+          value={selectedPath}
+          onChange={(e) => {
+            setSelectedPath(e.target.value);
+            setManualPath(e.target.value);
+          }}
+        >
+          <option value="">Select folder…</option>
+          {folders.map((folder) => (
+            <option key={folder.path} value={folder.path}>
+              {folder.name}
+            </option>
+          ))}
+        </select>
+
+        <label className="mb-2 block text-xs text-slate-400">Or paste path</label>
+        <input
+          className="mb-3 h-9 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm"
+          value={manualPath}
+          onChange={(e) => setManualPath(e.target.value)}
+          placeholder="/absolute/path"
+        />
+
+        {error && <div className="mb-3 text-xs text-rose-300">{error}</div>}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            cancel
+          </Button>
+          <Button onClick={submit} disabled={loading}>
+            {loading ? "selecting..." : "use folder"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBar({ mobile, onOpenSource }: { mobile: boolean; onOpenSource: () => void }) {
   const connected = useUniverseGraphStore((s) => s.connected);
   const nodes = useUniverseGraphStore((s) => s.nodeArray);
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
@@ -80,6 +232,10 @@ function StatusBar({ mobile }: { mobile: boolean }) {
         navigator
       </Button>
 
+      <Button type="button" variant="ghost" size="sm" className="h-8 rounded-full px-3" onClick={onOpenSource}>
+        source
+      </Button>
+
       <div className="min-w-0 flex-1 truncate px-1 text-center text-xs text-slate-300">{statusLine}</div>
 
       <div className="flex items-center gap-1 rounded-full border border-slate-800/80 bg-slate-900/70 p-1" role="group" aria-label="Layout mode">
@@ -125,6 +281,7 @@ function StatusBar({ mobile }: { mobile: boolean }) {
 
 export function UniverseScene() {
   const [mobile, setMobile] = useState(false);
+  const [sourceModalOpen, setSourceModalOpen] = useState(true);
 
   useEffect(() => {
     const update = () => setMobile(window.innerWidth < 900);
@@ -133,12 +290,30 @@ export function UniverseScene() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const current = await fetchSourceCurrent();
+        if (cancelled) return;
+        setSourceModalOpen(Boolean(current.requireSource && !current.currentRoot));
+      } catch {
+        if (!cancelled) setSourceModalOpen(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <UniverseLiveProvider>
       <div style={{ position: "relative", width: "100%", height: "100dvh", background: "#070b14" }}>
-        <StatusBar mobile={mobile} />
+        <StatusBar mobile={mobile} onOpenSource={() => setSourceModalOpen(true)} />
         <ProjectViewerPanel />
         <ReactFlowOverlay enabled />
+        <SourceModal open={sourceModalOpen} onClose={() => setSourceModalOpen(false)} onSelected={() => setSourceModalOpen(false)} />
       </div>
     </UniverseLiveProvider>
   );

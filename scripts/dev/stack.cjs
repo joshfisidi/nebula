@@ -44,8 +44,10 @@ function resolveConfig(parsed) {
   const watchDir = process.env.WATCH_DIR || ROOT_DIR;
   const universeWatchRoot = process.env.UNIVERSE_WATCH_ROOT || watchDir;
   const universeWsPort = String(process.env.UNIVERSE_WS_PORT || process.env.PORT || '18891');
+  const universeApiPort = String(process.env.UNIVERSE_API_PORT || '18892');
   const webPort = parsed.webPortCli || process.env.WEB_PORT || '3000';
   const nextPublicWsPort = process.env.NEXT_PUBLIC_UNIVERSE_WS_PORT || universeWsPort;
+  const nextPublicApiPort = process.env.NEXT_PUBLIC_UNIVERSE_API_PORT || universeApiPort;
 
   return {
     env: {
@@ -55,11 +57,15 @@ function resolveConfig(parsed) {
       ENABLE_IMPORT_EDGES: process.env.ENABLE_IMPORT_EDGES || '0',
       UNIVERSE_WATCH_ROOT: universeWatchRoot,
       UNIVERSE_WS_PORT: universeWsPort,
+      UNIVERSE_API_PORT: universeApiPort,
+      UNIVERSE_REQUIRE_SOURCE: process.env.UNIVERSE_REQUIRE_SOURCE || '1',
       NEXT_PUBLIC_UNIVERSE_WS_PORT: nextPublicWsPort,
+      NEXT_PUBLIC_UNIVERSE_API_PORT: nextPublicApiPort,
       WEB_PORT: webPort,
     },
     universeWatchRoot,
     universeWsPort,
+    universeApiPort,
     webPort,
     webArgs: parsed.webArgs,
   };
@@ -110,6 +116,7 @@ function printBanner(config) {
   process.stdout.write(`- websocket: ws://localhost:${config.universeWsPort}\n`);
   process.stdout.write(`- ws (LAN):  ws://<device-ip>:${config.universeWsPort}\n`);
   process.stdout.write(`- import edges: ${config.env.ENABLE_IMPORT_EDGES}\n`);
+  process.stdout.write(`- source api: http://localhost:${config.universeApiPort}\n`);
   process.stdout.write(`- web:       http://localhost:${config.webPort}\n`);
   process.stdout.write(`- web (LAN): http://<device-ip>:${config.webPort}\n`);
 }
