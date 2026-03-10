@@ -1,14 +1,14 @@
 import dynamic from "next/dynamic";
 
-const UniverseScene = dynamic(
-  () => import("@/universe/UniverseScene").then((module) => module.UniverseScene),
+const UniverseFlowScene = dynamic(
+  () => import("@/universe/UniverseFlowScene").then((module) => module.UniverseFlowScene),
   { ssr: false }
 );
 
 export default function HomePage() {
   return (
     <main>
-      <UniverseScene />
+      <UniverseFlowScene />
     </main>
   );
 }

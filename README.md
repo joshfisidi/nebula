@@ -1,6 +1,6 @@
 # Nebula
 
-Real-time 3D file-system universe visualizer.
+Real-time file-system graph visualizer (React Flow-first).
 
 ## Requirements
 - Node.js 22+
@@ -27,9 +27,9 @@ Open:
 - Tailscale/LAN: `http://<device-ip>:3000` (example: `http://100.88.154.26:3000`)
 
 UI highlights:
-- **Lattice mode (default):** deterministic tree-like layout for readability.
-- **3D mode:** presentation pass with depth and space aesthetics.
-- **Controls panel:** project toggles, search, type filters, collapse/expand tree, node inspector.
+- **React Flow runtime (default):** deterministic 2D graph rendering with pan/zoom.
+- **Live data pipeline:** websocket snapshot/patch updates flow into the graph store in real time.
+- **Controls panel:** project selection (single/all/none), search, and collapse/expand tree browsing.
 
 ## Run in background (persistent)
 ```bash

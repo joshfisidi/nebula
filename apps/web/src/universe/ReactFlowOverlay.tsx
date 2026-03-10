@@ -483,7 +483,11 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         expanded: state.expandedNodeIds.has(node.id),
         expandable: node.kind === "dir" && childCount > 0,
         childCount,
+<<<<<<< HEAD
         salience: node.physics?.salience ?? 1,
+=======
+        salience: ((node as { physics?: { salience?: number } }).physics?.salience) ?? 1,
+>>>>>>> agent
         focusRole,
         mindmapMode,
         z: live.z,

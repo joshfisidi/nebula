@@ -140,6 +140,7 @@ export function ProjectViewerPanel() {
   const noneSelected = selectedProjectIds.size === 0;
 
   return (
+<<<<<<< HEAD
     <>
       {isMobile && drawerOpen ? (
         <button
@@ -149,6 +150,20 @@ export function ProjectViewerPanel() {
           aria-label="Close project navigator"
         />
       ) : null}
+=======
+    <Card className="absolute left-3 top-16 z-20 w-[min(360px,calc(100vw-1.5rem))] max-h-[calc(100dvh-5rem)] backdrop-blur-sm">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle>Project Viewer</CardTitle>
+          <Badge variant={connected ? "default" : "secondary"}>{connected ? "live" : "offline"}</Badge>
+        </div>
+        <div className="flex gap-2 text-xs text-slate-400">
+          <span>{nodes.length} nodes</span>
+          <span>•</span>
+          <span>{edges.length} edges</span>
+        </div>
+      </CardHeader>
+>>>>>>> agent
 
       <aside
         id="project-drawer"
@@ -238,6 +253,7 @@ export function ProjectViewerPanel() {
           </div>
         </div>
 
+<<<<<<< HEAD
         <div className="border-b border-slate-800/80 px-4 py-3">
           <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">Path</div>
           {breadcrumbs.length > 0 ? (
@@ -257,6 +273,19 @@ export function ProjectViewerPanel() {
                 </button>
               ))}
             </div>
+=======
+        <div className="mb-3 flex items-center gap-2">
+          <Search size={14} className="text-slate-400" />
+          <Input placeholder="Search files/folders..." value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Button variant="outline" size="sm" onClick={() => setCollapsed(new Set())}>expand</Button>
+        </div>
+
+        <div className="max-h-[calc(100dvh-19rem)] overflow-auto rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
+          {rootNodes.length === 0 ? (
+            <div className="px-2 py-6 text-center text-xs text-slate-400">Waiting for graph data...</div>
+          ) : selectedProjectIds.size === 0 ? (
+            <div className="px-2 py-6 text-center text-xs text-slate-400">Select at least one project above to load it.</div>
+>>>>>>> agent
           ) : (
             <div className="text-sm text-slate-500">Choose a project to start exploring one node at a time.</div>
           )}

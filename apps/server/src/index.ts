@@ -92,7 +92,11 @@ function parseAllowedRootsEnv(): string[] {
 }
 
 const WS_PORT = parsePortEnv(["UNIVERSE_WS_PORT", "PORT"], 18891);
+<<<<<<< HEAD
 const API_PORT = parsePortEnv(["UNIVERSE_API_PORT"], 18892);
+=======
+const API_PORT = parsePortEnv(["UNIVERSE_API_PORT", "API_PORT"], 18892);
+>>>>>>> agent
 const DEFAULT_ROOT = parseOptionalResolvedPathEnv("UNIVERSE_WATCH_ROOT");
 const REQUIRE_SOURCE = parseBooleanEnv("UNIVERSE_REQUIRE_SOURCE", true);
 const AUTOSELECT_DEFAULT_ROOT = parseBooleanEnv("UNIVERSE_AUTOSELECT_DEFAULT_ROOT", false);
@@ -427,7 +431,23 @@ async function bootstrap(): Promise<void> {
 
   if (DEFAULT_ROOT) {
     if (AUTOSELECT_DEFAULT_ROOT) {
+<<<<<<< HEAD
       await startRoot(DEFAULT_ROOT);
+=======
+      try {
+        await startRoot(DEFAULT_ROOT);
+      } catch (error) {
+        const parsed = parseError(error);
+        logWarn({
+          scope: "server",
+          event: "default_root_autoselect_failed",
+          rootPath: DEFAULT_ROOT,
+          error: parsed.code,
+          details: parsed.details,
+          message: parsed.message
+        });
+      }
+>>>>>>> agent
     } else {
       logInfo({
         scope: "server",

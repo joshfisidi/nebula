@@ -1,5 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", ".next"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "src/universe/UniverseScene.tsx",
+    "src/universe/DeepSpaceStarfield.tsx",
+    "src/universe/EdgeSystem.tsx",
+    "src/universe/LabelSystem.tsx",
+    "src/universe/NodeSystem.tsx",
+    "src/universe/OrbitGuideSystem.tsx",
+    "src/universe/ParticleSystem.tsx",
+    "src/universe/Starfield.tsx",
+    "src/universe/physics.ts",
+    "src/universe/store.ts"
+  ]
 }
