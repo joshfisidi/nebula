@@ -12,12 +12,17 @@ function resolveWsUrl(): string {
   return `${protocol}://${host}:${port}`;
 }
 
-export function UniverseLiveProvider({ children }: { children: React.ReactNode }) {
+export function UniverseLiveProvider({ children, enabled = true }: { children: React.ReactNode; enabled?: boolean }) {
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
   const applyPatch = useUniverseGraphStore((s) => s.applyPatch);
   const setConnected = useUniverseGraphStore((s) => s.setConnected);
 
   useEffect(() => {
+    if (!enabled) {
+      setConnected(false);
+      return;
+    }
+
     const disconnect = connectUniverseWs({
       url: resolveWsUrl(),
       onConnected: setConnected,
@@ -28,7 +33,7 @@ export function UniverseLiveProvider({ children }: { children: React.ReactNode }
     });
 
     return () => disconnect();
-  }, [applyPatch, applySnapshot, setConnected]);
+  }, [enabled, applyPatch, applySnapshot, setConnected]);
 
   return <>{children}</>;
 }

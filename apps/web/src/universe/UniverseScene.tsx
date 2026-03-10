@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UniverseLiveProvider } from "./UniverseLiveProvider";
@@ -9,14 +9,18 @@ import { ReactFlowOverlay } from "./ReactFlowOverlay";
 import { fetchSourceCurrent, fetchSourceList, selectSource, type SourceFolder } from "./sourceApi";
 import { useUniverseGraphStore, type InteractionMode } from "./graphStore";
 
+type SourceSelectMode = "server" | "local";
+
 function SourceModal({
   open,
   onClose,
-  onSelected
+  onSelected,
+  onLocalPick
 }: {
   open: boolean;
   onClose: () => void;
-  onSelected: (path: string) => void;
+  onSelected: (path: string, mode: SourceSelectMode) => void;
+  onLocalPick: (files: FileList) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +29,15 @@ function SourceModal({
   const [folders, setFolders] = useState<SourceFolder[]>([]);
   const [selectedPath, setSelectedPath] = useState<string>("");
   const [manualPath, setManualPath] = useState("");
+  const localInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (localInputRef.current) {
+      localInputRef.current.setAttribute("webkitdirectory", "");
+      localInputRef.current.setAttribute("directory", "");
+      localInputRef.current.setAttribute("multiple", "");
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -85,7 +98,7 @@ function SourceModal({
     try {
       const res = await selectSource(path);
       if (res.currentRoot) {
-        onSelected(res.currentRoot);
+        onSelected(res.currentRoot, "server");
       }
       onClose();
     } catch (e) {
@@ -146,6 +159,30 @@ function SourceModal({
         />
 
         {error && <div className="mb-3 text-xs text-rose-300">{error}</div>}
+
+        <input
+          ref={localInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+              onLocalPick(files);
+              onSelected("local", "local");
+              onClose();
+            }
+          }}
+        />
+
+        <div className="mb-3 flex justify-start">
+          <Button
+            variant="outline"
+            onClick={() => localInputRef.current?.click()}
+            className="border-slate-700"
+          >
+            pick local folder (browser)
+          </Button>
+        </div>
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
@@ -279,9 +316,85 @@ function StatusBar({ mobile, onOpenSource }: { mobile: boolean; onOpenSource: ()
   );
 }
 
+function buildLocalSnapshot(files: FileList) {
+  type NodeRecord = {
+    id: string;
+    path: string;
+    name: string;
+    kind: "dir" | "file";
+    parentId: string | null;
+    depth: number;
+    children: string[];
+    pos: { x: number; y: number; z: number };
+  };
+
+  const nodes = new Map<string, NodeRecord>();
+  const rootLabel = (files[0]?.webkitRelativePath?.split("/")[0] || "local").trim() || "local";
+  const rootId = `local:${rootLabel}`;
+
+  nodes.set(rootId, {
+    id: rootId,
+    path: rootLabel,
+    name: rootLabel,
+    kind: "dir",
+    parentId: null,
+    depth: 0,
+    children: [],
+    pos: { x: 0, y: 0, z: 0 }
+  });
+
+  for (const file of Array.from(files)) {
+    const rel = (file.webkitRelativePath || file.name).replace(/\\/g, "/");
+    const parts = rel.split("/").filter(Boolean);
+    if (parts.length === 0) continue;
+
+    let parent = rootId;
+    let depth = 1;
+    for (let i = 1; i < parts.length; i += 1) {
+      const name = parts[i] as string;
+      const isLeaf = i === parts.length - 1;
+      const id = `${rootId}/${parts.slice(1, i + 1).join("/")}`;
+      if (!nodes.has(id)) {
+        nodes.set(id, {
+          id,
+          path: `${rootLabel}/${parts.slice(1, i + 1).join("/")}`,
+          name,
+          kind: isLeaf ? "file" : "dir",
+          parentId: parent,
+          depth,
+          children: [],
+          pos: { x: depth * 1.2, y: 0, z: 0 }
+        });
+      }
+      const parentNode = nodes.get(parent);
+      if (parentNode && !parentNode.children.includes(id)) parentNode.children.push(id);
+      parent = id;
+      depth += 1;
+    }
+  }
+
+  const edgeOut: Array<{ id: string; from: string; to: string; kind: "contains" | "imports" | "references" }> = [];
+  for (const n of nodes.values()) {
+    if (n.parentId) {
+      edgeOut.push({ id: `edge:${n.parentId}:${n.id}`, from: n.parentId, to: n.id, kind: "contains" });
+    }
+  }
+
+  return {
+    type: "snapshot" as const,
+    graph: {
+      nodes: Array.from(nodes.values()),
+      edges: edgeOut
+    }
+  };
+}
+
 export function UniverseScene() {
   const [mobile, setMobile] = useState(false);
   const [sourceModalOpen, setSourceModalOpen] = useState(true);
+  const [wsEnabled, setWsEnabled] = useState(true);
+  const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
+  const setConnected = useUniverseGraphStore((s) => s.setConnected);
 
   useEffect(() => {
     const update = () => setMobile(window.innerWidth < 900);
@@ -296,6 +409,7 @@ export function UniverseScene() {
       try {
         const current = await fetchSourceCurrent();
         if (cancelled) return;
+        setWsEnabled(Boolean(current.currentRoot));
         setSourceModalOpen(Boolean(current.requireSource && !current.currentRoot));
       } catch {
         if (!cancelled) setSourceModalOpen(true);
@@ -308,12 +422,25 @@ export function UniverseScene() {
   }, []);
 
   return (
-    <UniverseLiveProvider>
+    <UniverseLiveProvider enabled={wsEnabled}>
       <div style={{ position: "relative", width: "100%", height: "100dvh", background: "#070b14" }}>
         <StatusBar mobile={mobile} onOpenSource={() => setSourceModalOpen(true)} />
         <ProjectViewerPanel />
         <ReactFlowOverlay enabled />
-        <SourceModal open={sourceModalOpen} onClose={() => setSourceModalOpen(false)} onSelected={() => setSourceModalOpen(false)} />
+        <SourceModal
+          open={sourceModalOpen}
+          onClose={() => setSourceModalOpen(false)}
+          onSelected={(_, mode) => {
+            setWsEnabled(mode === "server");
+            if (mode === "local") setConnected(true);
+            setSourceModalOpen(false);
+          }}
+          onLocalPick={(files) => {
+            setWsEnabled(false);
+            applySnapshot(buildLocalSnapshot(files) as any);
+            setConnected(true);
+          }}
+        />
       </div>
     </UniverseLiveProvider>
   );
