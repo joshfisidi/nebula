@@ -5,12 +5,27 @@ export interface SourceFolder {
 
 export interface SourceCurrent {
   currentRoot: string | null;
-  requireSource: boolean;
-  allowedRoots: string[];
+  requireSource?: boolean;
+  allowedRoots?: string[];
   autoSelectDefaultRoot?: boolean;
 }
 
+export interface NebulaSyncHandshake {
+  ok: boolean;
+  bridge: string;
+  token: string;
+  sourcePath: string | null;
+  endpoints: {
+    health: string;
+    sourceCurrent: string;
+    sourceSelect: string;
+    sourceList: string;
+    graphSnapshot: string;
+  };
+}
+
 const API_TIMEOUT_MS = 9000;
+export const NEBULA_SYNC_BASE = "http://127.0.0.1:8787";
 
 function resolveApiBase(): string {
   const protocol = window.location.protocol;
@@ -36,7 +51,9 @@ async function readJson<T>(response: Response, fallbackLabel: string): Promise<T
     const message =
       payload && typeof payload === "object" && "message" in payload && typeof payload.message === "string"
         ? payload.message
-        : `${fallbackLabel} failed (${response.status})`;
+        : payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+          ? payload.error
+          : `${fallbackLabel} failed (${response.status})`;
     throw new Error(message);
   }
 
@@ -82,4 +99,43 @@ export async function selectSource(path: string): Promise<{ ok: boolean; current
     body: JSON.stringify({ path })
   });
   return readJson<{ ok: boolean; currentRoot: string | null }>(response, "source/select");
+}
+
+export async function detectNebulaSyncBridge(): Promise<NebulaSyncHandshake | null> {
+  try {
+    const response = await withTimeout(`${NEBULA_SYNC_BASE}/bridge/handshake`);
+    return await readJson<NebulaSyncHandshake>(response, "bridge/handshake");
+  } catch {
+    return null;
+  }
+}
+
+function authHeaders(token: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+}
+
+export async function nebulaSyncSourceList(token: string, root?: string): Promise<{ base: string; folders: SourceFolder[] }> {
+  const url = new URL(`${NEBULA_SYNC_BASE}/source/list`);
+  if (root) url.searchParams.set("root", root);
+  const response = await withTimeout(url.toString(), { headers: authHeaders(token) });
+  return readJson<{ base: string; folders: SourceFolder[] }>(response, "nebula-sync/source/list");
+}
+
+export async function nebulaSyncSelectSource(token: string, path: string): Promise<{ sourcePath: string | null }> {
+  const response = await withTimeout(`${NEBULA_SYNC_BASE}/source/select`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ path })
+  });
+  return readJson<{ sourcePath: string | null }>(response, "nebula-sync/source/select");
+}
+
+export async function nebulaSyncSnapshot(token: string): Promise<unknown> {
+  const response = await withTimeout(`${NEBULA_SYNC_BASE}/graph/snapshot`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return readJson<unknown>(response, "nebula-sync/graph/snapshot");
 }
