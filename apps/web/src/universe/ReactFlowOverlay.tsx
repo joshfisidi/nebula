@@ -151,42 +151,43 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
     },
     style: {
       background: isFocusNode
-        ? "rgba(248,154,58,0.96)"
+        ? "linear-gradient(135deg, rgba(250,204,21,0.96), rgba(249,115,22,0.96))"
         : isFocusParent
-          ? "rgba(198,77,68,0.95)"
+          ? "linear-gradient(135deg, rgba(244,114,182,0.92), rgba(251,113,133,0.92))"
           : isMindmapNode && isDir
-            ? "rgba(53,111,170,0.95)"
+            ? "linear-gradient(145deg, rgba(14,165,233,0.92), rgba(37,99,235,0.92))"
             : isBubbleGroup
-              ? "rgba(20,35,70,0.95)"
+              ? "linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92))"
               : isDir
-                ? "rgba(15,27,56,0.95)"
-                : "rgba(12,20,40,0.92)",
-      color: "#dbeafe",
+                ? "linear-gradient(145deg, rgba(15,23,42,0.94), rgba(30,64,175,0.64))"
+                : "linear-gradient(145deg, rgba(15,23,42,0.9), rgba(51,65,85,0.82))",
+      color: "#f8fafc",
       border: isFocusNode
-        ? "2px solid rgba(255,255,255,0.96)"
+        ? "2px solid rgba(255,255,255,0.92)"
         : isFocusParent
-          ? "2px solid rgba(255,228,214,0.92)"
+          ? "1px solid rgba(255,228,214,0.86)"
           : isMindmapNode && isDir
-            ? "2px solid rgba(255,255,255,0.86)"
+            ? "1px solid rgba(255,255,255,0.72)"
             : isBubbleGroup
-              ? "1px solid rgba(125,211,252,0.88)"
+              ? "1px solid rgba(125,211,252,0.3)"
               : isDir
-                ? `1px solid hsla(${(node.depth * 43) % 360} 80% ${68 + Math.min(14, node.salience * 4)}% / 0.78)`
-                : `1px solid rgba(148,163,184,${Math.min(0.82, 0.36 + node.salience * 0.08)})`,
-      borderRadius: isMindmapNode && isDir ? 999 : isBubbleGroup ? 999 : 10,
+                ? `1px solid hsla(${(node.depth * 37 + 190) % 360} 92% ${64 + Math.min(8, node.salience * 2)}% / 0.52)`
+                : `1px solid rgba(148,163,184,${Math.min(0.52, 0.22 + node.salience * 0.06)})`,
+      borderRadius: isMindmapNode && isDir ? 24 : isBubbleGroup ? 999 : 18,
       boxShadow: isSummary
         ? "none"
         : isFocusNode
-          ? "0 0 0 8px rgba(248,154,58,0.16), 0 24px 64px rgba(248,154,58,0.22)"
+          ? "0 0 0 8px rgba(250,204,21,0.12), 0 24px 70px rgba(249,115,22,0.32)"
           : isFocusParent
-            ? "0 0 0 5px rgba(198,77,68,0.12), 0 18px 48px rgba(198,77,68,0.16)"
+            ? "0 0 0 5px rgba(244,114,182,0.1), 0 18px 48px rgba(251,113,133,0.22)"
             : isMindmapNode && isDir
-              ? "0 10px 32px rgba(53,111,170,0.18)"
-              : `0 0 ${8 + node.salience * 7}px rgba(96,165,250,${Math.min(0.28, node.salience * 0.05)})`,
-      fontSize: isFocusNode ? "0.78rem" : isBubbleGroup ? "0.656rem" : "0.688rem",
+              ? "0 18px 40px rgba(14,165,233,0.22)"
+              : `0 16px ${22 + node.salience * 10}px rgba(14,165,233,${Math.min(0.22, node.salience * 0.04)})`,
+      fontSize: isFocusNode ? "0.8rem" : isBubbleGroup ? "0.66rem" : "0.7rem",
       fontWeight: isFocusNode || isFocusParent ? 700 : 600,
       lineHeight: 1.2,
-      padding: isMindmapNode && isDir ? "0.5rem" : isBubbleGroup ? "0.375rem 0.75rem" : "0.375rem 0.5rem",
+      letterSpacing: "0.01em",
+      padding: isMindmapNode && isDir ? "0.5rem" : isBubbleGroup ? "0.375rem 0.75rem" : "0.4rem 0.55rem",
       width,
       height,
       minWidth: width,
@@ -204,7 +205,7 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
 }
 
 function toFlowEdge(edge: { id: string; from: string; to: string }, depth: number, sourceLabel: string, targetLabel: string): Edge {
-  const hue = (depth * 47) % 360;
+  const hue = (depth * 31 + 190) % 360;
   return {
     id: edge.id,
     source: edge.from,
@@ -212,7 +213,7 @@ function toFlowEdge(edge: { id: string; from: string; to: string }, depth: numbe
     type: "smoothstep",
     focusable: false,
     ariaLabel: buildEdgeAriaLabel(sourceLabel, targetLabel),
-    style: { stroke: `hsla(${hue} 82% 64% / 0.34)`, strokeWidth: 1 }
+    style: { stroke: `hsla(${hue} 90% 72% / 0.26)`, strokeWidth: 1.15 }
   };
 }
 
@@ -780,8 +781,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         zoomOnScroll
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="rgba(80,120,180,0.12)" gap={isMobile ? 18 : 22} size={1} />
-        <Controls showInteractive={false} position={isMobile ? "top-right" : "bottom-right"} />
+        <Background color="rgba(56,189,248,0.08)" gap={isMobile ? 20 : 24} size={1} />
+        <Controls showInteractive={false} position="top-right" />
       </ReactFlow>
     </div>
   );

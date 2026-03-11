@@ -12,7 +12,14 @@
     "dev:bg": "./scripts/dev/start-bg.sh",
     "dev:stop": "./scripts/dev/stop-bg.sh",
     "dev:status": "./scripts/dev/status-bg.sh",
+    "playwright:install": "playwright install chromium firefox webkit",
+    "playwright:webserver": "rm -rf apps/web/.next && npm run -w @nebula/web build && npm run -w @nebula/web start -- --hostname 127.0.0.1 --port 3000",
+    "test:e2e": "playwright test",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "typecheck": "npm run -ws typecheck",
+    "nebula:preupgrade:audit": "bash scripts/automation/nebula-pre-upgrade-audit.sh",
     "nebula:audit:snapshot": "bash scripts/automation/nebula-audit-snapshot.sh",
     "nebula:hourly": "npm run -w nebula-maintainer run",
     "nebula:north-star:gate": "bash scripts/automation/nebula-north-star-gate.sh",
@@ -21,6 +28,7 @@
     "nebula:github:sync": "node scripts/automation/nebula-github-sync.cjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "typescript": "^5.7.3"
   }
 }
