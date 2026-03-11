@@ -56,18 +56,18 @@ test.describe("Nebula control room UI", () => {
     await expect(page.getByText("5 nodes")).toBeVisible();
     await expect(page.getByText("4 edges")).toBeVisible();
     await expect(page.getByRole("button", { name: "Focus nebula" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Folder apps, 1 children, collapsed" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Folder nebula, 2 children, collapsed" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Folder apps, 1 children, collapsed" }).click();
-    await page.getByRole("button", { name: "Folder apps, 1 children, collapsed" }).click();
-    await expect(page.getByRole("button", { name: "Folder web, 1 children, collapsed" })).toBeVisible();
-    await page.getByRole("button", { name: "Folder web, 1 children, collapsed" }).click();
-    await page.getByRole("button", { name: "Folder web, 1 children, collapsed" }).click();
+    await page.getByRole("button", { name: "Expand nebula" }).click();
+    await expect(page.getByRole("button", { name: "Expand apps" })).toBeVisible();
+    await page.getByRole("button", { name: "Expand apps" }).click();
+    await expect(page.getByRole("button", { name: "Expand web" })).toBeVisible();
+    await page.getByRole("button", { name: "Expand web" }).click();
 
-    await expect(page.getByRole("button", { name: "File page.tsx" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Focus page.tsx" })).toBeVisible();
 
     await page.getByPlaceholder("Search every visible path").fill("README.md");
-    await expect(page.getByRole("button", { name: "File README.md" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Focus README.md" })).toBeVisible();
 
     await page.getByRole("button", { name: "Inspector" }).click();
     await expect(page.getByText("Focused signal")).toBeHidden();

@@ -387,7 +387,6 @@ function ProjectTree() {
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
   const revealNode = useUniverseGraphStore((s) => s.revealNode);
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
-  const [collapsedTreeIds, setCollapsedTreeIds] = useState<Set<string>>(new Set());
 
   const byParent = useMemo(() => {
     const map = new Map<string, RenderNode[]>();
@@ -453,9 +452,7 @@ function ProjectTree() {
     if (visibleMatches && !visibleMatches.has(node.id)) return null;
 
     const children = byParent.get(node.id) ?? [];
-    const isStoreExpanded = expandedNodeIds.has(node.id);
-    const isTreeCollapsed = collapsedTreeIds.has(node.id);
-    const showChildren = isStoreExpanded && !isTreeCollapsed;
+    const showChildren = expandedNodeIds.has(node.id);
     const canExpand = node.kind === "dir" && children.length > 0;
 
     return (
@@ -475,12 +472,6 @@ function ProjectTree() {
               onClick={(event) => {
                 event.stopPropagation();
                 toggleExpandedNode(node.id);
-                setCollapsedTreeIds((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(node.id)) next.delete(node.id);
-                  else next.add(node.id);
-                  return next;
-                });
               }}
             >
               {showChildren ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -957,7 +948,7 @@ export function ControlRoomShell({
             ) : null}
 
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4">
-              <div className="nebula-status-strip pointer-events-auto flex flex-col gap-3 rounded-[1.4rem] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="nebula-status-strip flex flex-col gap-3 rounded-[1.4rem] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
                     {connected ? (

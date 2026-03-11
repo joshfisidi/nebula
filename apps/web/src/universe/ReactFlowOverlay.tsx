@@ -782,7 +782,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         proOptions={{ hideAttribution: true }}
       >
         <Background color="rgba(56,189,248,0.08)" gap={isMobile ? 20 : 24} size={1} />
-        <Controls showInteractive={false} position={isMobile ? "top-right" : "bottom-right"} />
+        <Controls showInteractive={false} position="top-right" />
       </ReactFlow>
     </div>
   );
