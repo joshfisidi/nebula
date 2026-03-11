@@ -90,9 +90,14 @@ function writeOperatorBrief({ status, steps, logPath }) {
 const startedAt = new Date();
 const steps = [];
 
-steps.push(runStep('audit_snapshot', 'npm', ['run', 'nebula:audit:snapshot']));
+steps.push(runStep('preupgrade_audit', 'npm', ['run', 'nebula:preupgrade:audit']));
 
-const auditOk = steps[0].ok;
+const preAuditOk = steps[0].ok;
+if (preAuditOk) {
+  steps.push(runStep('audit_snapshot', 'npm', ['run', 'nebula:audit:snapshot']));
+}
+
+const auditOk = steps.find((s) => s.name === 'audit_snapshot')?.ok === true;
 if (auditOk) {
   steps.push(runStep('hourly_upgrade', 'npm', ['run', 'nebula:hourly']));
 }
