@@ -49,6 +49,7 @@ test.describe("Nebula control room UI", () => {
     await page.getByRole("button", { name: "Load into control room" }).click();
 
     await expect(page.getByRole("heading", { name: "Choose a live graph source" })).toBeHidden();
+    await openResponsiveRail(page, "Inspector");
     await expect(page.getByText("Runtime connected")).toBeVisible();
     await expect(page.getByText("projects/nebula").first()).toBeVisible();
     await expect(page.getByText("server", { exact: true }).first()).toBeVisible();
@@ -59,7 +60,7 @@ test.describe("Nebula control room UI", () => {
 
     await page.goto("/");
 
-    await expect(page.getByText("Nebula Sync active")).toBeVisible();
+    await expect(page.getByText("Local bridge is feeding the graph stage.").first()).toBeVisible();
     await expect(page.getByText("5 nodes")).toBeVisible();
     await expect(page.getByText("4 edges")).toBeVisible();
 
@@ -79,6 +80,7 @@ test.describe("Nebula control room UI", () => {
     await expect(page.getByRole("button", { name: "Focus README.md" })).toBeVisible();
 
     await openResponsiveRail(page, "Inspector");
+    await expect(page.getByText("Nebula Sync active")).toBeVisible();
     await expect(page.getByText("Focused signal")).toBeVisible();
 
     await page.getByRole("button", { name: "Inspector" }).click();

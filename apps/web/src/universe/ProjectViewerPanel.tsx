@@ -137,7 +137,7 @@ export function ProjectViewerPanel() {
   };
 
   return (
-    <Card className="absolute left-3 top-16 z-20 w-[min(360px,calc(100vw-1.5rem))] max-h-[calc(100dvh-5rem)] backdrop-blur-sm">
+    <Card className="nebula-panel absolute left-3 top-16 z-20 w-[min(360px,calc(100vw-1.5rem))] max-h-[calc(100dvh-5rem)] rounded-[1.8rem]">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle>Project Viewer</CardTitle>
@@ -151,7 +151,7 @@ export function ProjectViewerPanel() {
       </CardHeader>
 
       <CardContent>
-        <div className="mb-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
+        <div className="mb-3 rounded-[1.2rem] border border-[var(--line)] bg-white/[0.03] p-3">
           <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
             <span>Project selector</span>
             <div className="flex gap-1">
@@ -184,7 +184,7 @@ export function ProjectViewerPanel() {
           <Button variant="outline" size="sm" onClick={() => setCollapsed(new Set())}>expand</Button>
         </div>
 
-        <div className="max-h-[calc(100dvh-19rem)] overflow-auto rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
+        <div className="max-h-[calc(100dvh-19rem)] overflow-auto rounded-[1.2rem] border border-[var(--line)] bg-white/[0.03] p-2">
           {rootNodes.length === 0 ? (
             <div className="px-2 py-6 text-center text-xs text-slate-400">Waiting for graph data...</div>
           ) : selectedProjectIds.size === 0 ? (
