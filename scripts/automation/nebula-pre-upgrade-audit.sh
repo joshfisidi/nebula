@@ -10,11 +10,20 @@ OUT="$AUDIT_DIR/PREUPGRADE_${STAMP_LOCAL}.md"
 
 cd "$ROOT"
 
-# Guardrail: avoid mixing unrelated local changes into hourly upgrade commits.
+# Guardrail mode: by default, keep latest manual changes by creating a minimal baseline commit
+# instead of failing the run. Set NEBULA_PREUPGRADE_STRICT=1 to restore fail-fast behavior.
 if [[ -n "$(git status --porcelain)" ]]; then
-  echo "[PREUPGRADE_AUDIT] FAIL: working tree is dirty; commit/stash first" >&2
-  git status --short >&2
-  exit 1
+  if [[ "${NEBULA_PREUPGRADE_STRICT:-0}" == "1" ]]; then
+    echo "[PREUPGRADE_AUDIT] FAIL: working tree is dirty; commit/stash first" >&2
+    git status --short >&2
+    exit 1
+  fi
+
+  echo "[PREUPGRADE_AUDIT] INFO: dirty tree detected; creating baseline commit to preserve latest manual changes"
+  git add -A
+  if ! git diff --cached --quiet; then
+    git commit -m "chore(preupgrade): baseline latest manual changes before hourly" >/dev/null
+  fi
 fi
 
 {

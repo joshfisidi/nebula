@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Nebula",
-  description: "Real-time 3D file universe visualizer"
+  description: "Nebula control room for live file-system graph operations"
 };
 
 export const viewport: Viewport = {
