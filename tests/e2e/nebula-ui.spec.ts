@@ -1,5 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { mockBrokenBridge, mockLocalBridge, mockServerSelection } from "./helpers/nebula-mocks";
+
+async function openResponsiveRail(page: Page, label: "Explorer" | "Inspector") {
+  const button = page.getByRole("button", { name: label });
+  if ((await button.getAttribute("aria-pressed")) !== "true") {
+    await button.click();
+  }
+}
 
 test.describe("Nebula control room UI", () => {
   test("shows local-first onboarding when no source is configured", async ({ page }) => {
@@ -55,6 +62,8 @@ test.describe("Nebula control room UI", () => {
     await expect(page.getByText("Nebula Sync active")).toBeVisible();
     await expect(page.getByText("5 nodes")).toBeVisible();
     await expect(page.getByText("4 edges")).toBeVisible();
+
+    await openResponsiveRail(page, "Explorer");
     await expect(page.getByRole("button", { name: "Focus nebula" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Folder nebula, 2 children, collapsed" })).toBeVisible();
 
@@ -69,9 +78,28 @@ test.describe("Nebula control room UI", () => {
     await page.getByPlaceholder("Search every visible path").fill("README.md");
     await expect(page.getByRole("button", { name: "Focus README.md" })).toBeVisible();
 
+    await openResponsiveRail(page, "Inspector");
+    await expect(page.getByText("Focused signal")).toBeVisible();
+
     await page.getByRole("button", { name: "Inspector" }).click();
     await expect(page.getByText("Focused signal")).toBeHidden();
     await page.getByRole("button", { name: "Inspector" }).click();
+    await expect(page.getByText("Focused signal")).toBeVisible();
+  });
+
+  test("keeps the shell operable on narrow mobile viewports", async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 900, "This assertion is only meaningful on mobile projects.");
+
+    await mockLocalBridge(page);
+    await page.goto("/");
+
+    await expect(page.getByRole("button", { name: "Explorer" })).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByRole("button", { name: "Inspector" })).toHaveAttribute("aria-pressed", "false");
+
+    await openResponsiveRail(page, "Explorer");
+    await expect(page.getByPlaceholder("Search every visible path")).toBeVisible();
+
+    await openResponsiveRail(page, "Inspector");
     await expect(page.getByText("Focused signal")).toBeVisible();
   });
 });

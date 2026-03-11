@@ -13,6 +13,7 @@
     "dev:stop": "./scripts/dev/stop-bg.sh",
     "dev:status": "./scripts/dev/status-bg.sh",
     "playwright:install": "playwright install chromium firefox webkit",
+    "playwright:webserver": "rm -rf apps/web/.next && npm run -w @nebula/web build && npm run -w @nebula/web start -- --hostname 127.0.0.1 --port 3000",
     "test:e2e": "playwright test",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",

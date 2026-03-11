@@ -11,6 +11,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : 1,
   reporter: [["line"], ["html", { open: "never" }]],
+  expect: {
+    timeout: 10_000
+  },
   use: {
     baseURL,
     trace: "on-first-retry",
@@ -18,7 +21,7 @@ export default defineConfig({
     video: "retain-on-failure"
   },
   webServer: {
-    command: `npm run -w @nebula/web build && npm run -w @nebula/web start -- --hostname ${HOST} --port ${PORT}`,
+    command: "npm run playwright:webserver",
     url: baseURL,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI
@@ -35,6 +38,14 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] }
+    },
+    {
+      name: "mobile-chromium",
+      use: { ...devices["Pixel 7"] }
+    },
+    {
+      name: "mobile-webkit",
+      use: { ...devices["iPhone 14"] }
     }
   ]
 });
