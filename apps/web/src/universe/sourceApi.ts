@@ -10,13 +10,15 @@ export interface SourceCurrent {
   autoSelectDefaultRoot?: boolean;
 }
 
-export interface NebulaSyncHandshake {
+export interface LocalAccessSession {
   ok: boolean;
-  bridge: string;
+  agent: string;
   token: string;
   sourcePath: string | null;
   endpoints: {
     health: string;
+    permissionStatus: string;
+    requestFolderAccess: string;
     sourceCurrent: string;
     sourceSelect: string;
     sourceList: string;
@@ -80,6 +82,81 @@ async function withTimeout(input: RequestInfo | URL, init?: RequestInit): Promis
   }
 }
 
+type RequestAttemptResult =
+  | { kind: "response"; response: Response; label: string }
+  | { kind: "error"; error: unknown; label: string };
+
+async function tryEndpoint(
+  pathname: string,
+  init?: RequestInit
+): Promise<Extract<RequestAttemptResult, { kind: "response" }>> {
+  const response = await withTimeout(`${NEBULA_SYNC_BASE}${pathname}`, init);
+  return { kind: "response", response, label: pathname };
+}
+
+async function requestFirstAvailable(pathnames: string[], init?: RequestInit): Promise<RequestAttemptResult> {
+  let lastError: RequestAttemptResult | null = null;
+
+  for (const pathname of pathnames) {
+    try {
+      const result = await tryEndpoint(pathname, init);
+      if (result.response.status === 404) {
+        lastError = result;
+        continue;
+      }
+      return result;
+    } catch (error) {
+      lastError = { kind: "error", error, label: pathname };
+    }
+  }
+
+  return (
+    lastError ?? {
+      kind: "error",
+      error: new Error("No endpoint candidates configured."),
+      label: pathnames[0] ?? "unknown-endpoint"
+    }
+  );
+}
+
+function normalizeLocalAccessSession(value: unknown): LocalAccessSession {
+  if (!value || typeof value !== "object") {
+    throw new Error("local-access/status returned invalid JSON payload.");
+  }
+
+  const payload = value as {
+    ok?: boolean;
+    agent?: string;
+    bridge?: string;
+    token?: string;
+    sourcePath?: string | null;
+    endpoints?: Partial<LocalAccessSession["endpoints"]>;
+  };
+
+  if (typeof payload.token !== "string" || payload.token.trim() === "") {
+    throw new Error("local-access/status returned no auth token.");
+  }
+
+  return {
+    ok: payload.ok ?? true,
+    agent:
+      (typeof payload.agent === "string" && payload.agent) ||
+      (typeof payload.bridge === "string" && payload.bridge) ||
+      "nebula-sync",
+    token: payload.token,
+    sourcePath: typeof payload.sourcePath === "string" ? payload.sourcePath : null,
+    endpoints: {
+      health: payload.endpoints?.health ?? `${NEBULA_SYNC_BASE}/health`,
+      permissionStatus: payload.endpoints?.permissionStatus ?? `${NEBULA_SYNC_BASE}/permissions/status`,
+      requestFolderAccess: payload.endpoints?.requestFolderAccess ?? `${NEBULA_SYNC_BASE}/permissions/request-folder`,
+      sourceCurrent: payload.endpoints?.sourceCurrent ?? `${NEBULA_SYNC_BASE}/source/current`,
+      sourceSelect: payload.endpoints?.sourceSelect ?? `${NEBULA_SYNC_BASE}/source/select`,
+      sourceList: payload.endpoints?.sourceList ?? `${NEBULA_SYNC_BASE}/source/list`,
+      graphSnapshot: payload.endpoints?.graphSnapshot ?? `${NEBULA_SYNC_BASE}/graph/snapshot`
+    }
+  };
+}
+
 export async function fetchSourceCurrent(): Promise<SourceCurrent> {
   const response = await withTimeout(`${resolveApiBase()}/source/current`);
   return readJson<SourceCurrent>(response, "source/current");
@@ -101,10 +178,15 @@ export async function selectSource(path: string): Promise<{ ok: boolean; current
   return readJson<{ ok: boolean; currentRoot: string | null }>(response, "source/select");
 }
 
-export async function detectNebulaSyncBridge(): Promise<NebulaSyncHandshake | null> {
+export async function fetchLocalAccessSession(): Promise<LocalAccessSession | null> {
+  const result = await requestFirstAvailable(["/permissions/status", "/local-access/status", "/bridge/handshake"]);
+  if (result.kind === "error") {
+    return null;
+  }
+
   try {
-    const response = await withTimeout(`${NEBULA_SYNC_BASE}/bridge/handshake`);
-    return await readJson<NebulaSyncHandshake>(response, "bridge/handshake");
+    const payload = await readJson<unknown>(result.response, result.label);
+    return normalizeLocalAccessSession(payload);
   } catch {
     return null;
   }
@@ -117,25 +199,38 @@ function authHeaders(token: string): HeadersInit {
   };
 }
 
-export async function nebulaSyncSourceList(token: string, root?: string): Promise<{ base: string; folders: SourceFolder[] }> {
+export async function fetchLocalAccessSourceList(token: string, root?: string): Promise<{ base: string; folders: SourceFolder[] }> {
   const url = new URL(`${NEBULA_SYNC_BASE}/source/list`);
   if (root) url.searchParams.set("root", root);
   const response = await withTimeout(url.toString(), { headers: authHeaders(token) });
-  return readJson<{ base: string; folders: SourceFolder[] }>(response, "nebula-sync/source/list");
+  return readJson<{ base: string; folders: SourceFolder[] }>(response, "local-access/source/list");
 }
 
-export async function nebulaSyncSelectSource(token: string, path: string): Promise<{ sourcePath: string | null }> {
+export async function selectLocalAccessSource(token: string, path: string): Promise<{ sourcePath: string | null }> {
   const response = await withTimeout(`${NEBULA_SYNC_BASE}/source/select`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ path })
   });
-  return readJson<{ sourcePath: string | null }>(response, "nebula-sync/source/select");
+  return readJson<{ sourcePath: string | null }>(response, "local-access/source/select");
 }
 
-export async function nebulaSyncSnapshot(token: string): Promise<unknown> {
+export async function requestLocalFolderAccess(token: string): Promise<{ sourcePath: string | null } | null> {
+  const result = await requestFirstAvailable(["/permissions/request-folder", "/local-access/request-folder"], {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({})
+  });
+
+  if (result.kind === "error") return null;
+  if (result.response.status === 404) return null;
+
+  return readJson<{ sourcePath: string | null }>(result.response, result.label);
+}
+
+export async function fetchLocalAccessSnapshot(token: string): Promise<unknown> {
   const response = await withTimeout(`${NEBULA_SYNC_BASE}/graph/snapshot`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  return readJson<unknown>(response, "nebula-sync/graph/snapshot");
+  return readJson<unknown>(response, "local-access/graph/snapshot");
 }

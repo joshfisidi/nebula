@@ -27,9 +27,11 @@ interface UniverseGraphState {
   layoutMode: LayoutMode;
   layoutEngine: LayoutEngine;
   version: number;
+  hasActiveMotion: boolean;
   setConnected: (connected: boolean) => void;
   applySnapshot: (snapshot: UniverseSnapshotMessage) => void;
   applyPatch: (ops: PatchOp[]) => void;
+  stepMotion: (dtMs: number) => boolean;
   addEdge: (params: { source: string; target: string }) => void;
   setProjectSelection: (projectId: string | null) => void;
   clearProjectSelection: () => void;
@@ -48,6 +50,17 @@ interface UniverseGraphState {
 
 function toVec(value?: Vec3): Vec3 {
   return value ?? { x: 0, y: 0, z: 0 };
+}
+
+function cloneVec(value: Vec3): Vec3 {
+  return { x: value.x, y: value.y, z: value.z };
+}
+
+function distanceSq(a: Vec3, b: Vec3): number {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dz = a.z - b.z;
+  return dx * dx + dy * dy + dz * dz;
 }
 
 function assignProjectIds(nodes: Map<string, RenderNode>) {
@@ -151,6 +164,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   layoutMode: "focus",
   layoutEngine: "radial",
   version: 0,
+  hasActiveMotion: false,
 
   setConnected(connected) {
     set({ connected });
@@ -160,7 +174,7 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
     const nodes = new Map<string, RenderNode>();
     for (const node of snapshot.graph.nodes) {
       const pos = toVec(node.pos);
-      nodes.set(node.id, { ...node, projectId: node.id, posCurrent: { ...pos }, posTarget: { ...pos } });
+      nodes.set(node.id, { ...node, projectId: node.id, posCurrent: cloneVec(pos), posTarget: cloneVec(pos) });
     }
 
     assignProjectIds(nodes);
@@ -171,26 +185,39 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       edges.set(edge.id, edge);
     }
 
-    set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: get().version + 1 });
+    set({
+      nodes,
+      edges,
+      nodeArray: [...nodes.values()],
+      edgeArray: [...edges.values()],
+      version: get().version + 1,
+      hasActiveMotion: false
+    });
   },
 
   applyPatch(ops) {
     const state = get();
     const nodes = new Map(state.nodes);
     const edges = new Map(state.edges);
+    let hasActiveMotion = state.hasActiveMotion;
 
     for (const op of ops) {
       switch (op.op) {
         case "upsertNode": {
           const existing = nodes.get(op.node.id);
           const target = op.node.pos ? toVec(op.node.pos) : existing?.posTarget ?? existing?.posCurrent ?? { x: 0, y: 0, z: 0 };
+          const posCurrent = existing?.posCurrent ? cloneVec(existing.posCurrent) : cloneVec(target);
           nodes.set(op.node.id, {
+            ...(existing ?? {}),
             ...op.node,
             projectId: existing?.projectId ?? op.node.id,
-            pos: { ...target },
-            posCurrent: { ...target },
-            posTarget: { ...target }
+            pos: cloneVec(target),
+            posCurrent,
+            posTarget: cloneVec(target)
           });
+          if (existing && distanceSq(posCurrent, target) > 0.0004) {
+            hasActiveMotion = true;
+          }
           break;
         }
         case "removeNode":
@@ -205,9 +232,15 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
         case "setPos": {
           const node = nodes.get(op.id);
           if (node) {
-            node.pos = { ...op.pos };
-            node.posTarget = op.pos;
-            node.posCurrent = { ...op.pos };
+            const target = cloneVec(op.pos);
+            node.pos = cloneVec(target);
+            node.posTarget = target;
+            if (!node.posCurrent) {
+              node.posCurrent = cloneVec(target);
+            }
+            if (distanceSq(node.posCurrent, target) > 0.0004) {
+              hasActiveMotion = true;
+            }
           }
           break;
         }
@@ -216,7 +249,62 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
 
     assignProjectIds(nodes);
     applyDeterministicTreeLayout(nodes);
-    set({ nodes, edges, nodeArray: [...nodes.values()], edgeArray: [...edges.values()], version: state.version + 1 });
+    set({
+      nodes,
+      edges,
+      nodeArray: [...nodes.values()],
+      edgeArray: [...edges.values()],
+      version: state.version + 1,
+      hasActiveMotion
+    });
+  },
+
+  stepMotion(dtMs) {
+    const state = get();
+    if (!state.hasActiveMotion || state.nodes.size === 0) return false;
+
+    const alpha = 1 - Math.exp(-Math.max(8, dtMs) / 140);
+    const snapEpsilonSq = 0.0009;
+    const nodes = new Map(state.nodes);
+    let moved = false;
+    let stillActive = false;
+
+    for (const node of nodes.values()) {
+      const current = node.posCurrent ?? node.posTarget ?? node.pos;
+      const target = node.posTarget ?? node.pos ?? current;
+      if (!current || !target) continue;
+
+      const next: Vec3 = {
+        x: current.x + (target.x - current.x) * alpha,
+        y: current.y + (target.y - current.y) * alpha,
+        z: current.z + (target.z - current.z) * alpha
+      };
+
+      if (distanceSq(next, target) <= snapEpsilonSq) {
+        if (distanceSq(current, target) > 0) {
+          node.posCurrent = cloneVec(target);
+          moved = true;
+        }
+        continue;
+      }
+
+      node.posCurrent = next;
+      moved = true;
+      stillActive = true;
+    }
+
+    if (!moved) {
+      set({ hasActiveMotion: false });
+      return false;
+    }
+
+    set({
+      nodes,
+      nodeArray: [...nodes.values()],
+      version: state.version + 1,
+      hasActiveMotion: stillActive
+    });
+    return true;
   },
 
   addEdge({ source, target }) {

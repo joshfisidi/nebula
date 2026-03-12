@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useUniverseGraphStore } from "./graphStore";
+import { compressPatchOps, type PatchOp, type UniverseSnapshotMessage } from "./patch";
 import { connectUniverseWs } from "./wsClient";
 
 export type UniverseConnectionStatus = {
@@ -30,15 +31,45 @@ export function UniverseLiveProvider({
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
   const applyPatch = useUniverseGraphStore((s) => s.applyPatch);
   const setConnected = useUniverseGraphStore((s) => s.setConnected);
+  const stepMotion = useUniverseGraphStore((s) => s.stepMotion);
+  const pendingSnapshotRef = useRef<UniverseSnapshotMessage | null>(null);
+  const pendingOpsRef = useRef<PatchOp[]>([]);
+  const frameRef = useRef<number | null>(null);
+  const lastFrameMsRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       setConnected(false);
+      pendingSnapshotRef.current = null;
+      pendingOpsRef.current = [];
+      lastFrameMsRef.current = null;
       onStatus?.({ phase: "idle" });
       return;
     }
 
     onStatus?.({ phase: "connecting", message: "Connecting to live graph…" });
+
+    const stepFrame = (now: number) => {
+      const previous = lastFrameMsRef.current ?? now - 16;
+      const dtMs = now - previous;
+      lastFrameMsRef.current = now;
+
+      if (pendingSnapshotRef.current) {
+        const snapshot = pendingSnapshotRef.current;
+        pendingSnapshotRef.current = null;
+        pendingOpsRef.current = [];
+        applySnapshot(snapshot);
+      } else if (pendingOpsRef.current.length > 0) {
+        const queued = compressPatchOps(pendingOpsRef.current);
+        pendingOpsRef.current = [];
+        applyPatch(queued);
+      }
+
+      stepMotion(dtMs);
+      frameRef.current = window.requestAnimationFrame(stepFrame);
+    };
+
+    frameRef.current = window.requestAnimationFrame(stepFrame);
 
     const disconnect = connectUniverseWs({
       url: resolveWsUrl(),
@@ -53,13 +84,27 @@ export function UniverseLiveProvider({
         onStatus?.({ phase: "error", message });
       },
       onMessage(message) {
-        if (message.type === "snapshot") applySnapshot(message);
-        else applyPatch(message.ops);
+        if (message.type === "snapshot") {
+          pendingSnapshotRef.current = message;
+          pendingOpsRef.current = [];
+          return;
+        }
+
+        pendingOpsRef.current.push(...message.ops);
       }
     });
 
-    return () => disconnect();
-  }, [applyPatch, applySnapshot, enabled, onStatus, setConnected]);
+    return () => {
+      disconnect();
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      frameRef.current = null;
+      lastFrameMsRef.current = null;
+      pendingSnapshotRef.current = null;
+      pendingOpsRef.current = [];
+    };
+  }, [applyPatch, applySnapshot, enabled, onStatus, setConnected, stepMotion]);
 
   return <>{children}</>;
 }
