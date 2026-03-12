@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { ControlRoomShell } from "./ControlRoomShell";
 import { useUniverseGraphStore } from "./graphStore";
 import {
-  detectNebulaSyncBridge,
+  fetchLocalAccessSession,
   fetchSourceCurrent,
-  nebulaSyncSelectSource,
-  nebulaSyncSnapshot,
+  fetchLocalAccessSnapshot,
+  requestLocalFolderAccess,
   selectSource,
-  type NebulaSyncHandshake
+  selectLocalAccessSource,
+  type LocalAccessSession
 } from "./sourceApi";
 import { UniverseLiveProvider, type UniverseConnectionStatus } from "./UniverseLiveProvider";
 
@@ -21,7 +22,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [sourceSelecting, setSourceSelecting] = useState(false);
   const [wsEnabled, setWsEnabled] = useState(false);
   const [status, setStatus] = useState<UniverseConnectionStatus>({ phase: "idle" });
-  const [bridge, setBridge] = useState<NebulaSyncHandshake | null>(null);
+  const [localAccessSession, setLocalAccessSession] = useState<LocalAccessSession | null>(null);
   const autoSelectedRootRef = useRef<string | null>(null);
 
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
@@ -30,8 +31,8 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const nodeArray = useUniverseGraphStore((s) => s.nodeArray);
   const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
 
-  const loadBridgeSnapshot = async (token: string) => {
-    const tree = await nebulaSyncSnapshot(token);
+  const loadLocalAccessSnapshot = async (token: string) => {
+    const tree = await fetchLocalAccessSnapshot(token);
 
     const nodes: Array<any> = [];
     const edges: Array<any> = [];
@@ -79,16 +80,16 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         setSourceError(null);
         setSourceLoading(true);
 
-        const detectedBridge = await detectNebulaSyncBridge();
+        const detectedSession = await fetchLocalAccessSession();
         if (cancelled) return;
 
-        if (detectedBridge) {
-          setBridge(detectedBridge);
-          setCurrentRoot(detectedBridge.sourcePath ?? null);
+        if (detectedSession) {
+          setLocalAccessSession(detectedSession);
+          setCurrentRoot(detectedSession.sourcePath ?? null);
           setWsEnabled(false);
 
-          if (detectedBridge.sourcePath) {
-            await loadBridgeSnapshot(detectedBridge.token);
+          if (detectedSession.sourcePath) {
+            await loadLocalAccessSnapshot(detectedSession.token);
             if (!cancelled) setSourceModalOpen(false);
           } else {
             setSourceModalOpen(true);
@@ -118,20 +119,26 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     };
   }, [applySnapshot, selectAllProjects, setConnected]);
 
-  const handleConnectBridge = async () => {
+  const handleRequestLocalAccess = async () => {
     setSourceSelecting(true);
     setSourceError(null);
     try {
-      const detected = await detectNebulaSyncBridge();
-      if (!detected) {
-        throw new Error("Nebula Sync bridge not found on localhost:8787. Start Nebula Sync first.");
+      const detectedSession = await fetchLocalAccessSession();
+      if (!detectedSession) {
+        throw new Error("Local access agent not found on localhost:8787. Start Nebula Sync to grant workspace access.");
       }
-      setBridge(detected);
+      setLocalAccessSession(detectedSession);
       setWsEnabled(false);
-      if (detected.sourcePath) {
-        setCurrentRoot(detected.sourcePath);
-        await loadBridgeSnapshot(detected.token);
+      const granted = await requestLocalFolderAccess(detectedSession.token);
+      const nextSourcePath = granted?.sourcePath ?? detectedSession.sourcePath;
+
+      if (nextSourcePath) {
+        setCurrentRoot(nextSourcePath);
+        await loadLocalAccessSnapshot(detectedSession.token);
         setSourceModalOpen(false);
+      } else {
+        setCurrentRoot(null);
+        setSourceModalOpen(true);
       }
     } catch (err) {
       setSourceError(err instanceof Error ? err.message : String(err));
@@ -150,7 +157,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     setSourceError(null);
     try {
       const result = await selectSource(path);
-      setBridge(null);
+      setLocalAccessSession(null);
       setCurrentRoot(result.currentRoot ?? null);
       setWsEnabled(Boolean(result.currentRoot));
       setSourceModalOpen(false);
@@ -161,9 +168,9 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     }
   };
 
-  const handleSelectLocalSync = async (path: string) => {
-    if (!bridge?.token) {
-      setSourceError("Nebula Sync bridge not connected.");
+  const handleSelectLocalAccessSource = async (path: string) => {
+    if (!localAccessSession?.token) {
+      setSourceError("Local access agent not connected.");
       return;
     }
     if (!path) {
@@ -174,9 +181,9 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     setSourceSelecting(true);
     setSourceError(null);
     try {
-      const result = await nebulaSyncSelectSource(bridge.token, path);
+      const result = await selectLocalAccessSource(localAccessSession.token, path);
       setCurrentRoot(result.sourcePath ?? null);
-      await loadBridgeSnapshot(bridge.token);
+      await loadLocalAccessSnapshot(localAccessSession.token);
       setWsEnabled(false);
       setSourceModalOpen(false);
     } catch (err) {
@@ -191,7 +198,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
       <ControlRoomShell
         preview={preview}
         currentRoot={currentRoot}
-        bridge={bridge}
+        localAccessSession={localAccessSession}
         sourceModalOpen={sourceModalOpen}
         sourceLoading={sourceLoading}
         sourceSelecting={sourceSelecting}
@@ -200,9 +207,9 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         status={status}
         onOpenSource={() => setSourceModalOpen(true)}
         onCloseSource={() => setSourceModalOpen(false)}
-        onConnectBridge={handleConnectBridge}
+        onRequestLocalAccess={handleRequestLocalAccess}
         onSelectedServer={handleSelectSource}
-        onSelectedLocal={handleSelectLocalSync}
+        onSelectedLocal={handleSelectLocalAccessSource}
       />
     </UniverseLiveProvider>
   );

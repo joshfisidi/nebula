@@ -72,3 +72,94 @@ export function isUniverseMessage(value: unknown): value is UniverseMessage {
   }
   return false;
 }
+
+type PendingNodeState = {
+  order: number;
+  upsertNode?: Extract<PatchOp, { op: "upsertNode" }>["node"];
+  setPos?: Extract<PatchOp, { op: "setPos" }>["pos"];
+  removed?: boolean;
+};
+
+type PendingEdgeState = {
+  order: number;
+  upsertEdge?: Extract<PatchOp, { op: "upsertEdge" }>["edge"];
+  removed?: boolean;
+};
+
+export function compressPatchOps(ops: PatchOp[]): PatchOp[] {
+  const nodeState = new Map<string, PendingNodeState>();
+  const edgeState = new Map<string, PendingEdgeState>();
+  let sequence = 0;
+
+  for (const op of ops) {
+    switch (op.op) {
+      case "upsertNode": {
+        const current = nodeState.get(op.node.id) ?? { order: sequence++ };
+        current.removed = false;
+        current.upsertNode = current.setPos ? { ...op.node, pos: { ...current.setPos } } : op.node;
+        nodeState.set(op.node.id, current);
+        break;
+      }
+      case "setPos": {
+        const current = nodeState.get(op.id) ?? { order: sequence++ };
+        current.removed = false;
+        current.setPos = op.pos;
+        if (current.upsertNode) {
+          current.upsertNode = { ...current.upsertNode, pos: { ...op.pos } };
+        }
+        nodeState.set(op.id, current);
+        break;
+      }
+      case "removeNode": {
+        const current = nodeState.get(op.id) ?? { order: sequence++ };
+        current.removed = true;
+        current.upsertNode = undefined;
+        current.setPos = undefined;
+        nodeState.set(op.id, current);
+        break;
+      }
+      case "upsertEdge": {
+        const current = edgeState.get(op.edge.id) ?? { order: sequence++ };
+        current.removed = false;
+        current.upsertEdge = op.edge;
+        edgeState.set(op.edge.id, current);
+        break;
+      }
+      case "removeEdge": {
+        const current = edgeState.get(op.id) ?? { order: sequence++ };
+        current.removed = true;
+        current.upsertEdge = undefined;
+        edgeState.set(op.id, current);
+        break;
+      }
+    }
+  }
+
+  const out: Array<{ order: number; op: PatchOp }> = [];
+
+  for (const [id, state] of nodeState) {
+    if (state.removed) {
+      out.push({ order: state.order, op: { op: "removeNode", id } });
+      continue;
+    }
+    if (state.upsertNode) {
+      out.push({ order: state.order, op: { op: "upsertNode", node: state.upsertNode } });
+      continue;
+    }
+    if (state.setPos) {
+      out.push({ order: state.order, op: { op: "setPos", id, pos: state.setPos } });
+    }
+  }
+
+  for (const [id, state] of edgeState) {
+    if (state.removed) {
+      out.push({ order: state.order, op: { op: "removeEdge", id } });
+      continue;
+    }
+    if (state.upsertEdge) {
+      out.push({ order: state.order, op: { op: "upsertEdge", edge: state.upsertEdge } });
+    }
+  }
+
+  return out.sort((a, b) => a.order - b.order).map((entry) => entry.op);
+}

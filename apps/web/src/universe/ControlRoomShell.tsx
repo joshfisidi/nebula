@@ -29,16 +29,16 @@ import { cn } from "@/lib/utils";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
 import { useUniverseGraphStore, type InteractionMode, type RenderNode } from "./graphStore";
 import type { LayoutMode } from "./layoutEngines";
-import type { NebulaSyncHandshake, SourceFolder } from "./sourceApi";
+import type { LocalAccessSession, SourceFolder } from "./sourceApi";
 import type { UniverseConnectionStatus } from "./UniverseLiveProvider";
 
-type SourceMode = "local-sync" | "server";
+type SourceMode = "local-access" | "server";
 type SearchMode = "global" | "focus";
 
 type ControlRoomShellProps = {
   preview?: boolean;
   currentRoot: string | null;
-  bridge: NebulaSyncHandshake | null;
+  localAccessSession: LocalAccessSession | null;
   sourceModalOpen: boolean;
   sourceLoading: boolean;
   sourceSelecting: boolean;
@@ -47,7 +47,7 @@ type ControlRoomShellProps = {
   status: UniverseConnectionStatus;
   onOpenSource: () => void;
   onCloseSource: () => void;
-  onConnectBridge: () => void;
+  onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
 };
@@ -63,16 +63,16 @@ function formatKind(node: RenderNode): string {
 }
 
 function deriveStatusTone(params: {
-  bridge: NebulaSyncHandshake | null;
+  localAccessSession: LocalAccessSession | null;
   currentRoot: string | null;
   status: UniverseConnectionStatus;
   wsEnabled: boolean;
 }): { tone: "good" | "warn" | "danger" | "idle"; label: string; detail: string } {
-  if (params.bridge && params.currentRoot) {
+  if (params.localAccessSession && params.currentRoot) {
     return {
       tone: "good",
-      label: "Nebula Sync active",
-      detail: "Local bridge is feeding the graph stage."
+      label: "Local workspace active",
+      detail: "The local-access agent is feeding the graph stage."
     };
   }
 
@@ -104,7 +104,7 @@ function deriveStatusTone(params: {
     return {
       tone: "idle",
       label: "Source setup required",
-      detail: "Choose a local bridge or a server-backed folder to begin."
+      detail: "Grant local folder access or choose a server-backed folder to begin."
     };
   }
 
@@ -134,18 +134,18 @@ function SourceModal({
   open,
   loading,
   error,
-  bridge,
+  localAccessSession,
   onClose,
-  onConnectBridge,
+  onRequestLocalAccess,
   onSelectedServer,
   onSelectedLocal
 }: {
   open: boolean;
   loading: boolean;
   error: string | null;
-  bridge: NebulaSyncHandshake | null;
+  localAccessSession: LocalAccessSession | null;
   onClose: () => void;
-  onConnectBridge: () => void;
+  onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
 }) {
@@ -165,16 +165,16 @@ function SourceModal({
         setLocalError(null);
         const sourceApi = await import("./sourceApi");
 
-        if (bridge?.token) {
-          const base = bridge.sourcePath ?? "/Users";
+        if (localAccessSession?.token) {
+          const base = localAccessSession.sourcePath ?? "/Users";
           setRoots([base]);
           setSelectedRoot(base);
-          const list = await sourceApi.nebulaSyncSourceList(bridge.token, base);
+          const list = await sourceApi.fetchLocalAccessSourceList(localAccessSession.token, base);
           if (cancelled) return;
           setFolders(list.folders ?? []);
-          if (bridge.sourcePath) {
-            setSelectedFolderPath(bridge.sourcePath);
-            setManualPath(bridge.sourcePath);
+          if (localAccessSession.sourcePath) {
+            setSelectedFolderPath(localAccessSession.sourcePath);
+            setManualPath(localAccessSession.sourcePath);
           }
           return;
         }
@@ -205,7 +205,7 @@ function SourceModal({
     return () => {
       cancelled = true;
     };
-  }, [open, bridge]);
+  }, [localAccessSession, open]);
 
   if (!open) return null;
 
@@ -227,8 +227,8 @@ function SourceModal({
             </div>
 
             <p className="max-w-xl text-sm leading-6 text-slate-200/78">
-              Start with the local Nebula Sync bridge for the fastest operator loop, or fall back to the runtime server
-              when you need a manually selected watch root.
+              Grant local folder access for the fastest live workspace loop, or fall back to the runtime server when
+              you need a manually selected watch root.
             </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -239,17 +239,17 @@ function SourceModal({
                   </Badge>
                   <Sparkles size={18} className="text-cyan-100/80" />
                 </div>
-                <div className="text-lg font-semibold text-white">Local via Nebula Sync</div>
+                <div className="text-lg font-semibold text-white">Live Local Workspace</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  One-click bridge connection, no token entry, and the cleanest path into the control-room layout.
+                  Grant folder access once, then let the local agent stream live graph updates into the control room.
                 </p>
                 <div className="mt-5">
                   <Button
                     className="h-11 w-full rounded-2xl bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                     disabled={loading}
-                    onClick={onConnectBridge}
+                    onClick={onRequestLocalAccess}
                   >
-                    {bridge ? "Bridge connected" : "Connect Nebula Sync"}
+                    {localAccessSession ? "Local Access Granted" : "Grant Local Folder Access"}
                   </Button>
                 </div>
               </div>
@@ -263,7 +263,7 @@ function SourceModal({
                 </div>
                 <div className="text-lg font-semibold text-white">Runtime server mode</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Use a server-backed watch root when the local bridge is unavailable or when remote access is required.
+                  Use a server-backed watch root when local access is unavailable or when remote access is required.
                 </p>
                 <div className="mt-5 rounded-2xl border border-[var(--line)] bg-white/[0.02] p-3 text-xs leading-5 text-slate-300/78">
                   Source listing and folder selection remain fully supported here.
@@ -295,8 +295,8 @@ function SourceModal({
                 setSelectedRoot(root);
                 try {
                   const sourceApi = await import("./sourceApi");
-                  const list = bridge?.token
-                    ? await sourceApi.nebulaSyncSourceList(bridge.token, root)
+                  const list = localAccessSession?.token
+                    ? await sourceApi.fetchLocalAccessSourceList(localAccessSession.token, root)
                     : await sourceApi.fetchSourceList(root);
                   setFolders(list.folders ?? []);
                 } catch (err) {
@@ -348,8 +348,8 @@ function SourceModal({
               </div>
             ) : (
               <div className="mb-4 rounded-2xl border border-[var(--line)] bg-white/[0.02] px-4 py-3 text-sm text-slate-300/82">
-                {bridge?.token
-                  ? "Local bridge is available. Folder changes will refresh the graph from Nebula Sync."
+                {localAccessSession?.token
+                  ? "Local workspace access is available. Folder changes will refresh the graph from the local agent."
                   : "Server mode will continue to use the runtime API and websocket connection."}
               </div>
             )}
@@ -363,7 +363,7 @@ function SourceModal({
                 disabled={loading}
                 onClick={() => {
                   const path = manualPath.trim() || selectedFolderPath;
-                  if (bridge?.token) onSelectedLocal(path);
+                  if (localAccessSession?.token) onSelectedLocal(path);
                   else onSelectedServer(path);
                 }}
               >
@@ -645,7 +645,7 @@ function InspectorRail({
   toneLabel,
   toneDetail,
   currentRoot,
-  bridge,
+  localAccessSession,
   status,
   onOpenSource
 }: {
@@ -653,7 +653,7 @@ function InspectorRail({
   toneLabel: string;
   toneDetail: string;
   currentRoot: string | null;
-  bridge: NebulaSyncHandshake | null;
+  localAccessSession: LocalAccessSession | null;
   status: UniverseConnectionStatus;
   onOpenSource: () => void;
 }) {
@@ -741,7 +741,7 @@ function InspectorRail({
           <div className="rounded-[1.2rem] border border-[var(--line)] bg-white/[0.02] p-4 text-sm leading-6 text-slate-300/82">
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-400">Source mode</span>
-              <span className="font-medium text-white">{bridge ? "local-sync" : "server"}</span>
+              <span className="font-medium text-white">{localAccessSession ? "local-access" : "server"}</span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-slate-400">Current root</span>
@@ -777,7 +777,7 @@ function InspectorRail({
 export function ControlRoomShell({
   preview,
   currentRoot,
-  bridge,
+  localAccessSession,
   sourceModalOpen,
   sourceLoading,
   sourceSelecting,
@@ -786,7 +786,7 @@ export function ControlRoomShell({
   status,
   onOpenSource,
   onCloseSource,
-  onConnectBridge,
+  onRequestLocalAccess,
   onSelectedServer,
   onSelectedLocal
 }: ControlRoomShellProps) {
@@ -816,7 +816,7 @@ export function ControlRoomShell({
     setRightRailOpen(true);
   }, [setDrawerOpen, shellMode]);
 
-  const statusTone = deriveStatusTone({ bridge, currentRoot, status, wsEnabled });
+  const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled });
   const graphStateText = sourceLoading
     ? "Checking control-room source..."
     : !currentRoot
@@ -825,8 +825,8 @@ export function ControlRoomShell({
         ? "Source connected, waiting for the graph to populate."
         : connected
           ? "Live signal is feeding the graph stage."
-          : bridge
-            ? "Local bridge snapshot loaded."
+          : localAccessSession
+            ? "Local workspace snapshot loaded."
             : "Source loaded. Runtime is on standby.";
 
   const topActions: InteractionMode[] = ["browse", "pan", "edit"];
@@ -904,7 +904,7 @@ export function ControlRoomShell({
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="text-lg font-semibold text-white">{formatRootLabel(currentRoot)}</span>
                   <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {bridge ? "local-sync" : "server"}
+                    {localAccessSession ? "local-access" : "server"}
                   </Badge>
                   <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
                     {layoutMode}
@@ -990,7 +990,7 @@ export function ControlRoomShell({
               toneLabel={statusTone.label}
               toneDetail={statusTone.detail}
               currentRoot={currentRoot}
-              bridge={bridge}
+              localAccessSession={localAccessSession}
               status={status}
               onOpenSource={onOpenSource}
             />
@@ -1002,9 +1002,9 @@ export function ControlRoomShell({
         open={sourceModalOpen}
         loading={sourceSelecting}
         error={sourceError}
-        bridge={bridge}
+        localAccessSession={localAccessSession}
         onClose={onCloseSource}
-        onConnectBridge={onConnectBridge}
+        onRequestLocalAccess={onRequestLocalAccess}
         onSelectedServer={onSelectedServer}
         onSelectedLocal={onSelectedLocal}
       />
