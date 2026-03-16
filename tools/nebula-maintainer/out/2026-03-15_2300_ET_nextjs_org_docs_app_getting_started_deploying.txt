@@ -1,0 +1,583 @@
+#alternate
+
+   Skip to content
+
+   (BUTTON) Search documentation... (BUTTON) Search...88K (BUTTON)
+   (BUTTON)
+
+   ShowcaseDocsBlogTemplatesEnterprise
+
+   (BUTTON) Search documentation... (BUTTON) Search...88K (BUTTON)
+   (BUTTON) FeedbackLearn
+
+   (BUTTON) Menu
+
+   (BUTTON)
+
+   Using App Router
+
+   Features available in /app
+   (BUTTON)
+
+   Latest Version
+
+   16.1.6
+
+     * Getting Started
+          + Installation
+          + Project Structure
+          + Layouts and Pages
+          + Linking and Navigating
+          + Server and Client Components
+          + Cache Components
+          + Fetching Data
+          + Updating Data
+          + Caching and Revalidating
+          + Error Handling
+          + CSS
+          + Image Optimization
+          + Font Optimization
+          + Metadata and OG images
+          + Route Handlers
+          + Proxy
+          + Deploying
+          + Upgrading
+
+     * Guides
+          + AI Coding Agents
+          + Analytics
+          + Authentication
+          + Backend for Frontend
+          + Caching
+          + CI Build Caching
+          + Content Security Policy
+          + CSS-in-JS
+          + Custom Server
+          + Data Security
+          + Debugging
+          + Draft Mode
+          + Environment Variables
+          + Forms
+          + ISR
+          + Instrumentation
+          + Internationalization
+          + JSON-LD
+          + Lazy Loading
+          + Development Environment
+          + Next.js MCP Server
+          + MDX
+          + Memory Usage
+          + Migrating
+               o App Router
+               o Create React App
+               o Vite
+          + Multi-tenant
+          + Multi-zones
+          + OpenTelemetry
+          + Package Bundling
+          + Prefetching
+          + Production
+          + PWAs
+          + Public pages
+          + Redirecting
+          + Sass
+          + Scripts
+          + Self-Hosting
+          + SPAs
+          + Static Exports
+          + Tailwind CSS v3
+          + Testing
+               o Cypress
+               o Jest
+               o Playwright
+               o Vitest
+          + Third Party Libraries
+          + Upgrading
+               o Codemods
+               o Version 14
+               o Version 15
+               o Version 16
+          + Videos
+
+     * API Reference
+          + Directives
+               o use cache
+               o use cache: private
+               o use cache: remote
+               o use client
+               o use server
+          + Components
+               o Font
+               o Form Component
+               o Image Component
+               o Link Component
+               o Script Component
+          + File-system conventions
+               o default.js
+               o Dynamic Segments
+               o error.js
+               o forbidden.js
+               o instrumentation.js
+               o instrumentation-client.js
+               o Intercepting Routes
+               o layout.js
+               o loading.js
+               o mdx-components.js
+               o not-found.js
+               o page.js
+               o Parallel Routes
+               o proxy.js
+               o public
+               o route.js
+               o Route Groups
+               o Route Segment Config
+               o src
+               o template.js
+               o unauthorized.js
+               o Metadata Files
+                    # favicon, icon, and apple-icon
+                    # manifest.json
+                    # opengraph-image and twitter-image
+                    # robots.txt
+                    # sitemap.xml
+          + Functions
+               o after
+               o cacheLife
+               o cacheTag
+               o connection
+               o cookies
+               o draftMode
+               o fetch
+               o forbidden
+               o generateImageMetadata
+               o generateMetadata
+               o generateSitemaps
+               o generateStaticParams
+               o generateViewport
+               o headers
+               o ImageResponse
+               o NextRequest
+               o NextResponse
+               o notFound
+               o permanentRedirect
+               o redirect
+               o refresh
+               o revalidatePath
+               o revalidateTag
+               o unauthorized
+               o unstable_cache
+               o unstable_noStore
+               o unstable_rethrow
+               o updateTag
+               o useLinkStatus
+               o useParams
+               o usePathname
+               o useReportWebVitals
+               o useRouter
+               o useSearchParams
+               o useSelectedLayoutSegment
+               o useSelectedLayoutSegments
+               o userAgent
+          + Configuration
+               o next.config.js
+                    # experimental.adapterPath
+                    # allowedDevOrigins
+                    # appDir
+                    # assetPrefix
+                    # authInterrupts
+                    # basePath
+                    # browserDebugInfoInTerminal
+                    # cacheComponents
+                    # cacheHandlers
+                    # cacheLife
+                    # compress
+                    # crossOrigin
+                    # cssChunking
+                    # deploymentId
+                    # devIndicators
+                    # distDir
+                    # env
+                    # expireTime
+                    # exportPathMap
+                    # generateBuildId
+                    # generateEtags
+                    # headers
+                    # htmlLimitedBots
+                    # httpAgentOptions
+                    # images
+                    # cacheHandler
+                    # inlineCss
+                    # isolatedDevBuild
+                    # logging
+                    # mdxRs
+                    # onDemandEntries
+                    # optimizePackageImports
+                    # output
+                    # pageExtensions
+                    # poweredByHeader
+                    # productionBrowserSourceMaps
+                    # proxyClientMaxBodySize
+                    # reactCompiler
+                    # reactMaxHeadersLength
+                    # reactStrictMode
+                    # redirects
+                    # rewrites
+                    # sassOptions
+                    # serverActions
+                    # serverComponentsHmrCache
+                    # serverExternalPackages
+                    # staleTimes
+                    # staticGeneration*
+                    # taint
+                    # trailingSlash
+                    # transpilePackages
+                    # turbopack
+                    # turbopackFileSystemCache
+                    # typedRoutes
+                    # typescript
+                    # urlImports
+                    # useLightningcss
+                    # viewTransition
+                    # webpack
+                    # webVitalsAttribution
+               o TypeScript
+               o ESLint
+          + CLI
+               o create-next-app
+               o next CLI
+          + Edge Runtime
+          + Turbopack
+
+     * Glossary
+
+     * Getting Started
+          + Installation
+          + Project Structure
+          + Images
+          + Fonts
+          + CSS
+          + Deploying
+
+     * Guides
+          + Analytics
+          + Authentication
+          + Babel
+          + CI Build Caching
+          + Content Security Policy
+          + CSS-in-JS
+          + Custom Server
+          + Debugging
+          + Draft Mode
+          + Environment Variables
+          + Forms
+          + ISR
+          + Instrumentation
+          + Internationalization
+          + Lazy Loading
+          + MDX
+          + Migrating
+               o App Router
+               o Create React App
+               o Vite
+          + Multi-Zones
+          + OpenTelemetry
+          + Package Bundling
+          + PostCSS
+          + Preview Mode
+          + Production
+          + Redirecting
+          + Sass
+          + Scripts
+          + Self-Hosting
+          + Static Exports
+          + Tailwind CSS
+          + Testing
+               o Cypress
+               o Jest
+               o Playwright
+               o Vitest
+          + Third Party Libraries
+          + Upgrading
+               o Codemods
+               o Version 10
+               o Version 11
+               o Version 12
+               o Version 13
+               o Version 14
+               o Version 9
+
+     * Building Your Application
+          + Routing
+               o Pages and Layouts
+               o Dynamic Routes
+               o Linking and Navigating
+               o Custom App
+               o Custom Document
+               o API Routes
+               o Custom Errors
+          + Rendering
+               o Server-side Rendering (SSR)
+               o Static Site Generation (SSG)
+               o Automatic Static Optimization
+               o Client-side Rendering (CSR)
+          + Data Fetching
+               o getStaticProps
+               o getStaticPaths
+               o Forms and Mutations
+               o getServerSideProps
+               o Client-side Fetching
+          + Configuring
+               o Error Handling
+
+     * API Reference
+          + Components
+               o Font
+               o Form
+               o Head
+               o Image
+               o Image (Legacy)
+               o Link
+               o Script
+          + File-system conventions
+               o instrumentation.js
+               o Proxy
+               o public
+               o src Directory
+          + Functions
+               o getInitialProps
+               o getServerSideProps
+               o getStaticPaths
+               o getStaticProps
+               o NextRequest
+               o NextResponse
+               o useParams
+               o useReportWebVitals
+               o useRouter
+               o useSearchParams
+               o userAgent
+          + Configuration
+               o next.config.js Options
+                    # experimental.adapterPath
+                    # allowedDevOrigins
+                    # assetPrefix
+                    # basePath
+                    # bundlePagesRouterDependencies
+                    # compress
+                    # crossOrigin
+                    # deploymentId
+                    # devIndicators
+                    # distDir
+                    # env
+                    # exportPathMap
+                    # generateBuildId
+                    # generateEtags
+                    # headers
+                    # httpAgentOptions
+                    # images
+                    # isolatedDevBuild
+                    # onDemandEntries
+                    # optimizePackageImports
+                    # output
+                    # pageExtensions
+                    # poweredByHeader
+                    # productionBrowserSourceMaps
+                    # experimental.proxyClientMaxBodySize
+                    # reactStrictMode
+                    # redirects
+                    # rewrites
+                    # serverExternalPackages
+                    # trailingSlash
+                    # transpilePackages
+                    # turbopack
+                    # typescript
+                    # urlImports
+                    # useLightningcss
+                    # webpack
+                    # webVitalsAttribution
+               o TypeScript
+               o ESLint
+          + CLI
+               o create-next-app CLI
+               o next CLI
+          + Edge Runtime
+          + Turbopack
+
+     * Architecture
+          + Accessibility
+          + Fast Refresh
+          + Next.js Compiler
+          + Supported Browsers
+
+     * Community
+          + Contribution Guide
+          + Rspack
+
+   On this page
+     * Node.js server
+     * Templates
+     * Docker
+     * Templates
+     * Static export
+     * Templates
+     * Adapters
+
+   Edit this page on GitHub (BUTTON) Scroll to top
+
+   App RouterGetting StartedDeploying
+   (BUTTON) Copy page (BUTTON)
+
+Deploying
+
+   Last updated February 27, 2026
+
+   Next.js can be deployed as a Node.js server, Docker container, static
+   export, or adapted to run on different platforms.
+   Deployment Option  Feature Support
+   Node.js server    All
+   Docker container  All
+   Static export     Limited
+   Adapters          Platform-specific
+
+Node.js server
+
+   Next.js can be deployed to any provider that supports Node.js. Ensure
+   your package.json has the "build" and "start" scripts:
+   package.json
+   (BUTTON)
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+
+   Then, run npm run build to build your application and npm run start to
+   start the Node.js server. This server supports all Next.js features. If
+   needed, you can also eject to a custom server.
+
+   Node.js deployments support all Next.js features. Learn how to
+   configure them for your infrastructure.
+
+Templates
+
+     * Flightcontrol
+     * Railway
+     * Replit
+     * Hostinger
+
+Docker
+
+   Next.js can be deployed to any provider that supports Docker
+   containers. This includes container orchestrators like Kubernetes or a
+   cloud provider that runs Docker. For containerization best practices,
+   see the Docker guide for React.js.
+
+   Docker deployments support all Next.js features. Learn how to configure
+   them for your infrastructure.
+
+     Note for development: While Docker is excellent for production
+     deployments, consider using local development (npm run dev) instead
+     of Docker during development on Mac and Windows for better
+     performance. Learn more about optimizing local development.
+
+Templates
+
+   The following examples demonstrate best practices for containerizing
+   Next.js applications:
+     * Docker Standalone Output - Deploy a Next.js application using
+       output: "standalone" to generate a minimal, production-ready Docker
+       image with only the required runtime files and dependencies.
+     * Docker Export Output - Deploy a fully static Next.js application
+       using output: "export" to generate optimized HTML files that can be
+       served from a lightweight container or any static hosting
+       environment.
+     * Docker Multi-Environment - Manage separate Docker configurations
+       for development, staging, and production environments with
+       different environment variables.
+
+   Additionally, hosting providers offer guidance on deploying Next.js:
+     * DigitalOcean
+     * Fly.io
+     * Google Cloud Run
+     * Render
+     * SST
+
+Static export
+
+   Next.js enables starting as a static site or Single-Page Application
+   (SPA), then later optionally upgrading to use features that require a
+   server.
+
+   Since Next.js supports static exports, it can be deployed and hosted on
+   any web server that can serve HTML/CSS/JS static assets. This includes
+   tools like AWS S3, Nginx, or Apache.
+
+   Running as a static export does not support Next.js features that
+   require a server. Learn more.
+
+Templates
+
+     * GitHub Pages
+
+Adapters
+
+   Next.js can be adapted to run on different platforms to support their
+   infrastructure capabilities.
+
+   Refer to each provider's documentation for information on supported
+   Next.js features:
+     * Appwrite Sites
+     * AWS Amplify Hosting
+     * Cloudflare
+     * Deno Deploy
+     * Firebase App Hosting
+     * Netlify
+     * Vercel
+
+     Note: We are working on a Deployment Adapters API for all platforms
+     to adopt. After completion, we will add documentation on how to
+     write your own adapters.
+
+   Previous
+   Proxy
+   Next
+   Upgrading
+
+   Was this helpful?
+   (BUTTON) (BUTTON) (BUTTON) (BUTTON)
+
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   supported.
+   (BUTTON) Send
+     __________________________________________________________________
+     __________________________________________________________________
+
+Resources
+
+   DocsSupport PolicyLearnShowcaseBlogTeamAnalyticsNext.js
+   ConfPreviewsEvals
+
+More
+
+   Next.js CommerceContact SalesCommunityGitHubReleasesTelemetryGovernance
+
+About Vercel
+
+   Next.js + VercelOpen Source SoftwareGitHubBlueskyX
+
+Legal
+
+   Privacy Policy (BUTTON) Cookie Preferences
+
+Subscribe to our newsletter
+
+   Stay updated on new releases and features, guides, and case studies.
+   ____________________ (BUTTON) Subscribe
+
+   � 2026 Vercel, Inc.
+     __________________________________________________________________
+     __________________________________________________________________
