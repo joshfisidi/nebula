@@ -153,7 +153,7 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 610
+     * Fork 611
      * Star 12k
 
      * Code
@@ -605,7 +605,7 @@ Watchers
 
 Forks
 
-   610 forks
+   611 forks
    Report repository
 
 Releases 19
@@ -635,35 +635,26 @@ Uh oh!
 
 Used by 35.6m
 
-     * @mboo2005
-     * @maulana-tech
-     * @shaloo22
-     * @JanaSundar
-     * @fomalhaut84
-     * @cjlapao
-     * @sogud
-     * @oursky
+     * @euro-cell
+     * @zengjl03
+     * @im-tututu
+     * @tejas96
+     * @CallMeKingsley97
+     * @preechapon250
+     * @kunickiaj
+     * @huyixi
 
-   + 35,573,457
+   + 35,580,160
 
-Contributors 112
+Contributors
 
-     * @es128
-     * @paulmillr
-     * @43081j
-     * @XhmikosR
-     * @nono
-     * @srguiwiz
-     * @dependabot-preview[bot]
-     * @JSMonk
-     * @dbashford
-     * @phated
-     * @alan-agius4
-     * @jrebmann
-     * @alexpusch
-     * @tym-network
+     *
+     *
+     *
 
-   + 98 contributors
+Uh oh!
+
+   There was an error while loading. Please reload this page.
 
 Languages
 
