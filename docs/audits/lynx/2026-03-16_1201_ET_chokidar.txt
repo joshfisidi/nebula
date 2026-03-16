@@ -153,11 +153,11 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 609
+     * Fork 611
      * Star 12k
 
      * Code
-     * Issues 27
+     * Issues 28
      * Pull requests 7
      * Discussions
      * Actions
@@ -605,7 +605,7 @@ Watchers
 
 Forks
 
-   609 forks
+   611 forks
    Report repository
 
 Releases 19
@@ -635,16 +635,16 @@ Uh oh!
 
 Used by 35.6m
 
-     * @mboo2005
-     * @maulana-tech
-     * @shaloo22
-     * @JanaSundar
-     * @fomalhaut84
-     * @cjlapao
-     * @sogud
-     * @oursky
+     * @caffeinepub
+     * @caffeinepub
+     * @AryanOak
+     * @caffeinepub
+     * @caffeinepub
+     * @ClaudioRoncaglio
+     * @planet-devo-k
+     * @caffeinepub
 
-   + 35,573,457
+   + 35,570,813
 
 Contributors 112
 
