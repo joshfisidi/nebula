@@ -1,5 +1,5 @@
 ---
-upgrade_id: "2026-03-18_1300_ET"
+upgrade_id: "2026-03-18_1500_ET"
 repo: "nebula"
 nebula_root: "/Users/josh/.openclaw/workspace/projects/nebula"
 protocol_version: 2
@@ -17,16 +17,16 @@ evidence:
     sha256: "0e5b2850d2ba01381a88e990915bab46972aa1078dcee9e4fb4de9104c0fd132"
   - title: "nextjs_org_docs_app_guides_production_checklist"
     url: "https://nextjs.org/docs/app/guides/production-checklist"
-    sha256: "34dbea75c312157ad5463e42e468c0886dc63baa1ac4f951606f1eb14c3e2218"
+    sha256: "d4fce4798805adeda3346bbf49b5cb5f6434b56413c5318a19f56cc4258e233b"
   - title: "nextjs_org_docs_app_getting_started_deploying"
     url: "https://nextjs.org/docs/app/getting-started/deploying"
-    sha256: "f3075ba45d20c27a753635b00f2948db279267aba8fc1f300113e60dd4df367d"
+    sha256: "c9cd8b35601c7f8845cfd70078bdfcf3006943b96d7150e6d9180d8089aff03d"
   - title: "github_com_vasturiano_three_fatline"
     url: "https://github.com/vasturiano/three-fatline"
     sha256: "0d6b6020160166adec5d907f230d7092303bed89418e769020aca1cacc0ff7aa"
 ---
 
-# Nebula Hourly Upgrade 2026-03-18_1300_ET
+# Nebula Hourly Upgrade 2026-03-18_1500_ET
 
 ## RALPH Summary
 - Retrieve: 6 evidence snapshots captured.
