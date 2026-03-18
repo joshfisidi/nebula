@@ -562,7 +562,7 @@ Routing Edges
    Our editable edge Pro Example could also be used as a starting point
    for implementing a custom edge that can be routed along a specific
    path.
-   Last updated on February 4, 2026
+   Last updated on February 19, 2026
    ThemingSub Flows
 
    A project by the xyflow team
