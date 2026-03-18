@@ -99,6 +99,11 @@ if (preAuditOk) {
 
 const auditOk = steps.find((s) => s.name === 'audit_snapshot')?.ok === true;
 if (auditOk) {
+  steps.push(runStep('autoresearch', 'npm', ['run', 'nebula:autoresearch']));
+}
+
+const autoresearchOk = steps.find((s) => s.name === 'autoresearch')?.ok === true;
+if (autoresearchOk) {
   steps.push(runStep('hourly_upgrade', 'npm', ['run', 'nebula:hourly']));
 }
 

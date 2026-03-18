@@ -22,6 +22,7 @@
     "nebula:preupgrade:audit": "bash scripts/automation/nebula-pre-upgrade-audit.sh",
     "nebula:audit:snapshot": "bash scripts/automation/nebula-audit-snapshot.sh",
     "nebula:hourly": "npm run -w nebula-maintainer run",
+    "nebula:autoresearch": "node scripts/automation/nebula-autoresearch.cjs",
     "nebula:north-star:gate": "bash scripts/automation/nebula-north-star-gate.sh",
     "nebula:cron:run": "node scripts/automation/nebula-cron-run.cjs",
     "nebula:cron:health": "node scripts/automation/nebula-health-check.cjs",
