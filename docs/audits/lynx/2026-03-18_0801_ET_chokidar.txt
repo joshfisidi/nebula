@@ -78,6 +78,7 @@ Navigation Menu
                o Security Lab
                o Maintainer Community
                o Accelerator
+               o GitHub Stars
                o Archive Program
           + REPOSITORIES
                o Topics
@@ -153,7 +154,7 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 610
+     * Fork 611
      * Star 12k
 
      * Code
@@ -605,7 +606,7 @@ Watchers
 
 Forks
 
-   610 forks
+   611 forks
    Report repository
 
 Releases 19
@@ -633,18 +634,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.6m
+Uh oh!
 
-     * @caffeinepub
-     * @caffeinepub
-     * @xtrusia
-     * @caffeinepub
-     * @undertheCevent
-     * @caffeinepub
-     * @caffeinepub
-     * @caffeinepub
-
-   + 35,576,446
+   There was an error while loading. Please reload this page.
 
 Contributors 112
 
