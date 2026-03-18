@@ -32,12 +32,13 @@ import type { LayoutMode } from "./layoutEngines";
 import type { LocalAccessSession, SourceFolder } from "./sourceApi";
 import type { UniverseConnectionStatus } from "./UniverseLiveProvider";
 
-type SourceMode = "local-access" | "server";
+type SourceMode = "browser" | "local-access" | "server";
 type SearchMode = "global" | "focus";
 
 type ControlRoomShellProps = {
   preview?: boolean;
   currentRoot: string | null;
+  sourceMode: SourceMode | null;
   localAccessSession: LocalAccessSession | null;
   sourceModalOpen: boolean;
   sourceLoading: boolean;
@@ -47,6 +48,7 @@ type ControlRoomShellProps = {
   status: UniverseConnectionStatus;
   onOpenSource: () => void;
   onCloseSource: () => void;
+  onRequestBrowserAccess: () => void;
   onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
@@ -62,13 +64,29 @@ function formatKind(node: RenderNode): string {
   return node.kind === "dir" ? "Directory" : "File";
 }
 
+function formatSourceMode(mode: SourceMode | null): string {
+  if (mode === "browser") return "browser";
+  if (mode === "local-access") return "local-access";
+  if (mode === "server") return "server";
+  return "unrouted";
+}
+
 function deriveStatusTone(params: {
+  sourceMode: SourceMode | null;
   localAccessSession: LocalAccessSession | null;
   currentRoot: string | null;
   status: UniverseConnectionStatus;
   wsEnabled: boolean;
 }): { tone: "good" | "warn" | "danger" | "idle"; label: string; detail: string } {
-  if (params.localAccessSession && params.currentRoot) {
+  if (params.sourceMode === "browser" && params.currentRoot) {
+    return {
+      tone: "good",
+      label: "Browser workspace active",
+      detail: "This tab is rendering a folder you selected directly from the browser."
+    };
+  }
+
+  if (params.sourceMode === "local-access" && params.currentRoot) {
     return {
       tone: "good",
       label: "Local workspace active",
@@ -104,7 +122,7 @@ function deriveStatusTone(params: {
     return {
       tone: "idle",
       label: "Source setup required",
-      detail: "Grant local folder access or choose a server-backed folder to begin."
+      detail: "Choose a folder in the browser, use the local access agent, or choose a server-backed folder to begin."
     };
   }
 
@@ -136,6 +154,7 @@ function SourceModal({
   error,
   localAccessSession,
   onClose,
+  onRequestBrowserAccess,
   onRequestLocalAccess,
   onSelectedServer,
   onSelectedLocal
@@ -145,6 +164,7 @@ function SourceModal({
   error: string | null;
   localAccessSession: LocalAccessSession | null;
   onClose: () => void;
+  onRequestBrowserAccess: () => void;
   onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
@@ -197,7 +217,15 @@ function SourceModal({
           if (!cancelled) setFolders(list.folders ?? []);
         }
       } catch (err) {
-        if (!cancelled) setLocalError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) {
+          if (localAccessSession?.token) {
+            setLocalError(err instanceof Error ? err.message : String(err));
+          } else {
+            setRoots([]);
+            setFolders([]);
+            setLocalError(null);
+          }
+        }
       }
     };
 
@@ -227,11 +255,11 @@ function SourceModal({
             </div>
 
             <p className="max-w-xl text-sm leading-6 text-slate-200/78">
-              Grant local folder access for the fastest live workspace loop, or fall back to the runtime server when
-              you need a manually selected watch root.
+              Choose a folder directly in the browser for the fastest start, then use the local access agent or
+              runtime server only when you need background or server-backed behavior.
             </p>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
               <div className="rounded-[1.4rem] border border-cyan-300/20 bg-slate-950/38 p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <Badge className="rounded-full border-cyan-300/25 bg-cyan-400/10 px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em] text-cyan-100">
@@ -239,17 +267,36 @@ function SourceModal({
                   </Badge>
                   <Sparkles size={18} className="text-cyan-100/80" />
                 </div>
-                <div className="text-lg font-semibold text-white">Live Local Workspace</div>
+                <div className="text-lg font-semibold text-white">Browser workspace</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Grant folder access once, then let the local agent stream live graph updates into the control room.
+                  Pick a folder directly from this tab and build the mind map immediately without relying on the
+                  localhost agent.
                 </p>
                 <div className="mt-5">
                   <Button
                     className="h-11 w-full rounded-2xl bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                     disabled={loading}
-                    onClick={onRequestLocalAccess}
+                    onClick={onRequestBrowserAccess}
                   >
-                    {localAccessSession ? "Local Access Granted" : "Grant Local Folder Access"}
+                    Choose Folder In Browser
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-[1.4rem] border border-[var(--line)] bg-slate-950/42 p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em]">
+                    Advanced
+                  </Badge>
+                  <HardDrive size={18} className="text-slate-200/72" />
+                </div>
+                <div className="text-lg font-semibold text-white">Local access agent</div>
+                <p className="mt-2 text-sm leading-6 text-slate-300/82">
+                  Use the localhost agent when you need a native folder permission flow and background-style access.
+                </p>
+                <div className="mt-5">
+                  <Button variant="outline" className="h-11 w-full rounded-2xl border-[var(--line)]" disabled={loading} onClick={onRequestLocalAccess}>
+                    {localAccessSession ? "Grant Agent Folder Access" : "Use Local Access Agent"}
                   </Button>
                 </div>
               </div>
@@ -263,10 +310,10 @@ function SourceModal({
                 </div>
                 <div className="text-lg font-semibold text-white">Runtime server mode</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Use a server-backed watch root when local access is unavailable or when remote access is required.
+                  Use a server-backed watch root when remote access or explicit server control is required.
                 </p>
                 <div className="mt-5 rounded-2xl border border-[var(--line)] bg-white/[0.02] p-3 text-xs leading-5 text-slate-300/78">
-                  Source listing and folder selection remain fully supported here.
+                  Source listing and manual path selection remain fully supported here.
                 </div>
               </div>
             </div>
@@ -350,7 +397,7 @@ function SourceModal({
               <div className="mb-4 rounded-2xl border border-[var(--line)] bg-white/[0.02] px-4 py-3 text-sm text-slate-300/82">
                 {localAccessSession?.token
                   ? "Local workspace access is available. Folder changes will refresh the graph from the local agent."
-                  : "Server mode will continue to use the runtime API and websocket connection."}
+                  : "Use this panel for agent-backed or server-backed routing. Browser workspace mode does not need a server path."}
               </div>
             )}
 
@@ -645,6 +692,7 @@ function InspectorRail({
   toneLabel,
   toneDetail,
   currentRoot,
+  sourceMode,
   localAccessSession,
   status,
   onOpenSource
@@ -653,6 +701,7 @@ function InspectorRail({
   toneLabel: string;
   toneDetail: string;
   currentRoot: string | null;
+  sourceMode: SourceMode | null;
   localAccessSession: LocalAccessSession | null;
   status: UniverseConnectionStatus;
   onOpenSource: () => void;
@@ -741,7 +790,7 @@ function InspectorRail({
           <div className="rounded-[1.2rem] border border-[var(--line)] bg-white/[0.02] p-4 text-sm leading-6 text-slate-300/82">
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-400">Source mode</span>
-              <span className="font-medium text-white">{localAccessSession ? "local-access" : "server"}</span>
+              <span className="font-medium text-white">{formatSourceMode(sourceMode)}</span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-slate-400">Current root</span>
@@ -777,6 +826,7 @@ function InspectorRail({
 export function ControlRoomShell({
   preview,
   currentRoot,
+  sourceMode,
   localAccessSession,
   sourceModalOpen,
   sourceLoading,
@@ -786,6 +836,7 @@ export function ControlRoomShell({
   status,
   onOpenSource,
   onCloseSource,
+  onRequestBrowserAccess,
   onRequestLocalAccess,
   onSelectedServer,
   onSelectedLocal
@@ -816,18 +867,20 @@ export function ControlRoomShell({
     setRightRailOpen(true);
   }, [setDrawerOpen, shellMode]);
 
-  const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled });
+  const statusTone = deriveStatusTone({ sourceMode, localAccessSession, currentRoot, status, wsEnabled });
   const graphStateText = sourceLoading
     ? "Checking control-room source..."
     : !currentRoot
-      ? "No active source. Open source routing to begin."
+      ? "No active source. Choose a folder to begin."
       : nodeArray.length === 0
         ? "Source connected, waiting for the graph to populate."
-        : connected
-          ? "Live signal is feeding the graph stage."
-          : localAccessSession
+        : sourceMode === "browser"
+          ? "Browser workspace snapshot loaded in this tab."
+          : sourceMode === "local-access"
             ? "Local workspace snapshot loaded."
-            : "Source loaded. Runtime is on standby.";
+            : connected
+              ? "Live runtime signal is feeding the graph stage."
+              : "Source loaded. Runtime is on standby.";
 
   const topActions: InteractionMode[] = ["browse", "pan", "edit"];
 
@@ -904,7 +957,7 @@ export function ControlRoomShell({
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="text-lg font-semibold text-white">{formatRootLabel(currentRoot)}</span>
                   <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {localAccessSession ? "local-access" : "server"}
+                    {formatSourceMode(sourceMode)}
                   </Badge>
                   <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
                     {layoutMode}
@@ -990,6 +1043,7 @@ export function ControlRoomShell({
               toneLabel={statusTone.label}
               toneDetail={statusTone.detail}
               currentRoot={currentRoot}
+              sourceMode={sourceMode}
               localAccessSession={localAccessSession}
               status={status}
               onOpenSource={onOpenSource}
@@ -1004,6 +1058,7 @@ export function ControlRoomShell({
         error={sourceError}
         localAccessSession={localAccessSession}
         onClose={onCloseSource}
+        onRequestBrowserAccess={onRequestBrowserAccess}
         onRequestLocalAccess={onRequestLocalAccess}
         onSelectedServer={onSelectedServer}
         onSelectedLocal={onSelectedLocal}
