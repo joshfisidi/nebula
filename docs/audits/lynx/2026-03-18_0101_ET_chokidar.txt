@@ -78,6 +78,7 @@ Navigation Menu
                o Security Lab
                o Maintainer Community
                o Accelerator
+               o GitHub Stars
                o Archive Program
           + REPOSITORIES
                o Topics
@@ -153,7 +154,7 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 610
+     * Fork 611
      * Star 12k
 
      * Code
@@ -605,7 +606,7 @@ Watchers
 
 Forks
 
-   610 forks
+   611 forks
    Report repository
 
 Releases 19
@@ -635,16 +636,16 @@ Uh oh!
 
 Used by 35.6m
 
-     * @WenboLi-CN-DE
-     * @Nexus-Websites
-     * @nutraz
-     * @fstrasz
-     * @rohithkrishnark
-     * @cornbread78
-     * @glavery
-     * @Unskilled-Skill
+     * @caffeinepub
+     * @caffeinepub
+     * @Sanjay3243
+     * @caffeinepub
+     * @upvio
+     * @caffeinepub
+     * @caffeinepub
+     * @caffeinepub
 
-   + 35,576,666
+   + 35,582,038
 
 Contributors 112
 
