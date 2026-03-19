@@ -1,5 +1,5 @@
 ---
-upgrade_id: "2026-03-19_0500_ET"
+upgrade_id: "2026-03-19_0600_ET"
 repo: "nebula"
 nebula_root: "/Users/josh/.openclaw/workspace/projects/nebula"
 protocol_version: 2
@@ -26,7 +26,7 @@ evidence:
     sha256: "0d6b6020160166adec5d907f230d7092303bed89418e769020aca1cacc0ff7aa"
 ---
 
-# Nebula Hourly Upgrade 2026-03-19_0500_ET
+# Nebula Hourly Upgrade 2026-03-19_0600_ET
 
 ## RALPH Summary
 - Retrieve: 6 evidence snapshots captured.
@@ -185,13 +185,13 @@ Skipped: @nebula/web has no "test" script
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    200 B           617 kB
-├ ○ /_not-found                          879 B          88.4 kB
-└ ○ /preview/control-room                2.79 kB         620 kB
+┌ ○ /                                    200 B           620 kB
+├ ○ /_not-found                          876 B          88.4 kB
+└ ○ /preview/control-room                2.78 kB         622 kB
 + First Load JS shared by all            87.6 kB
-  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.7 kB
+  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.6 kB
   ├ chunks/749-5b2cf24b8e7aba0a.js       31.9 kB
-  └ other shared chunks (total)          2 kB
+  └ other shared chunks (total)          2.01 kB
 
 
 ○  (Static)  prerendered as static content
@@ -350,13 +350,13 @@ Skipped: nebula-maintainer has no "test" script
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    200 B           617 kB
-├ ○ /_not-found                          879 B          88.4 kB
-└ ○ /preview/control-room                2.79 kB         620 kB
+┌ ○ /                                    200 B           620 kB
+├ ○ /_not-found                          876 B          88.4 kB
+└ ○ /preview/control-room                2.78 kB         622 kB
 + First Load JS shared by all            87.6 kB
-  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.7 kB
+  ├ chunks/5b8f0dd8-f3c36e373e055d35.js  53.6 kB
   ├ chunks/749-5b2cf24b8e7aba0a.js       31.9 kB
-  └ other shared chunks (total)          2 kB
+  └ other shared chunks (total)          2.01 kB
 
 
 ○  (Static)  prerendered as static content
