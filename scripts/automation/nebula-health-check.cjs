@@ -5,6 +5,7 @@ const path = require('node:path');
 const repoRoot = path.resolve(__dirname, '..', '..');
 const statusPath = path.join(repoRoot, '.openclaw', 'state', 'nebula', 'status.json');
 const latestDocPath = path.join(repoRoot, 'docs', 'upgrades', 'LATEST.md');
+const briefPath = path.join(repoRoot, 'upgrades', 'briefs');
 
 const maxStaleMinutes = Number(process.env.NEBULA_MAX_STALE_MINUTES || '130');
 const maxStaleMs = maxStaleMinutes * 60 * 1000;
@@ -54,16 +55,54 @@ if (staleMs > maxStaleMs) {
   });
 }
 
-if (!fs.existsSync(latestDocPath)) {
-  fail('missing_latest_upgrade_doc', { latestDocPath });
+const candidateArtifacts = [];
+
+if (fs.existsSync(latestDocPath)) {
+  const stat = fs.statSync(latestDocPath);
+  candidateArtifacts.push({
+    kind: 'latest_doc',
+    path: latestDocPath,
+    mtimeMs: stat.mtimeMs,
+  });
 }
 
-const latestStat = fs.statSync(latestDocPath);
-const latestAgeMs = now - latestStat.mtimeMs;
-if (latestAgeMs > maxStaleMs) {
-  fail('latest_doc_too_old', {
-    latestDocPath,
-    latest_doc_age_minutes: Math.floor(latestAgeMs / 60000),
+if (typeof status.brief_path === 'string' && status.brief_path && fs.existsSync(status.brief_path)) {
+  const stat = fs.statSync(status.brief_path);
+  candidateArtifacts.push({
+    kind: 'brief',
+    path: status.brief_path,
+    mtimeMs: stat.mtimeMs,
+  });
+}
+
+if (fs.existsSync(briefPath)) {
+  const briefFiles = fs
+    .readdirSync(briefPath)
+    .filter((name) => /^BRIEF_.*\.md$/.test(name))
+    .sort();
+  if (briefFiles.length) {
+    const newestBrief = path.join(briefPath, briefFiles[briefFiles.length - 1]);
+    const stat = fs.statSync(newestBrief);
+    candidateArtifacts.push({
+      kind: 'latest_brief',
+      path: newestBrief,
+      mtimeMs: stat.mtimeMs,
+    });
+  }
+}
+
+if (!candidateArtifacts.length) {
+  fail('missing_upgrade_artifact', { latestDocPath, briefPath, brief_from_status: status.brief_path || null });
+}
+
+candidateArtifacts.sort((a, b) => b.mtimeMs - a.mtimeMs);
+const freshestArtifact = candidateArtifacts[0];
+const artifactAgeMs = now - freshestArtifact.mtimeMs;
+if (artifactAgeMs > maxStaleMs) {
+  fail('upgrade_artifact_too_old', {
+    artifact_kind: freshestArtifact.kind,
+    artifact_path: freshestArtifact.path,
+    artifact_age_minutes: Math.floor(artifactAgeMs / 60000),
     max_stale_minutes: maxStaleMinutes,
   });
 }
@@ -75,7 +114,9 @@ console.log(
       checked_at: new Date().toISOString(),
       max_stale_minutes: maxStaleMinutes,
       last_successful_run_at: status.last_successful_run_at,
-      latest_doc_mtime: new Date(latestStat.mtimeMs).toISOString(),
+      freshest_artifact_kind: freshestArtifact.kind,
+      freshest_artifact_path: freshestArtifact.path,
+      freshest_artifact_mtime: new Date(freshestArtifact.mtimeMs).toISOString(),
     },
     null,
     2,
