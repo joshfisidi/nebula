@@ -178,7 +178,6 @@ paulmillr/chokidar
 
    (BUTTON)
     main
-   (BUTTON)
    BranchesTags
    (BUTTON) Go to file
    (BUTTON) Code
@@ -599,7 +598,7 @@ Stars
 
 Watchers
 
-   84 watching
+   85 watching
 
 Forks
 
