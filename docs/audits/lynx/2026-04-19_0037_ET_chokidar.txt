@@ -178,7 +178,6 @@ paulmillr/chokidar
 
    (BUTTON)
     main
-   (BUTTON)
    BranchesTags
    (BUTTON) Go to file
    (BUTTON) Code
@@ -644,15 +643,24 @@ Used by 35.6m
 
    + 35,594,247
 
-Contributors
+Contributors 112
 
-     *
-     *
-     *
+     * @es128
+     * @paulmillr
+     * @43081j
+     * @XhmikosR
+     * @nono
+     * @srguiwiz
+     * @dependabot-preview[bot]
+     * @JSMonk
+     * @dbashford
+     * @phated
+     * @alan-agius4
+     * @jrebmann
+     * @alexpusch
+     * @tym-network
 
-Uh oh!
-
-   There was an error while loading. Please reload this page.
+   + 98 contributors
 
 Languages
 
