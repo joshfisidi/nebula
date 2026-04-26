@@ -154,7 +154,7 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 619
+     * Fork 621
      * Star 12.1k
 
      * Code
@@ -602,7 +602,7 @@ Watchers
 
 Forks
 
-   619 forks
+   621 forks
    Report repository
 
 Releases 19
@@ -630,9 +630,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.6m
 
-   There was an error while loading. Please reload this page.
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+     * @wladpaiva
+
+   + 35,621,337
 
 Contributors
 
