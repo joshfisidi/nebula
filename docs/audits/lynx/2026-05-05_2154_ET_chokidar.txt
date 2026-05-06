@@ -194,8 +194,8 @@ Latest commit
 
 History
 
-   1,752 Commits
-   1,752 Commits
+   1,753 Commits
+   1,753 Commits
    .github
    .github
 
@@ -630,18 +630,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.6m
+Uh oh!
 
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-     * @wladpaiva
-
-   + 35,621,337
+   There was an error while loading. Please reload this page.
 
 Contributors
 
