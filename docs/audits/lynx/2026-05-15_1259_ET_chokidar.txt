@@ -159,7 +159,7 @@ Uh oh!
 
      * Code
      * Issues 29
-     * Pull requests 10
+     * Pull requests 12
      * Discussions
      * Actions
      * Security and quality 0
