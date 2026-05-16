@@ -159,7 +159,7 @@ Uh oh!
 
      * Code
      * Issues 29
-     * Pull requests 10
+     * Pull requests 12
      * Discussions
      * Actions
      * Security and quality 0
@@ -630,18 +630,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.6m
+Uh oh!
 
-     * @jhipster
-     * @ImplementSprint
-     * @krishagarwal278
-     * @beforeyoubid
-     * @youssifcu
-     * @NKolosov097
-     * @menviv
-     * @Alas129
-
-   + 35,640,446
+   There was an error while loading. Please reload this page.
 
 Contributors
 
