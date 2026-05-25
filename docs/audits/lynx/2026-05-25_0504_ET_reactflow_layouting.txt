@@ -196,6 +196,7 @@
                o Edge Intersection
                o Edge Toolbar
                o Edge Types
+               o Edge Routing
                o Floating Edges
                o Markers
                o Multi Connection Line
