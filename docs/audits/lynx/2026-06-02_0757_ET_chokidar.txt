@@ -158,7 +158,7 @@ Uh oh!
      * Star 12.1k
 
      * Code
-     * Issues 31
+     * Issues 32
      * Pull requests 12
      * Discussions
      * Actions
@@ -630,9 +630,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.7m
 
-   There was an error while loading. Please reload this page.
+     * @patternfly-java
+     * @Red-Parakeet
+     * @benjakugler96
+     * @senseipri
+     * @bjmhe
+     * @StefanGentz
+     * @abhishek94095
+     * @jobindex-open
+
+   + 35,661,631
 
 Contributors
 
