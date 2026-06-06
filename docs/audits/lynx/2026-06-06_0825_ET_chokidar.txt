@@ -13,8 +13,7 @@ Navigation Menu
      * (BUTTON) Platform
           + AI CODE CREATION
                o GitHub CopilotWrite better code with AI
-               o GitHub SparkBuild and deploy intelligent apps
-               o GitHub ModelsManage and compare prompts
+               o GitHub Copilot appDirect agents from issue to merge
                o MCP Registry^NewIntegrate external tools
           + DEVELOPER WORKFLOWS
                o ActionsAutomate any workflow
@@ -630,18 +629,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.7m
+Uh oh!
 
-     * @patternfly-java
-     * @Red-Parakeet
-     * @benjakugler96
-     * @senseipri
-     * @bjmhe
-     * @StefanGentz
-     * @abhishek94095
-     * @jobindex-open
-
-   + 35,661,631
+   There was an error while loading. Please reload this page.
 
 Contributors
 
