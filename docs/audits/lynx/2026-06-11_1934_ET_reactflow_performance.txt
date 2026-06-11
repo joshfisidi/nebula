@@ -2,9 +2,19 @@
 
    React Flow
 
-   LearnReferenceExamplesUIShowcase (BUTTON) More
+   LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow Pro
 
-   (BUTTON) SearchReact FlowPro (BUTTON)
+     * Learn
+     * Reference
+     * Examples
+     * UI
+     * Showcase
+     * (BUTTON) Pro
+     * (BUTTON) More
+
+   (BUTTON) Search
+
+   (BUTTON)
      * (BUTTON) Learn
           + Quick Start
           + (BUTTON) Core Concepts
@@ -169,12 +179,13 @@
                o isNode()
                o reconnectEdge()
      * (BUTTON) Examples
-          + Examples
+          + All Examples
+          + Pro Examples
           + Feature Overview
           + (BUTTON) Nodes
-               o Add Node on Edge Drop
+               o Add Node On Edge Drop
                o Connection Limit
-               o Custom Node
+               o Custom Nodes
                o Delete Middle Node
                o Drag Handle
                o Easy Connect
@@ -184,8 +195,8 @@
                o Proximity Connect
                o Rotatable Node
                o Node Position Animation
-               o Stress
-               o Update Node
+               o Stress Test
+               o Updating Nodes
                o Shapes
           + (BUTTON) Edges
                o Animating Edges
@@ -198,7 +209,7 @@
                o Edge Types
                o Edge Routing
                o Floating Edges
-               o Markers
+               o Edge Markers
                o Multi Connection Line
                o Reconnect Edge
                o Simple Floating Edges
@@ -210,24 +221,24 @@
                o Context Menu
                o Contextual Zoom
                o Drag and Drop
-               o Prevent Cycles
+               o Preventing Cycles
                o Save and Restore
                o Touch Device
                o Validation
                o Helper Lines
                o Collaborative
-               o Copy Paste
-               o Undo Redo
+               o Copy and Paste
+               o Undo and Redo
           + (BUTTON) Subflows & Grouping
                o Selection Grouping
                o Parent Child Relation
-               o Sub Flows
+               o Sub Flow
           + (BUTTON) Layout
-               o Dagre
-               o Elkjs
+               o Dagre Tree
+               o Elkjs Tree
                o Elkjs Multiple Handles
-               o Horizontal
-               o Expand Collapse
+               o Horizontal Flow
+               o Expand and Collapse
                o Auto Layout
                o Force Layout
                o Dynamic Layouting
@@ -238,7 +249,7 @@
                o Tailwind
                o Turbo Flow
           + (BUTTON) Whiteboard
-               o Eraser
+               o Eraser Tool
                o Lasso Selection
                o Rectangle
                o Freehand Draw
@@ -281,9 +292,13 @@
      * Showcase
      * (BUTTON) More
           + Changelog
+          + Case Studies
           + Blog
           + Contact Us
           + Playground
+     * React Flow Pro
+
+   (BUTTON) Light
 
      * Quick Start
      * (BUTTON) Core Concepts
@@ -328,6 +343,8 @@
           + Migrate to v10
      * API Reference
 
+   (BUTTON) Light
+
    On This Page
      * Use memoization
      * Memoize components
@@ -352,7 +369,6 @@ React Flow Playground
    interactive playground
    (BUTTON) Launch
    LearnAdvanced UsePerformance
-   (BUTTON) Copy page (BUTTON)
 
 Performance
 
@@ -473,7 +489,7 @@ Additional resources
      * Tuning Edge Animations ReactFlow Optimal Performance
      * 5 Ways to Optimize React Flow in 10 minutes
 
-   Last updated on April 20, 2026
+   Last updated on June 1, 2026
 
    Uncontrolled FlowState Management
 
@@ -482,7 +498,7 @@ Additional resources
    since 2019.
 
    Docs
-   Getting StartedAPI ReferenceExamplesComponentsShowcasePlayground
+   Getting StartedAPI ReferenceExamplesUIShowcasePlayground
 
    Social
    DiscordGithubX / TwitterBluesky
