@@ -1,3 +1,0 @@
-                              504 Gateway Time-out
-
-   The server didn't respond in time.
