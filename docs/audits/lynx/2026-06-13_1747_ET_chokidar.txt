@@ -157,7 +157,7 @@ Uh oh!
      * Star 12.1k
 
      * Code
-     * Issues 32
+     * Issues 33
      * Pull requests 12
      * Discussions
      * Actions
