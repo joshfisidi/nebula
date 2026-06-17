@@ -489,7 +489,7 @@ Additional resources
      * Tuning Edge Animations ReactFlow Optimal Performance
      * 5 Ways to Optimize React Flow in 10 minutes
 
-   Last updated on June 1, 2026
+   Last updated on June 11, 2026
 
    Uncontrolled FlowState Management
 
