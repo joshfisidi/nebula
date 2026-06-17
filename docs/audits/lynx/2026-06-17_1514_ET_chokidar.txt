@@ -633,24 +633,15 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Contributors 112
+Contributors
 
-     * @es128
-     * @paulmillr
-     * @43081j
-     * @XhmikosR
-     * @nono
-     * @srguiwiz
-     * @dependabot-preview[bot]
-     * @JSMonk
-     * @dbashford
-     * @phated
-     * @alan-agius4
-     * @jrebmann
-     * @alexpusch
-     * @tym-network
+     *
+     *
+     *
 
-   + 98 contributors
+Uh oh!
+
+   There was an error while loading. Please reload this page.
 
 Languages
 
