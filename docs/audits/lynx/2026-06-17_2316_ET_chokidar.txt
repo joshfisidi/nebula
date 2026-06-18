@@ -153,7 +153,7 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 626
+     * Fork 627
      * Star 12.1k
 
      * Code
@@ -601,7 +601,7 @@ Watchers
 
 Forks
 
-   626 forks
+   627 forks
    Report repository
 
 Releases 19
@@ -633,24 +633,15 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Contributors 112
+Contributors
 
-     * @es128
-     * @paulmillr
-     * @43081j
-     * @XhmikosR
-     * @nono
-     * @srguiwiz
-     * @dependabot-preview[bot]
-     * @JSMonk
-     * @dbashford
-     * @phated
-     * @alan-agius4
-     * @jrebmann
-     * @alexpusch
-     * @tym-network
+     *
+     *
+     *
 
-   + 98 contributors
+Uh oh!
+
+   There was an error while loading. Please reload this page.
 
 Languages
 
