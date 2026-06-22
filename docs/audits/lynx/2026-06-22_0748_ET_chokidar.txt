@@ -1,0 +1,111 @@
+   #GitHub
+
+   Skip to content
+
+Navigation Menu
+
+   (BUTTON) Toggle navigation
+
+   (BUTTON)
+   Sign in
+   (BUTTON) Appearance settings
+
+   (BUTTON)
+   Search or jump to...
+
+Search code, repositories, users, issues, pull requests...
+
+   Search
+   ____________________
+   Clear (BUTTON)
+
+   Search syntax tips
+
+Provide feedback
+
+   (BUTTON)
+
+   We read every piece of feedback, and take your input very seriously.
+
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   [ ] Include my email address so I can be contacted
+
+   (BUTTON) Cancel (BUTTON) Submit feedback
+
+Saved searches
+
+Use saved searches to filter your results more quickly
+
+   (BUTTON)
+
+   Name ____________________
+   Query ____________________
+
+   To see all available qualifiers, see our documentation.
+
+   (BUTTON) Cancel (BUTTON) Create saved search
+
+   Sign in
+
+   Sign up
+
+   (BUTTON) Appearance settings
+
+   (BUTTON) Resetting focus
+
+   You signed in with another tab or window. Reload to refresh your
+   session. You signed out in another tab or window. Reload to refresh
+   your session. You switched accounts on another tab or window. Reload to
+   refresh your session. (BUTTON) Dismiss alert
+
+   (BUTTON)
+   {{ message }}
+
+   paulmillr / chokidar Public
+     *
+
+Uh oh!
+       There was an error while loading. Please reload this page.
+     * Notifications You must be signed in to change notification settings
+     * Fork 626
+     * Star 12.1k
+
+     * Code
+     * Issues 33
+     * Pull requests 11
+     * Discussions
+     * Actions
+     * Security and quality 0
+     * Insights
+
+   (BUTTON) Additional navigation options
+     * Code
+     * Issues
+     * Pull requests
+     * Discussions
+     * Actions
+     * Security and quality
+     * Insights
+
+Footer
+
+   © 2026 GitHub, Inc.
+
+Footer navigation
+
+     * Terms
+     * Privacy
+     * Security
+     * Status
+     * Community
+     * Docs
+     * Contact
+     * (BUTTON) Manage cookies
+     * (BUTTON) Do not share my personal information
+
+   (BUTTON) You can't perform that action at this time.
+
+   (BUTTON)
