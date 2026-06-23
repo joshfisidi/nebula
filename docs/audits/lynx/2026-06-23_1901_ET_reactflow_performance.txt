@@ -360,8 +360,7 @@
    Questions? Contact Us
 
    What's new?
-   React Flow 12.11.0React Flow 12.10.2New llms.txt endpoints for React
-   Flow are here!...and more!
+   React Flow 12.11.1React Flow 12.11.0React Flow 12.10.2...and more!
 
 React Flow Playground
 
