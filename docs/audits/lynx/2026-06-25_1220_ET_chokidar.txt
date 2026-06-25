@@ -154,7 +154,7 @@ Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
      * Fork 626
-     * Star 12.1k
+     * Star 12.2k
 
      * Code
      * Issues 33
@@ -593,7 +593,7 @@ Uh oh!
 
 Stars
 
-   12.1k stars
+   12.2k stars
 
 Watchers
 
@@ -629,9 +629,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.7m
 
-   There was an error while loading. Please reload this page.
+     * @trananhtung
+     * @Vesse00
+     * @davidevol
+     * @bexeGrace
+     * @lucat1
+     * @PelleNybe
+     * @rohandhir10
+     * @narnd
+
+   + 35,677,801
 
 Contributors
 
