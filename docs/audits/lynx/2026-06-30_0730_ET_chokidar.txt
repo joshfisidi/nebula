@@ -242,6 +242,7 @@ Repository files navigation
      * README
      * MIT license
 
+   (BUTTON) More items
    (BUTTON)
 
 Chokidar Weekly downloads
@@ -629,9 +630,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.7m
 
-   There was an error while loading. Please reload this page.
+     * @bepass-org
+     * @DingJun1028
+     * @lo-alz
+     * @andrewloable
+     * @raviswa
+     * @akashp369
+     * @00chris0099
+     * @reddoorla
+
+   + 35,683,793
 
 Contributors
 
