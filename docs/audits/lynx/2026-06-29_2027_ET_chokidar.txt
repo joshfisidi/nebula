@@ -242,6 +242,7 @@ Repository files navigation
      * README
      * MIT license
 
+   (BUTTON) More items
    (BUTTON)
 
 Chokidar Weekly downloads
