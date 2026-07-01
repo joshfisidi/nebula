@@ -1,5 +1,8 @@
    Skip to Content
 
+   React Flow Pro is now integrated into reactflow.dev! Read more here ->
+   (BUTTON)
+
    React Flow
 
    LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow Pro
@@ -578,7 +581,7 @@ Routing Edges
    Our editable edge Pro Example could also be used as a starting point
    for implementing a custom edge that can be routed along a specific
    path.
-   Last updated on June 17, 2026
+   Last updated on June 22, 2026
    ThemingSub Flows
 
    A project by the xyflow team

@@ -1,5 +1,8 @@
    Skip to Content
 
+   React Flow Pro is now integrated into reactflow.dev! Read more here ->
+   (BUTTON)
+
    React Flow
 
    LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow Pro
@@ -488,7 +491,7 @@ Additional resources
      * Tuning Edge Animations ReactFlow Optimal Performance
      * 5 Ways to Optimize React Flow in 10 minutes
 
-   Last updated on June 17, 2026
+   Last updated on June 22, 2026
 
    Uncontrolled FlowState Management
 
