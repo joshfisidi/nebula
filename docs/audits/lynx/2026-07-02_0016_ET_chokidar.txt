@@ -242,6 +242,7 @@ Repository files navigation
      * README
      * MIT license
 
+   (BUTTON) More items
    (BUTTON)
 
 Chokidar Weekly downloads
@@ -631,16 +632,16 @@ Uh oh!
 
 Used by 35.7m
 
-     * @trananhtung
-     * @Vesse00
-     * @davidevol
-     * @bexeGrace
-     * @lucat1
-     * @PelleNybe
-     * @rohandhir10
-     * @narnd
+     * @bepass-org
+     * @DingJun1028
+     * @lo-alz
+     * @andrewloable
+     * @raviswa
+     * @akashp369
+     * @00chris0099
+     * @reddoorla
 
-   + 35,677,801
+   + 35,683,793
 
 Contributors
 
