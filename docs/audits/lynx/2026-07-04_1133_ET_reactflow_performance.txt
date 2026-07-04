@@ -1,8 +1,12 @@
    Skip to Content
 
+   React Flow Pro is now integrated into reactflow.dev! Read more here ->
+   (BUTTON)
+
    React Flow
 
-   LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow Pro
+   LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow ProRemove
+   Attribution
 
      * Learn
      * Reference
@@ -53,7 +57,6 @@
                o React Flow UI
           + (BUTTON) Troubleshooting
                o Common Errors
-               o Remove Attribution
                o Migrate to v12
                o Migrate to v11
                o Migrate to v10
@@ -297,6 +300,7 @@
           + Contact Us
           + Playground
      * React Flow Pro
+     * Remove Attribution
 
    (BUTTON) Light
 
@@ -337,7 +341,6 @@
           + React Flow UI
      * (BUTTON) Troubleshooting
           + Common Errors
-          + Remove Attribution
           + Migrate to v12
           + Migrate to v11
           + Migrate to v10
@@ -356,7 +359,6 @@
      * Simplify node and edge styles
      * Additional resources
 
-   Edit this page on GitHub
    Questions? Contact Us
 
    What's new?
@@ -488,7 +490,7 @@ Additional resources
      * Tuning Edge Animations ReactFlow Optimal Performance
      * 5 Ways to Optimize React Flow in 10 minutes
 
-   Last updated on June 17, 2026
+   Last updated on July 1, 2026
 
    Uncontrolled FlowState Management
 
