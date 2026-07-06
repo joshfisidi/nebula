@@ -153,12 +153,12 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 627
+     * Fork 629
      * Star 12.2k
 
      * Code
      * Issues 33
-     * Pull requests 11
+     * Pull requests 12
      * Discussions
      * Actions
      * Security and quality 0
@@ -602,7 +602,7 @@ Watchers
 
 Forks
 
-   627 forks
+   629 forks
    Report repository
 
 Releases 19
@@ -630,18 +630,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.7m
+Uh oh!
 
-     * @bepass-org
-     * @DingJun1028
-     * @lo-alz
-     * @andrewloable
-     * @raviswa
-     * @akashp369
-     * @00chris0099
-     * @reddoorla
-
-   + 35,683,793
+   There was an error while loading. Please reload this page.
 
 Contributors
 
