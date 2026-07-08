@@ -362,7 +362,7 @@
    Questions? Contact Us
 
    What's new?
-   React Flow 12.11.1React Flow 12.11.0React Flow 12.10.2...and more!
+   React Flow 12.11.2React Flow 12.11.1React Flow 12.11.0...and more!
 
 React Flow Playground
 
@@ -490,7 +490,7 @@ Additional resources
      * Tuning Edge Animations ReactFlow Optimal Performance
      * 5 Ways to Optimize React Flow in 10 minutes
 
-   Last updated on July 1, 2026
+   Last updated on July 6, 2026
 
    Uncontrolled FlowState Management
 
