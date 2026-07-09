@@ -153,12 +153,12 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 628
+     * Fork 630
      * Star 12.2k
 
      * Code
      * Issues 33
-     * Pull requests 11
+     * Pull requests 10
      * Discussions
      * Actions
      * Security and quality 0
@@ -193,8 +193,8 @@ Latest commit
 
 History
 
-   1,756 Commits
-   1,756 Commits
+   1,758 Commits
+   1,758 Commits
    .github
    .github
 
@@ -602,7 +602,7 @@ Watchers
 
 Forks
 
-   628 forks
+   630 forks
    Report repository
 
 Releases 19
@@ -630,18 +630,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.7m
+Uh oh!
 
-     * @trananhtung
-     * @Vesse00
-     * @davidevol
-     * @bexeGrace
-     * @lucat1
-     * @PelleNybe
-     * @rohandhir10
-     * @narnd
-
-   + 35,677,801
+   There was an error while loading. Please reload this page.
 
 Contributors
 
