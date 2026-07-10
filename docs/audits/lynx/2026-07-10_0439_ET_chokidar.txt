@@ -158,7 +158,7 @@ Uh oh!
 
      * Code
      * Issues 33
-     * Pull requests 11
+     * Pull requests 10
      * Discussions
      * Actions
      * Security and quality 0
@@ -193,8 +193,8 @@ Latest commit
 
 History
 
-   1,756 Commits
-   1,756 Commits
+   1,758 Commits
+   1,758 Commits
    .github
    .github
 
