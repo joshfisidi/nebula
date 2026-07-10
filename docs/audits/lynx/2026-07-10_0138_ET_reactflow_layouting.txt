@@ -360,7 +360,7 @@
    Questions? Contact Us
 
    What's new?
-   React Flow 12.11.1React Flow 12.11.0React Flow 12.10.2...and more!
+   React Flow 12.11.2React Flow 12.11.1React Flow 12.11.0...and more!
 
 React Flow Playground
 
@@ -580,7 +580,7 @@ Routing Edges
    Our editable edge Pro Example could also be used as a starting point
    for implementing a custom edge that can be routed along a specific
    path.
-   Last updated on July 1, 2026
+   Last updated on July 6, 2026
    ThemingSub Flows
 
    A project by the xyflow team
