@@ -157,7 +157,7 @@ Uh oh!
      * Star 12.2k
 
      * Code
-     * Issues 33
+     * Issues 35
      * Pull requests 10
      * Discussions
      * Actions
@@ -630,18 +630,9 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Used by 35.7m
+Uh oh!
 
-     * @trananhtung
-     * @Vesse00
-     * @davidevol
-     * @bexeGrace
-     * @lucat1
-     * @PelleNybe
-     * @rohandhir10
-     * @narnd
-
-   + 35,677,801
+   There was an error while loading. Please reload this page.
 
 Contributors
 
