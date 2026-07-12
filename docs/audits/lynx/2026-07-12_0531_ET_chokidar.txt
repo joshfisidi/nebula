@@ -157,7 +157,7 @@ Uh oh!
      * Star 12.2k
 
      * Code
-     * Issues 33
+     * Issues 35
      * Pull requests 10
      * Discussions
      * Actions
@@ -632,16 +632,16 @@ Uh oh!
 
 Used by 35.7m
 
-     * @trananhtung
-     * @Vesse00
-     * @davidevol
-     * @bexeGrace
-     * @lucat1
-     * @PelleNybe
-     * @rohandhir10
-     * @narnd
+     * @LunarHUE
+     * @kaushiksaravanan
+     * @Devansh5505
+     * @Langxi13
+     * @nozle-dev
+     * @nozle-dev
+     * @arjunsecurelinegithu1
+     * @glassray
 
-   + 35,677,801
+   + 35,692,639
 
 Contributors
 
