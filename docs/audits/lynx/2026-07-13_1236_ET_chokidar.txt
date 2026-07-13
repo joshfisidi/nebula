@@ -153,12 +153,12 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 630
+     * Fork 631
      * Star 12.2k
 
      * Code
-     * Issues 33
-     * Pull requests 10
+     * Issues 35
+     * Pull requests 11
      * Discussions
      * Actions
      * Security and quality 0
@@ -602,7 +602,7 @@ Watchers
 
 Forks
 
-   630 forks
+   631 forks
    Report repository
 
 Releases 19
@@ -630,9 +630,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.7m
 
-   There was an error while loading. Please reload this page.
+     * @LunarHUE
+     * @kaushiksaravanan
+     * @Devansh5505
+     * @Langxi13
+     * @nozle-dev
+     * @nozle-dev
+     * @arjunsecurelinegithu1
+     * @glassray
+
+   + 35,692,639
 
 Contributors
 
