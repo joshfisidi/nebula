@@ -153,12 +153,12 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 630
+     * Fork 631
      * Star 12.2k
 
      * Code
      * Issues 35
-     * Pull requests 10
+     * Pull requests 12
      * Discussions
      * Actions
      * Security and quality 0
@@ -239,6 +239,7 @@ History
 
 Repository files navigation
 
+     *
      * README
      * MIT license
 
@@ -602,7 +603,7 @@ Watchers
 
 Forks
 
-   630 forks
+   631 forks
    Report repository
 
 Releases 19
