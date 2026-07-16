@@ -1,8 +1,5 @@
    Skip to Content
 
-   React Flow Pro is now integrated into reactflow.dev! Read more here ->
-   (BUTTON)
-
    React Flow
 
    LearnReferenceExamplesUIShowcase (BUTTON) MoreReact Flow ProRemove
