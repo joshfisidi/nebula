@@ -1,0 +1,60 @@
+{
+  "generated_at": "2026-03-18T20:01:47.776Z",
+  "timezone": "America/Toronto",
+  "repo": "nebula",
+  "context": {
+    "north_star_exists": true,
+    "north_star_heading": "Nebula North Star",
+    "latest_audit": "docs/audits/AUDIT_2026-03-18_1601_ET.md",
+    "audit_signals": {
+      "todoCount": 22,
+      "reactFlowMentions": 70,
+      "websocketMentions": 21,
+      "chokidarMentions": 19
+    },
+    "knowledge_source": "docs/knowledge",
+    "latest_upgrade_age_hours": 0.9895802937147352,
+    "skip_map_entries": 10,
+    "outdated_packages": 0,
+    "last_pipeline_status": "success"
+  },
+  "top_hypotheses": [
+    {
+      "id": "replace-skip-map-with-real-checks",
+      "lane": "reliability",
+      "signal": "skip_map_entries=10",
+      "proposal": "Autogenerate minimal lint/test scripts for missing workspaces and gradually replace skip-map exemptions with runnable checks.",
+      "action": "Generate scripts in workspace package.json, run npm run -ws typecheck/build, keep only green diffs.",
+      "impact": 9,
+      "effort": 4,
+      "confidence": 8,
+      "score": 6.5
+    },
+    {
+      "id": "knowledge-driven-graph-ux-lane",
+      "lane": "product-quality",
+      "signal": "docs/knowledge:files=1,perf_mentions=2,layout_mentions=0",
+      "proposal": "Use internal knowledge corpus to prioritize graph readability/performance upgrades tied to existing examples and prior notes.",
+      "action": "Generate upgrade candidates only when there is codebase locality + knowledge evidence + measurable UI objective (overlap, FPS, interaction latency).",
+      "impact": 8,
+      "effort": 4,
+      "confidence": 8,
+      "score": 6
+    },
+    {
+      "id": "todo-fixme-burn-down",
+      "lane": "maintainability",
+      "signal": "audit_todo_fixme_markers=22",
+      "proposal": "Convert high-signal TODO/FIXME markers into executable backlog items with acceptance tests.",
+      "action": "Take top 5 TODO/FIXME markers by file criticality, implement smallest safe fixes, gate on build/typecheck.",
+      "impact": 7,
+      "effort": 4,
+      "confidence": 7,
+      "score": 5.1
+    }
+  ],
+  "knowledge_sample_files": [
+    "docs/knowledge/README.md"
+  ],
+  "outdated_sample": []
+}

@@ -1,0 +1,642 @@
+#alternate
+
+   Skip to content
+
+   (BUTTON) Search documentation... (BUTTON) Search...88K (BUTTON)
+   (BUTTON)
+
+   ShowcaseDocsBlogTemplatesEnterprise
+
+   (BUTTON) Search documentation... (BUTTON) Search...88K (BUTTON)
+   (BUTTON) FeedbackLearn
+
+   (BUTTON) Menu
+
+   (BUTTON)
+
+   Using App Router
+
+   Features available in /app
+   (BUTTON)
+
+   Latest Version
+
+   16.1.6
+
+     * Getting Started
+          + Installation
+          + Project Structure
+          + Layouts and Pages
+          + Linking and Navigating
+          + Server and Client Components
+          + Cache Components
+          + Fetching Data
+          + Updating Data
+          + Caching and Revalidating
+          + Error Handling
+          + CSS
+          + Image Optimization
+          + Font Optimization
+          + Metadata and OG images
+          + Route Handlers
+          + Proxy
+          + Deploying
+          + Upgrading
+
+     * Guides
+          + AI Coding Agents
+          + Analytics
+          + Authentication
+          + Backend for Frontend
+          + Caching
+          + CI Build Caching
+          + Content Security Policy
+          + CSS-in-JS
+          + Custom Server
+          + Data Security
+          + Debugging
+          + Draft Mode
+          + Environment Variables
+          + Forms
+          + ISR
+          + Instrumentation
+          + Internationalization
+          + JSON-LD
+          + Lazy Loading
+          + Development Environment
+          + Next.js MCP Server
+          + MDX
+          + Memory Usage
+          + Migrating
+               o App Router
+               o Create React App
+               o Vite
+          + Multi-tenant
+          + Multi-zones
+          + OpenTelemetry
+          + Package Bundling
+          + Prefetching
+          + Production
+          + PWAs
+          + Public pages
+          + Redirecting
+          + Sass
+          + Scripts
+          + Self-Hosting
+          + SPAs
+          + Static Exports
+          + Tailwind CSS v3
+          + Testing
+               o Cypress
+               o Jest
+               o Playwright
+               o Vitest
+          + Third Party Libraries
+          + Upgrading
+               o Codemods
+               o Version 14
+               o Version 15
+               o Version 16
+          + Videos
+
+     * API Reference
+          + Directives
+               o use cache
+               o use cache: private
+               o use cache: remote
+               o use client
+               o use server
+          + Components
+               o Font
+               o Form Component
+               o Image Component
+               o Link Component
+               o Script Component
+          + File-system conventions
+               o default.js
+               o Dynamic Segments
+               o error.js
+               o forbidden.js
+               o instrumentation.js
+               o instrumentation-client.js
+               o Intercepting Routes
+               o layout.js
+               o loading.js
+               o mdx-components.js
+               o not-found.js
+               o page.js
+               o Parallel Routes
+               o proxy.js
+               o public
+               o route.js
+               o Route Groups
+               o Route Segment Config
+               o src
+               o template.js
+               o unauthorized.js
+               o Metadata Files
+                    # favicon, icon, and apple-icon
+                    # manifest.json
+                    # opengraph-image and twitter-image
+                    # robots.txt
+                    # sitemap.xml
+          + Functions
+               o after
+               o cacheLife
+               o cacheTag
+               o connection
+               o cookies
+               o draftMode
+               o fetch
+               o forbidden
+               o generateImageMetadata
+               o generateMetadata
+               o generateSitemaps
+               o generateStaticParams
+               o generateViewport
+               o headers
+               o ImageResponse
+               o NextRequest
+               o NextResponse
+               o notFound
+               o permanentRedirect
+               o redirect
+               o refresh
+               o revalidatePath
+               o revalidateTag
+               o unauthorized
+               o unstable_cache
+               o unstable_noStore
+               o unstable_rethrow
+               o updateTag
+               o useLinkStatus
+               o useParams
+               o usePathname
+               o useReportWebVitals
+               o useRouter
+               o useSearchParams
+               o useSelectedLayoutSegment
+               o useSelectedLayoutSegments
+               o userAgent
+          + Configuration
+               o next.config.js
+                    # experimental.adapterPath
+                    # allowedDevOrigins
+                    # appDir
+                    # assetPrefix
+                    # authInterrupts
+                    # basePath
+                    # browserDebugInfoInTerminal
+                    # cacheComponents
+                    # cacheHandlers
+                    # cacheLife
+                    # compress
+                    # crossOrigin
+                    # cssChunking
+                    # deploymentId
+                    # devIndicators
+                    # distDir
+                    # env
+                    # expireTime
+                    # exportPathMap
+                    # generateBuildId
+                    # generateEtags
+                    # headers
+                    # htmlLimitedBots
+                    # httpAgentOptions
+                    # images
+                    # cacheHandler
+                    # inlineCss
+                    # isolatedDevBuild
+                    # logging
+                    # mdxRs
+                    # onDemandEntries
+                    # optimizePackageImports
+                    # output
+                    # pageExtensions
+                    # poweredByHeader
+                    # productionBrowserSourceMaps
+                    # proxyClientMaxBodySize
+                    # reactCompiler
+                    # reactMaxHeadersLength
+                    # reactStrictMode
+                    # redirects
+                    # rewrites
+                    # sassOptions
+                    # serverActions
+                    # serverComponentsHmrCache
+                    # serverExternalPackages
+                    # staleTimes
+                    # staticGeneration*
+                    # taint
+                    # trailingSlash
+                    # transpilePackages
+                    # turbopack
+                    # turbopackFileSystemCache
+                    # typedRoutes
+                    # typescript
+                    # urlImports
+                    # useLightningcss
+                    # viewTransition
+                    # webpack
+                    # webVitalsAttribution
+               o TypeScript
+               o ESLint
+          + CLI
+               o create-next-app
+               o next CLI
+          + Edge Runtime
+          + Turbopack
+
+     * Glossary
+
+     * Getting Started
+          + Installation
+          + Project Structure
+          + Images
+          + Fonts
+          + CSS
+          + Deploying
+
+     * Guides
+          + Analytics
+          + Authentication
+          + Babel
+          + CI Build Caching
+          + Content Security Policy
+          + CSS-in-JS
+          + Custom Server
+          + Debugging
+          + Draft Mode
+          + Environment Variables
+          + Forms
+          + ISR
+          + Instrumentation
+          + Internationalization
+          + Lazy Loading
+          + MDX
+          + Migrating
+               o App Router
+               o Create React App
+               o Vite
+          + Multi-Zones
+          + OpenTelemetry
+          + Package Bundling
+          + PostCSS
+          + Preview Mode
+          + Production
+          + Redirecting
+          + Sass
+          + Scripts
+          + Self-Hosting
+          + Static Exports
+          + Tailwind CSS
+          + Testing
+               o Cypress
+               o Jest
+               o Playwright
+               o Vitest
+          + Third Party Libraries
+          + Upgrading
+               o Codemods
+               o Version 10
+               o Version 11
+               o Version 12
+               o Version 13
+               o Version 14
+               o Version 9
+
+     * Building Your Application
+          + Routing
+               o Pages and Layouts
+               o Dynamic Routes
+               o Linking and Navigating
+               o Custom App
+               o Custom Document
+               o API Routes
+               o Custom Errors
+          + Rendering
+               o Server-side Rendering (SSR)
+               o Static Site Generation (SSG)
+               o Automatic Static Optimization
+               o Client-side Rendering (CSR)
+          + Data Fetching
+               o getStaticProps
+               o getStaticPaths
+               o Forms and Mutations
+               o getServerSideProps
+               o Client-side Fetching
+          + Configuring
+               o Error Handling
+
+     * API Reference
+          + Components
+               o Font
+               o Form
+               o Head
+               o Image
+               o Image (Legacy)
+               o Link
+               o Script
+          + File-system conventions
+               o instrumentation.js
+               o Proxy
+               o public
+               o src Directory
+          + Functions
+               o getInitialProps
+               o getServerSideProps
+               o getStaticPaths
+               o getStaticProps
+               o NextRequest
+               o NextResponse
+               o useParams
+               o useReportWebVitals
+               o useRouter
+               o useSearchParams
+               o userAgent
+          + Configuration
+               o next.config.js Options
+                    # experimental.adapterPath
+                    # allowedDevOrigins
+                    # assetPrefix
+                    # basePath
+                    # bundlePagesRouterDependencies
+                    # compress
+                    # crossOrigin
+                    # deploymentId
+                    # devIndicators
+                    # distDir
+                    # env
+                    # exportPathMap
+                    # generateBuildId
+                    # generateEtags
+                    # headers
+                    # httpAgentOptions
+                    # images
+                    # isolatedDevBuild
+                    # onDemandEntries
+                    # optimizePackageImports
+                    # output
+                    # pageExtensions
+                    # poweredByHeader
+                    # productionBrowserSourceMaps
+                    # experimental.proxyClientMaxBodySize
+                    # reactStrictMode
+                    # redirects
+                    # rewrites
+                    # serverExternalPackages
+                    # trailingSlash
+                    # transpilePackages
+                    # turbopack
+                    # typescript
+                    # urlImports
+                    # useLightningcss
+                    # webpack
+                    # webVitalsAttribution
+               o TypeScript
+               o ESLint
+          + CLI
+               o create-next-app CLI
+               o next CLI
+          + Edge Runtime
+          + Turbopack
+
+     * Architecture
+          + Accessibility
+          + Fast Refresh
+          + Next.js Compiler
+          + Supported Browsers
+
+     * Community
+          + Contribution Guide
+          + Rspack
+
+   On this page
+     * Automatic optimizations
+     * During development
+     * Routing and rendering
+     * Data fetching and caching
+     * UI and accessibility
+     * Security
+     * Metadata and SEO
+     * Type safety
+     * Before going to production
+     * Core Web Vitals
+     * Analyzing bundles
+
+   Edit this page on GitHub (BUTTON) Scroll to top
+
+   App RouterGuidesProduction
+   (BUTTON) Copy page (BUTTON)
+
+How to optimize your Next.js application for production
+
+   Last updated February 27, 2026
+
+   Before taking your Next.js application to production, there are some
+   optimizations and patterns you should consider implementing for the
+   best user experience, performance, and security.
+
+   This page provides best practices that you can use as a reference when
+   building your application and before going to production, as well as
+   the automatic Next.js optimizations you should be aware of.
+
+Automatic optimizations
+
+   These Next.js optimizations are enabled by default and require no
+   configuration:
+     * Server Components: Next.js uses Server Components by default.
+       Server Components run on the server, and don't require JavaScript
+       to render on the client. As such, they have no impact on the size
+       of your client-side JavaScript bundles. You can then use Client
+       Components as needed for interactivity.
+     * Code-splitting: Server Components enable automatic code-splitting
+       by route segments. You may also consider lazy loading Client
+       Components and third-party libraries, where appropriate.
+     * Prefetching: When a link to a new route enters the user's viewport,
+       Next.js prefetches the route in background. This makes navigation
+       to new routes almost instant. You can opt out of prefetching, where
+       appropriate.
+     * Static Rendering: Next.js statically renders Server and Client
+       Components on the server at build time and caches the rendered
+       result to improve your application's performance. You can opt into
+       Dynamic Rendering for specific routes, where appropriate.
+     * Caching: Next.js caches data requests, the rendered result of
+       Server and Client Components, static assets, and more, to reduce
+       the number of network requests to your server, database, and
+       backend services. You may opt out of caching, where appropriate.
+
+   These defaults aim to improve your application's performance, and
+   reduce the cost and amount of data transferred on each network request.
+
+During development
+
+   While building your application, we recommend using the following
+   features to ensure the best performance and user experience:
+
+Routing and rendering
+
+     * Layouts: Use layouts to share UI across pages and enable partial
+       rendering on navigation.
+     * <Link> component: Use the <Link> component for client-side
+       navigation and prefetching.
+     * Error Handling: Gracefully handle catch-all errors and 404 errors
+       in production by creating custom error pages.
+     * Client and Server Components: Follow the recommended composition
+       patterns for Server and Client Components, and check the placement
+       of your "use client" boundaries to avoid unnecessarily increasing
+       your client-side JavaScript bundle.
+     * Dynamic APIs: Be aware that Dynamic APIs like cookies and the
+       searchParams prop will opt the entire route into Dynamic Rendering
+       (or your whole application if used in the Root Layout). Ensure
+       Dynamic API usage is intentional and wrap them in <Suspense>
+       boundaries where appropriate.
+
+     Good to know: Partial Prerendering (experimental) will allow parts
+     of a route to be dynamic without opting the whole route into dynamic
+     rendering.
+
+Data fetching and caching
+
+     * Server Components: Leverage the benefits of fetching data on the
+       server using Server Components.
+     * Route Handlers: Use Route Handlers to access your backend resources
+       from Client Components. But do not call Route Handlers from Server
+       Components to avoid an additional server request.
+     * Streaming: Use Loading UI and React Suspense to progressively send
+       UI from the server to the client, and prevent the whole route from
+       blocking while data is being fetched.
+     * Parallel Data Fetching: Reduce network waterfalls by fetching data
+       in parallel, where appropriate. Also, consider preloading data
+       where appropriate.
+     * Data Caching: Verify whether your data requests are being cached or
+       not, and opt into caching, where appropriate. Ensure requests that
+       don't use fetch are cached.
+     * Static Images: Use the public directory to automatically cache your
+       application's static assets, e.g. images.
+
+UI and accessibility
+
+     * Forms and Validation: Use Server Actions to handle form
+       submissions, server-side validation, and handle errors.
+     * Global Error UI: Add app/global-error.tsx to provide consistent,
+       accessible fallback UI and recovery for uncaught errors across your
+       app.
+     * Global 404: Add app/global-not-found.tsx to serve an accessible 404
+       for unmatched routes across your app.
+
+     * Font Module: Optimize fonts by using the Font Module, which
+       automatically hosts your font files with other static assets,
+       removes external network requests, and reduces layout shift.
+     * <Image> Component: Optimize images by using the Image Component,
+       which automatically optimizes images, prevents layout shift, and
+       serves them in modern formats like WebP.
+     * <Script> Component: Optimize third-party scripts by using the
+       Script Component, which automatically defers scripts and prevents
+       them from blocking the main thread.
+     * ESLint: Use the built-in eslint-plugin-jsx-a11y plugin to catch
+       accessibility issues early.
+
+Security
+
+     * Tainting: Prevent sensitive data from being exposed to the client
+       by tainting data objects and/or specific values.
+     * Server Actions: Ensure users are authorized to call Server Actions.
+       Review the recommended security practices.
+
+     * Environment Variables: Ensure your .env.* files are added to
+       .gitignore and only public variables are prefixed with
+       NEXT_PUBLIC_.
+     * Content Security Policy: Consider adding a Content Security Policy
+       to protect your application against various security threats such
+       as cross-site scripting, clickjacking, and other code injection
+       attacks.
+
+Metadata and SEO
+
+     * Metadata API: Use the Metadata API to improve your application's
+       Search Engine Optimization (SEO) by adding page titles,
+       descriptions, and more.
+     * Open Graph (OG) images: Create OG images to prepare your
+       application for social sharing.
+     * Sitemaps and Robots: Help Search Engines crawl and index your pages
+       by generating sitemaps and robots files.
+
+Type safety
+
+     * TypeScript and TS Plugin: Use TypeScript and the TypeScript plugin
+       for better type-safety, and to help you catch errors early.
+
+Before going to production
+
+   Before going to production, you can run next build to build your
+   application locally and catch any build errors, then run next start to
+   measure the performance of your application in a production-like
+   environment.
+
+Core Web Vitals
+
+     * Lighthouse: Run lighthouse in incognito to gain a better
+       understanding of how your users will experience your site, and to
+       identify areas for improvement. This is a simulated test and should
+       be paired with looking at field data (such as Core Web Vitals).
+
+     * useReportWebVitals hook: Use this hook to send Core Web Vitals data
+       to analytics tools.
+
+Analyzing bundles
+
+   Use the @next/bundle-analyzer plugin to analyze the size of your
+   JavaScript bundles and identify large modules and dependencies that
+   might be impacting your application's performance.
+
+   Additionally, the following tools can help you understand the impact of
+   adding new dependencies to your application:
+     * Import Cost
+     * Package Phobia
+     * Bundle Phobia
+     * bundlejs
+
+   Previous
+   Prefetching
+   Next
+   PWAs
+
+   Was this helpful?
+   (BUTTON) (BUTTON) (BUTTON) (BUTTON)
+
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   ____________________________________________________________
+   supported.
+   (BUTTON) Send
+     __________________________________________________________________
+     __________________________________________________________________
+
+Resources
+
+   DocsSupport PolicyLearnShowcaseBlogTeamAnalyticsNext.js
+   ConfPreviewsEvals
+
+More
+
+   Next.js CommerceContact SalesCommunityGitHubReleasesTelemetryGovernance
+
+About Vercel
+
+   Next.js + VercelOpen Source SoftwareGitHubBlueskyX
+
+Legal
+
+   Privacy Policy (BUTTON) Cookie Preferences
+
+Subscribe to our newsletter
+
+   Stay updated on new releases and features, guides, and case studies.
+   ____________________ (BUTTON) Subscribe
+
+   � 2026 Vercel, Inc.
+     __________________________________________________________________
+     __________________________________________________________________

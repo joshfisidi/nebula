@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { pickBrowserWorkspaceSnapshot } from "./browserSource";
 import { ControlRoomShell } from "./ControlRoomShell";
 import { useUniverseGraphStore } from "./graphStore";
 import {
@@ -14,6 +15,8 @@ import {
 } from "./sourceApi";
 import { UniverseLiveProvider, type UniverseConnectionStatus } from "./UniverseLiveProvider";
 
+type SourceMode = "browser" | "local-access" | "server";
+
 export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [currentRoot, setCurrentRoot] = useState<string | null>(null);
   const [sourceModalOpen, setSourceModalOpen] = useState(false);
@@ -23,6 +26,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [wsEnabled, setWsEnabled] = useState(false);
   const [status, setStatus] = useState<UniverseConnectionStatus>({ phase: "idle" });
   const [localAccessSession, setLocalAccessSession] = useState<LocalAccessSession | null>(null);
+  const [sourceMode, setSourceMode] = useState<SourceMode | null>(null);
   const autoSelectedRootRef = useRef<string | null>(null);
 
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
@@ -80,34 +84,25 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         setSourceError(null);
         setSourceLoading(true);
 
-        const detectedSession = await fetchLocalAccessSession();
+        const detectedSessionPromise = fetchLocalAccessSession().catch(() => null);
+        const current = await fetchSourceCurrent().catch(() => null);
+        const detectedSession = await detectedSessionPromise;
         if (cancelled) return;
 
-        if (detectedSession) {
-          setLocalAccessSession(detectedSession);
-          setCurrentRoot(detectedSession.sourcePath ?? null);
-          setWsEnabled(false);
+        setLocalAccessSession(detectedSession);
 
-          if (detectedSession.sourcePath) {
-            await loadLocalAccessSnapshot(detectedSession.token);
-            if (!cancelled) setSourceModalOpen(false);
-          } else {
-            setSourceModalOpen(true);
-          }
+        if (current?.currentRoot) {
+          setCurrentRoot(current.currentRoot);
+          setSourceMode("server");
+          setWsEnabled(true);
+          setSourceModalOpen(false);
           return;
         }
 
-        const current = await fetchSourceCurrent();
-        if (cancelled) return;
-
-        setCurrentRoot(current.currentRoot ?? null);
-        setWsEnabled(Boolean(current.currentRoot));
-        setSourceModalOpen(!current.currentRoot);
-      } catch (err) {
-        if (cancelled) return;
-        setSourceError(err instanceof Error ? err.message : String(err));
-        setSourceModalOpen(true);
+        setCurrentRoot(null);
+        setSourceMode(null);
         setWsEnabled(false);
+        setSourceModalOpen(true);
       } finally {
         if (!cancelled) setSourceLoading(false);
       }
@@ -119,13 +114,32 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     };
   }, [applySnapshot, selectAllProjects, setConnected]);
 
+  const handleRequestBrowserAccess = async () => {
+    setSourceSelecting(true);
+    setSourceError(null);
+    try {
+      const browserWorkspace = await pickBrowserWorkspaceSnapshot();
+      applySnapshot(browserWorkspace.snapshot);
+      setConnected(true);
+      selectAllProjects();
+      setCurrentRoot(browserWorkspace.rootPath);
+      setSourceMode("browser");
+      setWsEnabled(false);
+      setSourceModalOpen(false);
+    } catch (err) {
+      setSourceError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSourceSelecting(false);
+    }
+  };
+
   const handleRequestLocalAccess = async () => {
     setSourceSelecting(true);
     setSourceError(null);
     try {
       const detectedSession = await fetchLocalAccessSession();
       if (!detectedSession) {
-        throw new Error("Local access agent not found on localhost:8787. Start Nebula Sync to grant workspace access.");
+        throw new Error("Local access agent not found on localhost:8787. Choose a folder in the browser or start the local access agent for background syncing.");
       }
       setLocalAccessSession(detectedSession);
       setWsEnabled(false);
@@ -135,9 +149,11 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
       if (nextSourcePath) {
         setCurrentRoot(nextSourcePath);
         await loadLocalAccessSnapshot(detectedSession.token);
+        setSourceMode("local-access");
         setSourceModalOpen(false);
       } else {
         setCurrentRoot(null);
+        setSourceMode(null);
         setSourceModalOpen(true);
       }
     } catch (err) {
@@ -157,8 +173,8 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     setSourceError(null);
     try {
       const result = await selectSource(path);
-      setLocalAccessSession(null);
       setCurrentRoot(result.currentRoot ?? null);
+      setSourceMode(result.currentRoot ? "server" : null);
       setWsEnabled(Boolean(result.currentRoot));
       setSourceModalOpen(false);
     } catch (err) {
@@ -184,6 +200,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
       const result = await selectLocalAccessSource(localAccessSession.token, path);
       setCurrentRoot(result.sourcePath ?? null);
       await loadLocalAccessSnapshot(localAccessSession.token);
+      setSourceMode(result.sourcePath ? "local-access" : null);
       setWsEnabled(false);
       setSourceModalOpen(false);
     } catch (err) {
@@ -198,6 +215,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
       <ControlRoomShell
         preview={preview}
         currentRoot={currentRoot}
+        sourceMode={sourceMode}
         localAccessSession={localAccessSession}
         sourceModalOpen={sourceModalOpen}
         sourceLoading={sourceLoading}
@@ -207,6 +225,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         status={status}
         onOpenSource={() => setSourceModalOpen(true)}
         onCloseSource={() => setSourceModalOpen(false)}
+        onRequestBrowserAccess={handleRequestBrowserAccess}
         onRequestLocalAccess={handleRequestLocalAccess}
         onSelectedServer={handleSelectSource}
         onSelectedLocal={handleSelectLocalAccessSource}

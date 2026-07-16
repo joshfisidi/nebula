@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
+import { handleDbRoute } from "./routes/db.js";
+import { openProjectDb } from "./storage/db.js";
+import { createProjectionStore, type ProjectionStore } from "./storage/projectionStore.js";
 import { startUniverseRuntime, type UniverseRuntime } from "./universe/index.js";
 
 const JSON_BODY_LIMIT_BYTES = 128 * 1024;
@@ -100,6 +103,7 @@ const ALLOWED_ROOTS = parseAllowedRootsEnv();
 
 let runtime: UniverseRuntime | null = null;
 let currentRoot: string | null = null;
+let currentProjectionStore: ProjectionStore | null = null;
 let shuttingDown = false;
 let shutdownPromise: Promise<void> | null = null;
 
@@ -131,15 +135,40 @@ async function startRoot(rootPath: string): Promise<void> {
   ensureDirectory(nextRoot);
 
   const previousRuntime = runtime;
+  let projectionStore: ProjectionStore | null = null;
+
+  const projectDb = openProjectDb(nextRoot);
+  try {
+    projectionStore = createProjectionStore(projectDb);
+    projectionStore.ensureSourceRoot();
+  } catch (error) {
+    projectDb.close();
+    throw error;
+  }
+
   runtime = null;
   currentRoot = null;
+  currentProjectionStore = null;
 
   if (previousRuntime) {
     await previousRuntime.close();
   }
 
-  runtime = startUniverseRuntime({ rootPath: nextRoot, wsPort: WS_PORT, logger: logInfo });
+  try {
+    runtime = startUniverseRuntime({
+      sourceId: projectionStore.sourceId,
+      rootPath: nextRoot,
+      wsPort: WS_PORT,
+      projectionStore,
+      logger: logInfo
+    });
+  } catch (error) {
+    projectionStore.close();
+    throw error;
+  }
+
   currentRoot = nextRoot;
+  currentProjectionStore = projectionStore;
   logInfo({ scope: "server", event: "source_selected", rootPath: currentRoot });
 }
 
@@ -300,6 +329,18 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     return;
   }
 
+  if (
+    req.method === "GET" &&
+    handleDbRoute({
+      pathname: url.pathname,
+      searchParams: url.searchParams,
+      res,
+      projectionStore: currentProjectionStore
+    })
+  ) {
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/source/list") {
     const rootQuery = url.searchParams.get("root");
     const base = rootQuery ? path.resolve(rootQuery) : ALLOWED_ROOTS[0];
@@ -395,6 +436,7 @@ async function shutdown(reason: string): Promise<void> {
       const activeRuntime = runtime;
       runtime = null;
       currentRoot = null;
+      currentProjectionStore = null;
       await activeRuntime.close();
     }
 

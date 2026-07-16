@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-03-18T15:31:01.391Z",
+  "timezone": "America/Toronto",
+  "repo": "nebula",
+  "context": {
+    "latest_upgrade_age_hours": 0.475470326944987,
+    "skip_map_entries": 10,
+    "outdated_packages": 0,
+    "last_pipeline_status": "success"
+  },
+  "top_hypotheses": [
+    {
+      "id": "replace-skip-map-with-real-checks",
+      "lane": "reliability",
+      "signal": "skip_map_entries=10",
+      "proposal": "Autogenerate minimal lint/test scripts for missing workspaces and gradually replace skip-map exemptions with runnable checks.",
+      "action": "Generate scripts in workspace package.json, run npm run -ws typecheck/build, keep only green diffs.",
+      "impact": 9,
+      "effort": 4,
+      "confidence": 8,
+      "score": 6.5
+    },
+    {
+      "id": "graph-ux-autotuning-lane",
+      "lane": "product-quality",
+      "signal": "dense-graph-readability-risk=constant",
+      "proposal": "Run weekly experiments for label LOD, edge density control, and camera presets for large repos.",
+      "action": "Define objective metrics (overlap ratio, readable labels count) and auto-accept only improving variants.",
+      "impact": 8,
+      "effort": 4,
+      "confidence": 7,
+      "score": 5.6
+    }
+  ],
+  "outdated_sample": []
+}

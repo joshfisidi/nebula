@@ -6,6 +6,16 @@ export function normalizePath(absPath: string): string {
   return resolved.length > 1 ? resolved.replace(/\/+$/, "") : resolved;
 }
 
+export function normalizeRelativePath(relPath: string): string {
+  const normalized = relPath.replace(/\\/g, "/").replace(/\/+$/, "");
+  if (normalized === "" || normalized === ".") return ".";
+  return normalized.replace(/^\.\//, "");
+}
+
+export function relativePathFrom(rootPath: string, absPath: string): string {
+  return normalizeRelativePath(path.relative(normalizePath(rootPath), normalizePath(absPath)));
+}
+
 function sha1(input: string): string {
   return crypto.createHash("sha1").update(input).digest("hex");
 }

@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-05-10T11:22:54.890Z",
+  "timezone": "America/Toronto",
+  "repo": "nebula",
+  "context": {
+    "north_star_exists": true,
+    "north_star_heading": "Nebula North Star",
+    "latest_audit": "docs/audits/AUDIT_2026-05-10_0722_ET.md",
+    "audit_signals": {
+      "todoCount": 22,
+      "reactFlowMentions": 72,
+      "websocketMentions": 21,
+      "chokidarMentions": 20
+    },
+    "knowledge_source": "docs/knowledge",
+    "latest_upgrade_age_hours": 1232.1883046555583,
+    "skip_map_entries": 10,
+    "outdated_packages": 2,
+    "last_pipeline_status": "success"
+  },
+  "top_hypotheses": [
+    {
+      "id": "replace-skip-map-with-real-checks",
+      "lane": "reliability",
+      "signal": "skip_map_entries=10",
+      "proposal": "Autogenerate minimal lint/test scripts for missing workspaces and gradually replace skip-map exemptions with runnable checks.",
+      "action": "Generate scripts in workspace package.json, run npm run -ws typecheck/build, keep only green diffs.",
+      "impact": 9,
+      "effort": 4,
+      "confidence": 8,
+      "score": 6.5
+    },
+    {
+      "id": "stale-upgrade-pulse",
+      "lane": "ops",
+      "signal": "hours_since_last_upgrade=1232.2",
+      "proposal": "Upgrade cadence is stale. Trigger forced autoresearch pulse to refill executable backlog.",
+      "action": "Run maintainer + autoresearch + queue refresh immediately and report top 3 safe patches.",
+      "impact": 7,
+      "effort": 2,
+      "confidence": 8,
+      "score": 6.1
+    },
+    {
+      "id": "knowledge-driven-graph-ux-lane",
+      "lane": "product-quality",
+      "signal": "docs/knowledge:files=1,perf_mentions=2,layout_mentions=0",
+      "proposal": "Use internal knowledge corpus to prioritize graph readability/performance upgrades tied to existing examples and prior notes.",
+      "action": "Generate upgrade candidates only when there is codebase locality + knowledge evidence + measurable UI objective (overlap, FPS, interaction latency).",
+      "impact": 8,
+      "effort": 4,
+      "confidence": 8,
+      "score": 6
+    },
+    {
+      "id": "dependency-upgrade-lane",
+      "lane": "security+performance",
+      "signal": "outdated_packages=2",
+      "proposal": "Create a rolling dependency upgrade lane (small batches, lockfile+build+typecheck gates) to avoid stagnation and drift.",
+      "action": "Batch by risk: patch/minor first, run workspace checks, publish accepted batch to agent branch.",
+      "impact": 8,
+      "effort": 5,
+      "confidence": 8,
+      "score": 5.7
+    },
+    {
+      "id": "todo-fixme-burn-down",
+      "lane": "maintainability",
+      "signal": "audit_todo_fixme_markers=22",
+      "proposal": "Convert high-signal TODO/FIXME markers into executable backlog items with acceptance tests.",
+      "action": "Take top 5 TODO/FIXME markers by file criticality, implement smallest safe fixes, gate on build/typecheck.",
+      "impact": 7,
+      "effort": 4,
+      "confidence": 7,
+      "score": 5.1
+    }
+  ],
+  "knowledge_sample_files": [
+    "docs/knowledge/README.md"
+  ],
+  "outdated_sample": [
+    {
+      "name": "@playwright/test",
+      "current": "1.58.2",
+      "wanted": "1.59.1",
+      "latest": "1.59.1",
+      "location": "/Users/josh/.openclaw/workspace/projects/nebula/node_modules/@playwright/test"
+    },
+    {
+      "name": "typescript",
+      "current": "5.9.3",
+      "wanted": "5.9.3",
+      "latest": "6.0.3",
+      "location": "/Users/josh/.openclaw/workspace/projects/nebula/node_modules/typescript"
+    }
+  ]
+}
