@@ -10,89 +10,6 @@ Navigation Menu
    Sign in
    (BUTTON) Appearance settings
 
-     * (BUTTON) Platform
-          + AI CODE CREATION
-               o GitHub CopilotWrite better code with AI
-               o GitHub Copilot appDirect agents from issue to merge
-               o MCP Registry^NewIntegrate external tools
-          + DEVELOPER WORKFLOWS
-               o ActionsAutomate any workflow
-               o CodespacesInstant dev environments
-               o IssuesPlan and track work
-               o Code ReviewManage code changes
-          + APPLICATION SECURITY
-               o GitHub Advanced SecurityFind and fix vulnerabilities
-               o Code securitySecure your code as you build
-               o Secret protectionStop leaks before they start
-          + EXPLORE
-               o Why GitHub
-               o Documentation
-               o Blog
-               o Changelog
-               o Marketplace
-       View all features
-     * (BUTTON) Solutions
-          + BY COMPANY SIZE
-               o Enterprises
-               o Small and medium teams
-               o Startups
-               o Nonprofits
-          + BY USE CASE
-               o App Modernization
-               o DevSecOps
-               o DevOps
-               o CI/CD
-               o View all use cases
-          + BY INDUSTRY
-               o Healthcare
-               o Financial services
-               o Manufacturing
-               o Government
-               o View all industries
-       View all solutions
-     * (BUTTON) Resources
-          + EXPLORE BY TOPIC
-               o AI
-               o Software Development
-               o DevOps
-               o Security
-               o View all topics
-          + EXPLORE BY TYPE
-               o Customer stories
-               o Events & webinars
-               o Ebooks & reports
-               o Business insights
-               o GitHub Skills
-          + SUPPORT & SERVICES
-               o Documentation
-               o Customer support
-               o Community forum
-               o Trust center
-               o Partners
-       View all resources
-     * (BUTTON) Open Source
-          + COMMUNITY
-               o GitHub SponsorsFund open source developers
-          + PROGRAMS
-               o Security Lab
-               o Maintainer Community
-               o Accelerator
-               o GitHub Stars
-               o Archive Program
-          + REPOSITORIES
-               o Topics
-               o Trending
-               o Collections
-     * (BUTTON) Enterprise
-          + ENTERPRISE SOLUTIONS
-               o Enterprise platformAI-powered developer platform
-          + AVAILABLE ADD-ONS
-               o GitHub Advanced SecurityEnterprise-grade security
-                 features
-               o Copilot for BusinessEnterprise-grade AI features
-               o Premium SupportEnterprise-grade 24/7 support
-     * Pricing
-
    (BUTTON)
    Search or jump to...
 
@@ -153,12 +70,12 @@ Use saved searches to filter your results more quickly
 Uh oh!
        There was an error while loading. Please reload this page.
      * Notifications You must be signed in to change notification settings
-     * Fork 630
+     * Fork 631
      * Star 12.2k
 
      * Code
      * Issues 35
-     * Pull requests 10
+     * Pull requests 12
      * Discussions
      * Actions
      * Security and quality 0
@@ -239,6 +156,7 @@ History
 
 Repository files navigation
 
+     *
      * README
      * MIT license
 
@@ -602,7 +520,7 @@ Watchers
 
 Forks
 
-   630 forks
+   631 forks
    Report repository
 
 Releases 19
@@ -630,9 +548,18 @@ Uh oh!
 
    There was an error while loading. Please reload this page.
 
-Uh oh!
+Used by 35.7m
 
-   There was an error while loading. Please reload this page.
+     * @LunarHUE
+     * @kaushiksaravanan
+     * @Devansh5505
+     * @Langxi13
+     * @nozle-dev
+     * @nozle-dev
+     * @arjunsecurelinegithu1
+     * @glassray
+
+   + 35,692,639
 
 Contributors
 
