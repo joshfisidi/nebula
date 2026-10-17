@@ -234,6 +234,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
   const [viewport, setViewport] = useState({ width: 1280, height: 720 });
   const [zoom, setZoom] = useState(0.9);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
   const [layoutEngine, setLocalLayoutEngine] = useState<LayoutEngine>("living-lite");
   const [laidOut, setLaidOut] = useState<{ nodes: Node<FlowNodeData>[]; edges: Edge[] }>({ nodes: [], edges: [] });
@@ -250,6 +251,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
   }, []);
 
   const isMobile = viewport.width < 900;
@@ -594,7 +603,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
       if (rf) {
         viewportCommandActiveRef.current = true;
-        const duration = options?.duration ?? 240;
+        const duration = reducedMotion ? 0 : (options?.duration ?? 240);
         const maxZoom = options?.maxZoom ?? (isMobile ? 0.9 : 1.1);
         const currentZoom = rf.getZoom?.() ?? maxZoom;
         const nextZoom = Math.min(maxZoom, Math.max(currentZoom, isMobile ? 0.72 : 0.82));
@@ -627,7 +636,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         focusLockRef.current = false;
       }, 280);
     },
-    [isMobile, rf]
+    [isMobile, reducedMotion, rf]
   );
 
   const onConnect = useCallback<OnConnect>(
@@ -694,12 +703,12 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
           const y = node.position.y + ((node.height ?? 40) / 2);
           rf.setCenter(x, y, {
             zoom: Math.min(isMobile ? 0.9 : 1.1, Math.max(rf.getZoom?.() ?? 0.85, isMobile ? 0.72 : 0.82)),
-            duration: 180
+            duration: reducedMotion ? 0 : 180
           });
         } else {
           rf.fitView({
             nodes: [{ id: focused }],
-            duration: 180,
+            duration: reducedMotion ? 0 : 180,
             padding: isMobile ? 0.46 : 0.3,
             includeHiddenNodes: false,
             maxZoom: isMobile ? 0.9 : 1.1
@@ -707,7 +716,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         }
       } else {
         rf.fitView({
-          duration: 240,
+          duration: reducedMotion ? 0 : 240,
           padding: isMobile ? 0.34 : 0.2,
           includeHiddenNodes: false,
           minZoom: 0.22,
@@ -725,7 +734,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [enabled, graphSnapshot.layoutKey, renderedNodes.length, isMobile, layoutEngine, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
+  }, [enabled, graphSnapshot.layoutKey, renderedNodes.length, isMobile, layoutEngine, reducedMotion, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
     if (!viewportCommandActiveRef.current) {

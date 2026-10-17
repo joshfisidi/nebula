@@ -84,6 +84,22 @@ main {
   pointer-events: none;
 }
 
+.source-dialog {
+  margin: auto;
+  color-scheme: dark;
+}
+
+.source-dialog::backdrop {
+  background: rgba(3, 8, 17, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.source-dialog h2:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}
+
 .nebula-panel {
   background: var(--panel);
   backdrop-filter: blur(22px);
@@ -212,5 +228,16 @@ select:focus-visible {
 
   .nebula-stage::before {
     background-size: 36px 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

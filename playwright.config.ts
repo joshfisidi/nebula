@@ -18,9 +18,9 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    video: "retain-on-failure"
+    video: process.env.NEBULA_USE_SYSTEM_CHROME ? "off" : "retain-on-failure"
   },
-  webServer: {
+  webServer: process.env.NEBULA_EXTERNAL_SERVER ? undefined : {
     command: "npm run playwright:webserver",
     url: baseURL,
     timeout: 180_000,
@@ -29,7 +29,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] }
+      use: { ...devices["Desktop Chrome"], ...(process.env.NEBULA_USE_SYSTEM_CHROME ? { channel: "chrome" } : {}) }
     },
     {
       name: "firefox",
@@ -41,7 +41,7 @@ export default defineConfig({
     },
     {
       name: "mobile-chromium",
-      use: { ...devices["Pixel 7"] }
+      use: { ...devices["Pixel 7"], ...(process.env.NEBULA_USE_SYSTEM_CHROME ? { channel: "chrome" } : {}) }
     },
     {
       name: "mobile-webkit",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -31,9 +31,6 @@ import { useUniverseGraphStore, type InteractionMode, type RenderNode } from "./
 import type { LayoutMode } from "./layoutEngines";
 import type { LocalAccessSession, SourceFolder } from "./sourceApi";
 import type { UniverseConnectionStatus } from "./UniverseLiveProvider";
-
-type SourceMode = "local-access" | "server";
-type SearchMode = "global" | "focus";
 
 type ControlRoomShellProps = {
   preview?: boolean;
@@ -126,7 +123,7 @@ function useShellMode(): "mobile" | "tablet" | "desktop" {
   }, []);
 
   if (width < 900) return "mobile";
-  if (width < 1320) return "tablet";
+  if (width < 1280) return "tablet";
   return "desktop";
 }
 
@@ -155,6 +152,19 @@ function SourceModal({
   const [manualPath, setManualPath] = useState("");
   const [selectedFolderPath, setSelectedFolderPath] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    titleRef.current?.focus();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -212,8 +222,18 @@ function SourceModal({
   const effectiveError = error ?? localError;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-[rgba(3,8,17,0.74)] p-4 backdrop-blur-xl">
-      <div className="nebula-panel w-full max-w-5xl overflow-hidden rounded-[2rem] border border-[var(--line-strong)] shadow-[0_40px_120px_rgba(2,6,23,0.64)]">
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="source-dialog-title"
+      aria-describedby="source-dialog-description"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      className="source-dialog nebula-panel max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[2rem] border border-[var(--line-strong)] p-0 text-[var(--fg)] shadow-[0_40px_120px_rgba(2,6,23,0.64)]"
+      style={{ width: "min(64rem, calc(100vw - 2rem))" }}
+    >
+      <div className="w-full">
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="border-b border-[var(--line)] bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(249,115,22,0.08)_60%,rgba(15,23,42,0.08))] p-6 lg:border-b-0 lg:border-r">
             <div className="mb-6 flex items-center gap-3">
@@ -222,11 +242,11 @@ function SourceModal({
               </div>
               <div>
                 <div className="text-[0.72rem] uppercase tracking-[0.34em] text-cyan-100/70">Nebula Control Room</div>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">Choose a live graph source</h2>
+                <h2 id="source-dialog-title" ref={titleRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight text-white">Choose a live graph source</h2>
               </div>
             </div>
 
-            <p className="max-w-xl text-sm leading-6 text-slate-200/78">
+            <p id="source-dialog-description" className="max-w-xl text-sm leading-6 text-slate-200/78">
               Grant local folder access for the fastest live workspace loop, or fall back to the runtime server when
               you need a manually selected watch root.
             </p>
@@ -373,7 +393,7 @@ function SourceModal({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -536,6 +556,7 @@ function ProjectTree() {
             </div>
           </div>
           <NativeSelect
+            aria-label="Project scope"
             value={selectedProjectValue}
             className="h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)]"
             onChange={(event) => setProjectSelection(event.target.value || null)}
@@ -565,7 +586,7 @@ function ProjectTree() {
   );
 }
 
-function QuickFilters({ searchMode, onSearchModeChange }: { searchMode: SearchMode; onSearchModeChange: (value: SearchMode) => void }) {
+function QuickFilters() {
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
   const setSearchQuery = useUniverseGraphStore((s) => s.setSearchQuery);
   const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
@@ -582,36 +603,19 @@ function QuickFilters({ searchMode, onSearchModeChange }: { searchMode: SearchMo
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <Input
+            aria-label="Search graph paths"
             className="h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)] pl-11"
-            placeholder={searchMode === "focus" ? "Search from current focus" : "Search every visible path"}
+            placeholder="Search every visible path"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={searchMode === "global" ? "default" : "outline"}
-            size="sm"
-            className="rounded-full"
-            onClick={() => onSearchModeChange("global")}
-          >
-            Global
-          </Button>
-          <Button
-            variant={searchMode === "focus" ? "default" : "outline"}
-            size="sm"
-            className="rounded-full"
-            onClick={() => onSearchModeChange("focus")}
-          >
-            Focus
-          </Button>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <Button
             variant={layoutMode === "overview" ? "default" : "outline"}
             className="justify-start rounded-2xl"
+            aria-pressed={layoutMode === "overview"}
             onClick={() => setLayoutMode("overview")}
           >
             <Layers3 size={16} className="mr-2" />
@@ -620,6 +624,7 @@ function QuickFilters({ searchMode, onSearchModeChange }: { searchMode: SearchMo
           <Button
             variant={layoutMode === "focus" ? "default" : "outline"}
             className="justify-start rounded-2xl"
+            aria-pressed={layoutMode === "focus"}
             onClick={() => setLayoutMode("focus")}
           >
             <Radar size={16} className="mr-2" />
@@ -630,6 +635,7 @@ function QuickFilters({ searchMode, onSearchModeChange }: { searchMode: SearchMo
         <Button
           variant={showHiddenNodes ? "default" : "outline"}
           className="w-full justify-start rounded-2xl"
+          aria-pressed={showHiddenNodes}
           onClick={() => setShowHiddenNodes(!showHiddenNodes)}
         >
           <HardDrive size={16} className="mr-2" />
@@ -801,12 +807,22 @@ export function ControlRoomShell({
   const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
 
-  const [searchMode, setSearchMode] = useState<SearchMode>("global");
   const [rightRailOpen, setRightRailOpen] = useState(true);
+  const sourceTriggerRef = useRef<HTMLButtonElement>(null);
+  const wasSourceModalOpenRef = useRef(sourceModalOpen);
   const shellMode = useShellMode();
 
   useEffect(() => {
-    if (shellMode === "mobile") {
+    if (wasSourceModalOpenRef.current && !sourceModalOpen) {
+      const frame = requestAnimationFrame(() => sourceTriggerRef.current?.focus());
+      wasSourceModalOpenRef.current = sourceModalOpen;
+      return () => cancelAnimationFrame(frame);
+    }
+    wasSourceModalOpenRef.current = sourceModalOpen;
+  }, [sourceModalOpen]);
+
+  useEffect(() => {
+    if (shellMode !== "desktop") {
       setDrawerOpen(false);
       setRightRailOpen(false);
       return;
@@ -815,6 +831,18 @@ export function ControlRoomShell({
     setDrawerOpen(true);
     setRightRailOpen(true);
   }, [setDrawerOpen, shellMode]);
+
+  useEffect(() => {
+    if (shellMode === "desktop" || (!drawerOpen && !rightRailOpen)) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        setRightRailOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen, rightRailOpen, setDrawerOpen, shellMode]);
 
   const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled });
   const graphStateText = sourceLoading
@@ -830,6 +858,10 @@ export function ControlRoomShell({
             : "Source loaded. Runtime is on standby.";
 
   const topActions: InteractionMode[] = ["browse", "pan", "edit"];
+  const closeResponsiveRails = () => {
+    setDrawerOpen(false);
+    setRightRailOpen(false);
+  };
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-[var(--bg)] text-[var(--fg)]">
@@ -856,7 +888,7 @@ export function ControlRoomShell({
                     {layoutEngine}
                   </Badge>
                 </div>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300/78">
+                <p role="status" className="mt-1 max-w-3xl text-sm leading-6 text-slate-300/78">
                   {graphStateText}
                 </p>
               </div>
@@ -867,8 +899,12 @@ export function ControlRoomShell({
                 variant="outline"
                 size="sm"
                 className="rounded-full border-[var(--line)]"
-                onClick={() => setDrawerOpen(!drawerOpen)}
-                aria-pressed={drawerOpen}
+                onClick={() => {
+                  setDrawerOpen(!drawerOpen);
+                  if (shellMode !== "desktop") setRightRailOpen(false);
+                }}
+                aria-expanded={drawerOpen}
+                aria-controls="nebula-explorer"
               >
                 <PanelLeft size={16} className="mr-2" />
                 Explorer
@@ -877,13 +913,17 @@ export function ControlRoomShell({
                 variant="outline"
                 size="sm"
                 className="rounded-full border-[var(--line)]"
-                onClick={() => setRightRailOpen(!rightRailOpen)}
-                aria-pressed={rightRailOpen}
+                onClick={() => {
+                  setRightRailOpen(!rightRailOpen);
+                  if (shellMode !== "desktop") setDrawerOpen(false);
+                }}
+                aria-expanded={rightRailOpen}
+                aria-controls="nebula-inspector"
               >
                 <PanelRight size={16} className="mr-2" />
                 Inspector
               </Button>
-              <Button className="rounded-full bg-white text-slate-950 hover:bg-slate-100" size="sm" onClick={onOpenSource}>
+              <Button ref={sourceTriggerRef} className="rounded-full bg-white text-slate-950 hover:bg-slate-100" size="sm" onClick={onOpenSource}>
                 <HardDrive size={16} className="mr-2" />
                 Source routing
               </Button>
@@ -891,19 +931,39 @@ export function ControlRoomShell({
           </CardContent>
         </Card>
 
-        <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[22rem_minmax(0,1fr)_22rem]">
-          <div className={cn("min-h-0 space-y-4", !drawerOpen && "hidden xl:hidden", drawerOpen && "block")}>
-            <QuickFilters searchMode={searchMode} onSearchModeChange={setSearchMode} />
+        <div className={cn(
+          "relative grid min-h-0 flex-1 gap-4",
+          drawerOpen && rightRailOpen && "xl:grid-cols-[22rem_minmax(0,1fr)_22rem]",
+          drawerOpen && !rightRailOpen && "xl:grid-cols-[22rem_minmax(0,1fr)]",
+          !drawerOpen && rightRailOpen && "xl:grid-cols-[minmax(0,1fr)_22rem]"
+        )}>
+          {(drawerOpen || rightRailOpen) && shellMode !== "desktop" ? (
+            <button
+              type="button"
+              className="absolute inset-0 z-20 bg-slate-950/60 xl:hidden"
+              aria-label="Close side panel"
+              onClick={closeResponsiveRails}
+            />
+          ) : null}
+          <aside
+            id="nebula-explorer"
+            aria-label="Explorer"
+            className={cn(
+              "nebula-rail absolute inset-y-0 left-0 z-30 w-[min(22rem,calc(100vw-1.5rem))] space-y-4 overflow-y-auto rounded-[1.8rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
+              !drawerOpen && "hidden"
+            )}
+          >
+            <QuickFilters />
             <ProjectTree />
-          </div>
+          </aside>
 
-          <div className="nebula-stage relative min-h-0 overflow-hidden rounded-[2rem] border border-[var(--line-strong)]">
+          <div id="nebula-graph" className="nebula-stage relative min-h-0 overflow-hidden rounded-[2rem] border border-[var(--line-strong)]">
             <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-3 p-4">
-              <div className="nebula-stage-banner max-w-xl rounded-[1.2rem] px-4 py-3">
-                <div className="text-[0.72rem] uppercase tracking-[0.24em] text-slate-400">Stage feed</div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="nebula-stage-banner max-w-xl rounded-[1.2rem] px-3 py-2 sm:px-4 sm:py-3">
+                <div className="hidden text-[0.72rem] uppercase tracking-[0.24em] text-slate-400 sm:block">Stage feed</div>
+                <div className="flex flex-wrap items-center gap-2 sm:mt-2">
                   <span className="text-lg font-semibold text-white">{formatRootLabel(currentRoot)}</span>
-                  <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
+                  <Badge className="hidden rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] sm:inline-flex">
                     {localAccessSession ? "local-access" : "server"}
                   </Badge>
                   <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
@@ -919,6 +979,7 @@ export function ControlRoomShell({
                     size="sm"
                     variant={interactionMode === mode ? "default" : "outline"}
                     className="rounded-full border-[var(--line)]"
+                    aria-pressed={interactionMode === mode}
                     onClick={() => setInteractionMode(mode)}
                   >
                     {mode}
@@ -947,9 +1008,9 @@ export function ControlRoomShell({
               </div>
             ) : null}
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4">
-              <div className="nebula-status-strip flex flex-col gap-3 rounded-[1.4rem] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-3">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-2 sm:p-4">
+              <div className="nebula-status-strip flex flex-col gap-2 rounded-[1.4rem] px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
                     {connected ? (
                       <>
@@ -963,10 +1024,11 @@ export function ControlRoomShell({
                       </>
                     )}
                   </Badge>
-                  <span className="text-sm text-slate-300/82">{statusTone.detail}</span>
+                  <span className="text-sm text-slate-300/82 sm:hidden">{statusTone.label}</span>
+                  <span className="hidden text-sm text-slate-300/82 sm:inline">{statusTone.detail}</span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-200 sm:gap-3">
                   <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1">
                     <Blocks size={14} className="text-cyan-200" />
                     {nodeArray.length} nodes
@@ -975,7 +1037,7 @@ export function ControlRoomShell({
                     <Network size={14} className="text-cyan-200" />
                     {edgeArray.length} edges
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1">
+                  <span className="hidden items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1 sm:inline-flex">
                     <Activity size={14} className="text-cyan-200" />
                     {selectedProjectIds.size || 0} active projects
                   </span>
@@ -984,7 +1046,14 @@ export function ControlRoomShell({
             </div>
           </div>
 
-          <div className={cn("min-h-0", !rightRailOpen && "hidden xl:hidden", rightRailOpen && "block")}>
+          <aside
+            id="nebula-inspector"
+            aria-label="Inspector"
+            className={cn(
+              "nebula-rail absolute inset-y-0 right-0 z-30 w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-[1.8rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
+              !rightRailOpen && "hidden"
+            )}
+          >
             <InspectorRail
               tone={statusTone.tone}
               toneLabel={statusTone.label}
@@ -994,7 +1063,7 @@ export function ControlRoomShell({
               status={status}
               onOpenSource={onOpenSource}
             />
-          </div>
+          </aside>
         </div>
       </div>
 
