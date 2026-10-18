@@ -36,6 +36,8 @@ type ControlRoomShellProps = {
   preview?: boolean;
   currentRoot: string | null;
   localAccessSession: LocalAccessSession | null;
+  sourceMode: "server" | "local-access" | "browser";
+  serverAvailable: boolean;
   sourceModalOpen: boolean;
   sourceLoading: boolean;
   sourceSelecting: boolean;
@@ -47,6 +49,7 @@ type ControlRoomShellProps = {
   onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
+  onSelectedBrowser: (files: FileList) => void;
 };
 
 function formatRootLabel(root: string | null): string {
@@ -64,7 +67,15 @@ function deriveStatusTone(params: {
   currentRoot: string | null;
   status: UniverseConnectionStatus;
   wsEnabled: boolean;
+  sourceMode: ControlRoomShellProps["sourceMode"];
 }): { tone: "good" | "warn" | "danger" | "idle"; label: string; detail: string } {
+  if (params.sourceMode === "browser" && params.currentRoot) {
+    return {
+      tone: "good",
+      label: "Browser snapshot loaded",
+      detail: "Folder names stay in this browser. Choose the folder again to refresh."
+    };
+  }
   if (params.localAccessSession && params.currentRoot) {
     return {
       tone: "good",
@@ -132,19 +143,23 @@ function SourceModal({
   loading,
   error,
   localAccessSession,
+  serverAvailable,
   onClose,
   onRequestLocalAccess,
   onSelectedServer,
-  onSelectedLocal
+  onSelectedLocal,
+  onSelectedBrowser
 }: {
   open: boolean;
   loading: boolean;
   error: string | null;
   localAccessSession: LocalAccessSession | null;
+  serverAvailable: boolean;
   onClose: () => void;
   onRequestLocalAccess: () => void;
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
+  onSelectedBrowser: (files: FileList) => void;
 }) {
   const [roots, setRoots] = useState<string[]>([]);
   const [selectedRoot, setSelectedRoot] = useState("");
@@ -154,6 +169,11 @@ function SourceModal({
   const [localError, setLocalError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const browserFolderRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    browserFolderRef.current?.setAttribute("webkitdirectory", "");
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -189,6 +209,8 @@ function SourceModal({
           return;
         }
 
+        if (!serverAvailable) return;
+
         const current = await sourceApi.fetchSourceCurrent();
         if (cancelled) return;
 
@@ -215,7 +237,7 @@ function SourceModal({
     return () => {
       cancelled = true;
     };
-  }, [localAccessSession, open]);
+  }, [localAccessSession, open, serverAvailable]);
 
   if (!open) return null;
 
@@ -242,13 +264,12 @@ function SourceModal({
               </div>
               <div>
                 <div className="text-[0.72rem] uppercase tracking-[0.34em] text-cyan-100/70">Nebula Control Room</div>
-                <h2 id="source-dialog-title" ref={titleRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight text-white">Choose a live graph source</h2>
+                <h2 id="source-dialog-title" ref={titleRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight text-white">Choose a graph source</h2>
               </div>
             </div>
 
             <p id="source-dialog-description" className="max-w-xl text-sm leading-6 text-slate-200/78">
-              Grant local folder access for the fastest live workspace loop, or fall back to the runtime server when
-              you need a manually selected watch root.
+              Map a folder in this browser, or connect a local agent for live updates.
             </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -259,17 +280,29 @@ function SourceModal({
                   </Badge>
                   <Sparkles size={18} className="text-cyan-100/80" />
                 </div>
-                <div className="text-lg font-semibold text-white">Live Local Workspace</div>
+                <div className="text-lg font-semibold text-white">Browser folder snapshot</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Grant folder access once, then let the local agent stream live graph updates into the control room.
+                  Choose a folder to map its file names. File contents stay on your device; choose again to refresh.
                 </p>
+                <input
+                  ref={browserFolderRef}
+                  type="file"
+                  className="hidden"
+                  multiple
+                  aria-label="Choose folder in browser"
+                  onChange={(event) => {
+                    const files = event.target.files;
+                    if (files?.length) onSelectedBrowser(files);
+                    event.target.value = "";
+                  }}
+                />
                 <div className="mt-5">
                   <Button
                     className="h-11 w-full rounded-2xl bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                     disabled={loading}
-                    onClick={onRequestLocalAccess}
+                    onClick={() => browserFolderRef.current?.click()}
                   >
-                    {localAccessSession ? "Local Access Granted" : "Grant Local Folder Access"}
+                    Choose a folder
                   </Button>
                 </div>
               </div>
@@ -277,16 +310,18 @@ function SourceModal({
               <div className="rounded-[1.4rem] border border-[var(--line)] bg-slate-950/42 p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em]">
-                    Fallback
+                    Live updates
                   </Badge>
                   <Network size={18} className="text-slate-200/72" />
                 </div>
-                <div className="text-lg font-semibold text-white">Runtime server mode</div>
+                <div className="text-lg font-semibold text-white">Local workspace agent</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Use a server-backed watch root when local access is unavailable or when remote access is required.
+                  Connect Nebula Sync on this computer to stream live changes from a selected folder.
                 </p>
-                <div className="mt-5 rounded-2xl border border-[var(--line)] bg-white/[0.02] p-3 text-xs leading-5 text-slate-300/78">
-                  Source listing and folder selection remain fully supported here.
+                <div className="mt-5">
+                  <Button variant="outline" className="h-11 w-full rounded-2xl border-[var(--line)]" disabled={loading} onClick={onRequestLocalAccess}>
+                    {localAccessSession ? "Local agent connected" : "Connect local agent"}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -303,6 +338,11 @@ function SourceModal({
               </Button>
             </div>
 
+            {!serverAvailable && !localAccessSession ? (
+              <div className="rounded-2xl border border-[var(--line)] bg-white/[0.02] p-4 text-sm leading-6 text-slate-300/82">
+                This hosted page has no runtime server. Choose a browser folder for a snapshot, or connect a local agent for live updates.
+              </div>
+            ) : <>
             <label htmlFor="source-root" className="mb-2 block text-[0.72rem] uppercase tracking-[0.18em] text-slate-400">
               Root
             </label>
@@ -361,24 +401,25 @@ function SourceModal({
               onChange={(event) => setManualPath(event.target.value)}
               placeholder="/absolute/path"
             />
+            </>}
 
             {effectiveError ? (
               <div className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
                 {effectiveError}
               </div>
-            ) : (
+            ) : serverAvailable || localAccessSession ? (
               <div className="mb-4 rounded-2xl border border-[var(--line)] bg-white/[0.02] px-4 py-3 text-sm text-slate-300/82">
                 {localAccessSession?.token
                   ? "Local workspace access is available. Folder changes will refresh the graph from the local agent."
                   : "Server mode will continue to use the runtime API and websocket connection."}
               </div>
-            )}
+            ) : null}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button variant="outline" className="rounded-2xl border-[var(--line)]" onClick={onClose}>
                 Keep current state
               </Button>
-              <Button
+              {(serverAvailable || localAccessSession) && <Button
                 className="rounded-2xl bg-[linear-gradient(135deg,#38bdf8,#0ea5e9)] text-slate-950 hover:opacity-95"
                 disabled={loading}
                 onClick={() => {
@@ -388,7 +429,7 @@ function SourceModal({
                 }}
               >
                 {loading ? "Routing graph..." : "Load into control room"}
-              </Button>
+              </Button>}
             </div>
           </div>
         </div>
@@ -651,7 +692,7 @@ function InspectorRail({
   toneLabel,
   toneDetail,
   currentRoot,
-  localAccessSession,
+  sourceMode,
   status,
   onOpenSource
 }: {
@@ -659,7 +700,7 @@ function InspectorRail({
   toneLabel: string;
   toneDetail: string;
   currentRoot: string | null;
-  localAccessSession: LocalAccessSession | null;
+  sourceMode: ControlRoomShellProps["sourceMode"];
   status: UniverseConnectionStatus;
   onOpenSource: () => void;
 }) {
@@ -747,7 +788,7 @@ function InspectorRail({
           <div className="rounded-[1.2rem] border border-[var(--line)] bg-white/[0.02] p-4 text-sm leading-6 text-slate-300/82">
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-400">Source mode</span>
-              <span className="font-medium text-white">{localAccessSession ? "local-access" : "server"}</span>
+              <span className="font-medium text-white">{sourceMode}</span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-slate-400">Current root</span>
@@ -755,7 +796,7 @@ function InspectorRail({
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-slate-400">Runtime phase</span>
-              <span className="font-medium text-white">{status.phase}</span>
+              <span className="font-medium text-white">{sourceMode === "browser" ? "snapshot" : status.phase}</span>
             </div>
           </div>
 
@@ -784,6 +825,8 @@ export function ControlRoomShell({
   preview,
   currentRoot,
   localAccessSession,
+  sourceMode,
+  serverAvailable,
   sourceModalOpen,
   sourceLoading,
   sourceSelecting,
@@ -794,7 +837,8 @@ export function ControlRoomShell({
   onCloseSource,
   onRequestLocalAccess,
   onSelectedServer,
-  onSelectedLocal
+  onSelectedLocal,
+  onSelectedBrowser
 }: ControlRoomShellProps) {
   const connected = useUniverseGraphStore((s) => s.connected);
   const nodeArray = useUniverseGraphStore((s) => s.nodeArray);
@@ -844,14 +888,16 @@ export function ControlRoomShell({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen, rightRailOpen, setDrawerOpen, shellMode]);
 
-  const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled });
+  const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled, sourceMode });
   const graphStateText = sourceLoading
     ? "Checking control-room source..."
     : !currentRoot
       ? "No active source. Open source routing to begin."
       : nodeArray.length === 0
         ? "Source connected, waiting for the graph to populate."
-        : connected
+        : sourceMode === "browser"
+          ? "Browser folder snapshot loaded. Choose the folder again to refresh."
+          : connected
           ? "Live signal is feeding the graph stage."
           : localAccessSession
             ? "Local workspace snapshot loaded."
@@ -964,7 +1010,7 @@ export function ControlRoomShell({
                 <div className="flex flex-wrap items-center gap-2 sm:mt-2">
                   <span className="text-lg font-semibold text-white">{formatRootLabel(currentRoot)}</span>
                   <Badge className="hidden rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] sm:inline-flex">
-                    {localAccessSession ? "local-access" : "server"}
+                    {sourceMode}
                   </Badge>
                   <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
                     {layoutMode}
@@ -1012,7 +1058,9 @@ export function ControlRoomShell({
               <div className="nebula-status-strip flex flex-col gap-2 rounded-[1.4rem] px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {connected ? (
+                    {sourceMode === "browser" ? (
+                      <><HardDrive size={13} className="mr-1.5" /> snapshot</>
+                    ) : connected ? (
                       <>
                         <Wifi size={13} className="mr-1.5" />
                         live
@@ -1059,7 +1107,7 @@ export function ControlRoomShell({
               toneLabel={statusTone.label}
               toneDetail={statusTone.detail}
               currentRoot={currentRoot}
-              localAccessSession={localAccessSession}
+              sourceMode={sourceMode}
               status={status}
               onOpenSource={onOpenSource}
             />
@@ -1072,10 +1120,12 @@ export function ControlRoomShell({
         loading={sourceSelecting}
         error={sourceError}
         localAccessSession={localAccessSession}
+        serverAvailable={serverAvailable}
         onClose={onCloseSource}
         onRequestLocalAccess={onRequestLocalAccess}
         onSelectedServer={onSelectedServer}
         onSelectedLocal={onSelectedLocal}
+        onSelectedBrowser={onSelectedBrowser}
       />
     </div>
   );

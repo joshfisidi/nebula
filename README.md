@@ -2,6 +2,12 @@
 
 Real-time file-system graph visualizer (React Flow-first).
 
+## Hosted app
+
+The web control room is deployed at [nebuli.vercel.app](https://nebuli.vercel.app). On Vercel, choose **Browser folder snapshot** to map a folder without running a server. The browser reads file names and folder paths for the graph; it does not upload file contents. Choose the folder again to refresh the snapshot.
+
+Live file watching needs Nebula Sync on the viewer's computer or a separately hosted runtime API and WebSocket server. The Vercel web deployment does not include the filesystem watcher from `apps/server`.
+
 ## Requirements
 - Node.js 22+
 - pnpm

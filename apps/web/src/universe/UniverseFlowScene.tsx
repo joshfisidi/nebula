@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ControlRoomShell } from "./ControlRoomShell";
+import { createBrowserFolderSnapshot } from "./browserFolderSnapshot";
 import { useUniverseGraphStore } from "./graphStore";
 import {
   fetchLocalAccessSession,
   fetchSourceCurrent,
   fetchLocalAccessSnapshot,
+  hasRuntimeServer,
   requestLocalFolderAccess,
   selectSource,
   selectLocalAccessSource,
@@ -23,6 +25,8 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [wsEnabled, setWsEnabled] = useState(false);
   const [status, setStatus] = useState<UniverseConnectionStatus>({ phase: "idle" });
   const [localAccessSession, setLocalAccessSession] = useState<LocalAccessSession | null>(null);
+  const [sourceMode, setSourceMode] = useState<"server" | "local-access" | "browser">("server");
+  const [serverAvailable, setServerAvailable] = useState(false);
   const autoSelectedRootRef = useRef<string | null>(null);
 
   const applySnapshot = useUniverseGraphStore((s) => s.applySnapshot);
@@ -80,11 +84,20 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         setSourceError(null);
         setSourceLoading(true);
 
+        const runtimeConfigured = hasRuntimeServer();
+        setServerAvailable(runtimeConfigured);
+        if (!runtimeConfigured) {
+          setSourceMode("browser");
+          setSourceModalOpen(true);
+          return;
+        }
+
         const detectedSession = await fetchLocalAccessSession();
         if (cancelled) return;
 
         if (detectedSession) {
           setLocalAccessSession(detectedSession);
+          setSourceMode("local-access");
           setCurrentRoot(detectedSession.sourcePath ?? null);
           setWsEnabled(false);
 
@@ -101,6 +114,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         if (cancelled) return;
 
         setCurrentRoot(current.currentRoot ?? null);
+        setSourceMode("server");
         setWsEnabled(Boolean(current.currentRoot));
         setSourceModalOpen(!current.currentRoot);
       } catch (err) {
@@ -128,6 +142,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         throw new Error("Local access agent not found on localhost:8787. Start Nebula Sync to grant workspace access.");
       }
       setLocalAccessSession(detectedSession);
+      setSourceMode("local-access");
       setWsEnabled(false);
       const granted = await requestLocalFolderAccess(detectedSession.token);
       const nextSourcePath = granted?.sourcePath ?? detectedSession.sourcePath;
@@ -158,6 +173,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     try {
       const result = await selectSource(path);
       setLocalAccessSession(null);
+      setSourceMode("server");
       setCurrentRoot(result.currentRoot ?? null);
       setWsEnabled(Boolean(result.currentRoot));
       setSourceModalOpen(false);
@@ -182,6 +198,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     setSourceError(null);
     try {
       const result = await selectLocalAccessSource(localAccessSession.token, path);
+      setSourceMode("local-access");
       setCurrentRoot(result.sourcePath ?? null);
       await loadLocalAccessSnapshot(localAccessSession.token);
       setWsEnabled(false);
@@ -193,12 +210,32 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     }
   };
 
+  const handleSelectBrowserFolder = (files: FileList) => {
+    try {
+      const paths = Array.from(files, (file) => file.webkitRelativePath || file.name);
+      const { rootName, snapshot } = createBrowserFolderSnapshot(paths);
+      setWsEnabled(false);
+      setConnected(false);
+      setLocalAccessSession(null);
+      setSourceMode("browser");
+      applySnapshot(snapshot);
+      selectAllProjects();
+      setCurrentRoot(rootName);
+      setSourceError(null);
+      setSourceModalOpen(false);
+    } catch (error) {
+      setSourceError(error instanceof Error ? error.message : String(error));
+    }
+  };
+
   return (
     <UniverseLiveProvider enabled={wsEnabled} onStatus={setStatus}>
       <ControlRoomShell
         preview={preview}
         currentRoot={currentRoot}
         localAccessSession={localAccessSession}
+        sourceMode={sourceMode}
+        serverAvailable={serverAvailable}
         sourceModalOpen={sourceModalOpen}
         sourceLoading={sourceLoading}
         sourceSelecting={sourceSelecting}
@@ -210,6 +247,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         onRequestLocalAccess={handleRequestLocalAccess}
         onSelectedServer={handleSelectSource}
         onSelectedLocal={handleSelectLocalAccessSource}
+        onSelectedBrowser={handleSelectBrowserFolder}
       />
     </UniverseLiveProvider>
   );

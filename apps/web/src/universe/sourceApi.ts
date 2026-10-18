@@ -30,10 +30,16 @@ const API_TIMEOUT_MS = 9000;
 export const NEBULA_SYNC_BASE = "http://127.0.0.1:8787";
 
 function resolveApiBase(): string {
+  const configured = process.env.NEXT_PUBLIC_UNIVERSE_API_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
   const protocol = window.location.protocol;
   const host = window.location.hostname || "127.0.0.1";
   const port = process.env.NEXT_PUBLIC_UNIVERSE_API_PORT ?? "18892";
   return `${protocol}//${host}:${port}`;
+}
+
+export function hasRuntimeServer(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_UNIVERSE_API_URL?.trim() || process.env.NEXT_PUBLIC_UNIVERSE_API_PORT?.trim()) || window.location.protocol !== "https:";
 }
 
 async function safeJsonParse(raw: string): Promise<unknown> {
