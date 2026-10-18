@@ -4,9 +4,12 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEven
 import ReactFlow, {
   Background,
   Controls,
+  Handle,
+  Position,
   type Connection,
   type Edge,
   type Node,
+  type NodeProps,
   type OnConnect,
   type ReactFlowInstance,
   type Viewport
@@ -18,6 +21,7 @@ import {
   chooseLayout,
   layoutWithDagre,
   layoutWithElk,
+  layoutWithMindmap,
   layoutWithRadial,
   type LayoutEngine
 } from "./layoutEngines";
@@ -53,6 +57,21 @@ type FlowNodeData = {
   expandable: boolean;
   expanded: boolean;
 };
+
+function MindmapFlowNode({ data }: NodeProps<FlowNodeData>) {
+  const handleStyle = { width: 3, height: 3, border: 0, background: "rgba(196, 242, 136, 0.8)" };
+  return (
+    <>
+      <Handle id="left-in" type="target" position={Position.Left} style={handleStyle} />
+      <Handle id="left-out" type="source" position={Position.Left} style={handleStyle} />
+      <span className="block w-full overflow-hidden text-ellipsis">{data.label}</span>
+      <Handle id="right-in" type="target" position={Position.Right} style={handleStyle} />
+      <Handle id="right-out" type="source" position={Position.Right} style={handleStyle} />
+    </>
+  );
+}
+
+const nodeTypes = { mindmap: MindmapFlowNode };
 
 const MAX_INTERACTIVE_NODES = 2500;
 
@@ -90,7 +109,7 @@ function compareRankedNodes(
 
 function buildNodeAriaLabel(node: VisibleNode): string {
   if (node.kind === "summary") {
-    return `Collapsed branch summary, ${node.childCount ?? 0} hidden items`;
+    return `Show ${node.childCount ?? 0} more items`;
   }
 
   const kind = node.kind === "dir" ? "Folder" : "File";
@@ -131,6 +150,7 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
 
   return {
     id: node.id,
+    type: node.mindmapMode ? "mindmap" : undefined,
     position: node.position,
     width: widthPx,
     height: heightPx,
@@ -221,12 +241,15 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const connected = useUniverseGraphStore((s) => s.connected);
   const selectedProjectsKey = useUniverseGraphStore((s) => [...s.selectedProjectIds].sort().join("|"));
   const expandedKey = useUniverseGraphStore((s) => [...s.expandedNodeIds].sort().join("|"));
+  const revealedOverflowKey = useUniverseGraphStore((s) => [...s.revealedOverflowIds].sort().join("|"));
   const focusId = useUniverseGraphStore((s) => s.focusId);
   const searchQuery = useUniverseGraphStore((s) => s.searchQuery);
   const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
   const interactionMode = useUniverseGraphStore((s) => s.interactionMode);
   const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
   const toggleExpandedNode = useUniverseGraphStore((s) => s.toggleExpandedNode);
+  const showAllChildren = useUniverseGraphStore((s) => s.showAllChildren);
+  const setFocusId = useUniverseGraphStore((s) => s.setFocusId);
   const revealNode = useUniverseGraphStore((s) => s.revealNode);
   const setLayoutEngine = useUniverseGraphStore((s) => s.setLayoutEngine);
   const addEdgeToGraph = useUniverseGraphStore((s) => s.addEdge);
@@ -236,7 +259,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
   const [reducedMotion, setReducedMotion] = useState(false);
   const [rf, setRf] = useState<ReactFlowInstance | null>(null);
   const [layoutEngine, setLocalLayoutEngine] = useState<LayoutEngine>("living-lite");
-  const [laidOut, setLaidOut] = useState<{ nodes: Node<FlowNodeData>[]; edges: Edge[] }>({ nodes: [], edges: [] });
+  const [laidOut, setLaidOut] = useState<{ key: string; nodes: Node<FlowNodeData>[]; edges: Edge[] }>({ key: "", nodes: [], edges: [] });
   const focusLockRef = useRef(false);
   const focusNodeRef = useRef<string | null>(null);
   const focusUnlockTimerRef = useRef<number | null>(null);
@@ -330,8 +353,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     const queue: string[] = [];
     const summaryNodes: VisibleNode[] = [];
     const summaryEdges: Array<{ id: string; from: string; to: string; depth: number }> = [];
-    const maxVisible = search ? 420 : zoom < 0.38 ? 120 : zoom < 0.65 ? 200 : 320;
-    const childBudget = search ? 28 : zoom < 0.5 ? 8 : 18;
+    const maxVisible = layoutMode === "mindmap" ? 520 : search ? 420 : zoom < 0.38 ? 120 : zoom < 0.65 ? 200 : 320;
+    const childBudget = layoutMode === "mindmap" ? 36 : search ? 28 : zoom < 0.5 ? 8 : 18;
 
     const includeAncestors = (nodeId: string | null) => {
       let cursor = nodeId;
@@ -348,7 +371,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       visible.add(summaryId);
       summaryNodes.push({
         id: summaryId,
-        name: `+${hiddenCount} hidden`,
+        name: `+${hiddenCount} more`,
         kind: "summary",
         parentId,
         depth: parentDepth + 1,
@@ -357,14 +380,14 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         childCount: hiddenCount,
         salience: 0.8,
         focusRole: "default",
-        mindmapMode: false,
+        mindmapMode: layoutMode === "mindmap",
         z: 0,
         position: { x: 0, y: 0 }
       });
       summaryEdges.push({ id: `edge:${parentId}:${summaryId}`, from: parentId, to: summaryId, depth: parentDepth });
     };
 
-    if (layoutMode === "overview") {
+    if (layoutMode === "overview" || layoutMode === "mindmap") {
       for (const root of roots) {
         visible.add(root.id);
         if (!queued.has(root.id)) {
@@ -386,7 +409,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }
     }
 
-    const drillDownMode = layoutMode !== "overview" && !search;
+    const drillDownMode = layoutMode === "focus" && !search;
 
     if (drillDownMode) {
       const currentId = focus ?? primaryRootId;
@@ -403,15 +426,17 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
             const ranked = allChildren
               .slice()
               .sort((a, b) => compareRankedNodes(a, b, search, focus, matchedIds));
-            const budget = currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
+            const budget = state.revealedOverflowIds.has(currentNode.id) ? allChildren.length : currentNode.id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
             const kept = ranked.slice(0, budget);
 
+            let shownCount = 0;
             for (const child of kept) {
               if (visible.size >= maxVisible) break;
               visible.add(child.id);
+              shownCount += 1;
             }
 
-            addSummaryNode(currentNode.id, currentNode.depth ?? 0, Math.max(0, allChildren.length - kept.length));
+            addSummaryNode(currentNode.id, currentNode.depth ?? 0, Math.max(0, allChildren.length - shownCount));
           } else {
             addSummaryNode(currentNode.id, currentNode.depth ?? 0, allChildren.length);
           }
@@ -422,23 +447,25 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         const id = queue.shift()!;
         const node = byId.get(id);
         if (!node || node.kind !== "dir") continue;
+        if (layoutMode === "mindmap" && node.parentId && !state.expandedNodeIds.has(id) && !search) continue;
 
         const allChildren = children.get(id) ?? [];
         const branchFocused = focusTrail.has(id);
         const branchMatched = matchedBranchIds.has(id);
-        const showFiles = branchMatched || state.expandedNodeIds.has(id) || id === focus;
+        const showFiles = layoutMode === "mindmap" || branchMatched || state.expandedNodeIds.has(id) || id === focus;
 
         const ranked = allChildren
           .filter((child) => child.kind === "dir" || showFiles || matchedIds.has(child.id) || child.id === focus)
           .sort((a, b) => compareRankedNodes(a, b, search, focus, matchedIds));
 
-        const budget = id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
+        const budget = state.revealedOverflowIds.has(id) ? allChildren.length : id === primaryRootId ? Math.max(childBudget, 14) : childBudget;
         const kept = ranked.slice(0, budget);
-        const hiddenCount = Math.max(0, allChildren.length - kept.length);
+        let shownCount = 0;
 
         for (const child of kept) {
           if (visible.size >= maxVisible) break;
           visible.add(child.id);
+          shownCount += 1;
 
           const shouldExploreChild =
             child.kind === "dir" &&
@@ -448,7 +475,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
               branchMatched ||
               matchedBranchIds.has(child.id) ||
               id === primaryRootId ||
-              layoutMode === "overview");
+              layoutMode === "overview" || layoutMode === "mindmap");
 
           if (shouldExploreChild && !queued.has(child.id)) {
             queue.push(child.id);
@@ -456,7 +483,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
           }
         }
 
-        addSummaryNode(id, node.depth ?? 0, hiddenCount);
+        addSummaryNode(id, node.depth ?? 0, Math.max(0, allChildren.length - shownCount));
       }
     }
 
@@ -534,8 +561,9 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       rootCount: roots.length,
       layoutKey: `${[...visibleEdgeIds].sort().join("|")}::${flowEdges.map((edge) => edge.id).sort().join("|")}`
     };
-  }, [version, selectedProjectsKey, expandedKey, focusId, isMobile, layoutMode, searchQuery, showHiddenNodes, zoom]);
+  }, [version, selectedProjectsKey, expandedKey, revealedOverflowKey, focusId, isMobile, layoutMode, searchQuery, showHiddenNodes, zoom]);
 
+  const layoutZoom = layoutMode === "mindmap" ? 1 : zoom;
   useEffect(() => {
     let cancelled = false;
 
@@ -549,45 +577,53 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
 
     const engine = chooseLayout({
       mode: layoutMode,
-      zoom,
+      zoom: layoutZoom,
       visibleCount: graphSnapshot.nodes.length,
       hasCrossLinks,
       rootCount: graphSnapshot.rootCount
     });
+    const resultKey = `${engine}|${graphSnapshot.layoutKey}|${graphSnapshot.primaryRootId ?? ""}|${layoutMode === "mindmap" ? focusId ?? "" : ""}`;
 
     setLocalLayoutEngine(engine);
     setLayoutEngine(engine);
 
     const run = async () => {
       if (engine === "living-lite") {
-        if (!cancelled) setLaidOut({ nodes: [], edges: [] });
+        if (!cancelled) setLaidOut({ key: resultKey, nodes: [], edges: [] });
+        return;
+      }
+
+      if (engine === "mindmap") {
+        const out = layoutWithMindmap(graphSnapshot.nodes, graphSnapshot.edges);
+        if (!cancelled) setLaidOut({ key: resultKey, ...out });
         return;
       }
 
       if (engine === "radial") {
         const out = layoutWithRadial(graphSnapshot.nodes, graphSnapshot.edges, graphSnapshot.primaryRootId ?? undefined);
-        if (!cancelled) setLaidOut(out);
+        if (!cancelled) setLaidOut({ key: resultKey, ...out });
         return;
       }
 
       if (engine === "dagre") {
         const out = layoutWithDagre(graphSnapshot.nodes, graphSnapshot.edges, "LR");
-        if (!cancelled) setLaidOut(out);
+        if (!cancelled) setLaidOut({ key: resultKey, ...out });
         return;
       }
 
       const out = await layoutWithElk(graphSnapshot.nodes, graphSnapshot.edges, isMobile ? "DOWN" : "RIGHT");
-      if (!cancelled) setLaidOut(out);
+      if (!cancelled) setLaidOut({ key: resultKey, ...out });
     };
 
     run();
     return () => {
       cancelled = true;
     };
-  }, [graphSnapshot.layoutKey, graphSnapshot.primaryRootId, graphSnapshot.rootCount, isMobile, layoutMode, setLayoutEngine, zoom]);
+  }, [focusId, graphSnapshot.layoutKey, graphSnapshot.primaryRootId, graphSnapshot.rootCount, isMobile, layoutMode, layoutZoom, setLayoutEngine]);
 
-  const renderedNodes = layoutEngine === "living-lite" ? graphSnapshot.nodes : laidOut.nodes.length ? laidOut.nodes : graphSnapshot.nodes;
-  const renderedEdges = layoutEngine === "living-lite" ? graphSnapshot.edges : laidOut.edges.length ? laidOut.edges : graphSnapshot.edges;
+  const layoutReady = laidOut.key === `${layoutEngine}|${graphSnapshot.layoutKey}|${graphSnapshot.primaryRootId ?? ""}|${layoutMode === "mindmap" ? focusId ?? "" : ""}`;
+  const renderedNodes = layoutEngine === "living-lite" || !layoutReady ? graphSnapshot.nodes : laidOut.nodes;
+  const renderedEdges = layoutEngine === "living-lite" || !layoutReady ? graphSnapshot.edges : laidOut.edges;
 
   const focusNode = useCallback(
     (nodeId: string, options?: { duration?: number; padding?: number; maxZoom?: number }) => {
@@ -655,15 +691,20 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       if (node.id.startsWith("summary:")) {
         const parentId = node.data.parentId;
         if (parentId) {
-          revealNode(parentId);
-          toggleExpandedNode(parentId);
-          focusNode(parentId, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
+          showAllChildren(parentId);
+          if (layoutMode !== "mindmap") focusNode(parentId, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
         }
         return;
       }
 
       const runtime = useUniverseGraphStore.getState().nodes.get(node.id);
       if (!runtime) return;
+
+      if (layoutMode === "mindmap") {
+        setFocusId(node.id);
+        if (node.data.kind === "dir") toggleExpandedNode(node.id);
+        return;
+      }
 
       if (node.data.kind === "dir" && node.id === useUniverseGraphStore.getState().focusId) {
         toggleExpandedNode(node.id);
@@ -674,18 +715,21 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       revealNode(node.id);
       focusNode(node.id, { duration: 260, padding: isMobile ? 0.44 : 0.32, maxZoom: isMobile ? 0.9 : 1.1 });
     },
-    [focusNode, isMobile, revealNode, toggleExpandedNode]
+    [focusNode, isMobile, layoutMode, revealNode, setFocusId, showAllChildren, toggleExpandedNode]
   );
 
-  const viewportIntentKey = `${selectedProjectsKey}|${focusId ?? ""}|${layoutMode}|${searchQuery.trim()}|${enabled ? 1 : 0}`;
+  const viewportIntentKey = `${selectedProjectsKey}|${layoutMode === "mindmap" ? expandedKey : focusId ?? ""}|${layoutMode}|${searchQuery.trim()}|${enabled ? 1 : 0}`;
 
   useEffect(() => {
     if (!rf || !enabled || renderedNodes.length === 0) return;
+    if (!layoutReady && layoutEngine !== "living-lite") return;
     if (focusLockRef.current) return;
 
     const previousIntentKey = viewportIntentKeyRef.current;
     const intentChanged = previousIntentKey !== viewportIntentKey;
     viewportIntentKeyRef.current = viewportIntentKey;
+
+    if (layoutMode === "mindmap" && !intentChanged) return;
 
     if (!intentChanged && userNavigatedViewportRef.current) {
       return;
@@ -695,7 +739,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       viewportCommandActiveRef.current = true;
 
       const focused = focusNodeRef.current;
-      if (focused && renderedNodes.some((node) => node.id === focused)) {
+      if (layoutMode !== "mindmap" && focused && renderedNodes.some((node) => node.id === focused)) {
         const node = rf.getNode?.(focused);
         if (node) {
           const x = node.position.x + ((node.width ?? 180) / 2);
@@ -733,7 +777,7 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [enabled, graphSnapshot.layoutKey, renderedNodes.length, isMobile, layoutEngine, reducedMotion, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
+  }, [enabled, graphSnapshot.layoutKey, renderedNodes.length, isMobile, layoutEngine, layoutReady, reducedMotion, rf, searchQuery, selectedProjectsKey, viewportIntentKey, focusId, layoutMode]);
 
   const onMoveEnd = useCallback((_: unknown, view: Viewport) => {
     if (!viewportCommandActiveRef.current) {
@@ -765,14 +809,15 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
       }}
     >
       <div className="sr-only" role="status">
-        {connected
-          ? `Connected. ${graphSnapshot.nodes.length} nodes and ${graphSnapshot.edges.length} edges loaded in ${layoutEngine} layout.`
-          : "Disconnected from live project graph."}
+        {graphSnapshot.nodes.length > 0
+          ? `${graphSnapshot.nodes.length} nodes and ${graphSnapshot.edges.length} links loaded in ${layoutEngine} layout.`
+          : connected ? "Connected. Waiting for project graph." : "No project graph loaded."}
       </div>
 
       <ReactFlow
         nodes={renderedNodes}
         edges={renderedEdges}
+        nodeTypes={nodeTypes}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         onInit={setRf}

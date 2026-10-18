@@ -4,7 +4,9 @@ Real-time file-system graph visualizer (React Flow-first).
 
 ## Hosted app
 
-The web control room is deployed at [nebuli.vercel.app](https://nebuli.vercel.app). On Vercel, choose **Browser folder snapshot** to map a folder without running a server. The browser reads file names and folder paths for the graph; it does not upload file contents. Choose the folder again to refresh the snapshot.
+The web control room is deployed at [nebuli.vercel.app](https://nebuli.vercel.app). Choose **Open a folder** to map a project without running a server, or **Explore an example** to try the interface immediately. The browser reads file names and folder paths for the graph; it does not upload file contents. Choose the folder again to refresh the snapshot.
+
+The default **Mind map** view places project branches on both sides of the root. Click a folder to expand or collapse it, pan and zoom to navigate, and use search in the Explorer to find a path. **Tree** and **Focus** provide alternate layouts. **Export** downloads the full project hierarchy as a Mermaid `.mmd` mindmap for Markdown/docs or as a Freeplane `.mm` file for further editing in Freeplane. These exports are snapshots; select the folder again to pick up changes.
 
 Live file watching needs Nebula Sync on the viewer's computer or a separately hosted runtime API and WebSocket server. The Vercel web deployment does not include the filesystem watcher from `apps/server`.
 
@@ -33,7 +35,7 @@ Open:
 - Tailscale/LAN: `http://<device-ip>:3000` (example: `http://100.88.154.26:3000`)
 
 UI highlights:
-- **React Flow runtime (default):** deterministic 2D graph rendering with pan/zoom.
+- **React Flow runtime:** interactive mind map, tree, and focus layouts with pan/zoom.
 - **Live data pipeline:** websocket snapshot/patch updates flow into the graph store in real time.
 - **Controls panel:** project selection (single/all/none), search, and collapse/expand tree browsing.
 

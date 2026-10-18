@@ -1,7 +1,6 @@
 import type { GraphNode } from "./patch";
 
 const NATURALLY_HIDDEN_SEGMENTS = new Set([
-  "docs",
   "dist",
   "build",
   "node_modules",

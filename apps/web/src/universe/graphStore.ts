@@ -19,6 +19,7 @@ interface UniverseGraphState {
   edgeArray: GraphEdge[];
   selectedProjectIds: Set<string>;
   expandedNodeIds: Set<string>;
+  revealedOverflowIds: Set<string>;
   focusId: string | null;
   searchQuery: string;
   showHiddenNodes: boolean;
@@ -37,6 +38,7 @@ interface UniverseGraphState {
   clearProjectSelection: () => void;
   selectAllProjects: () => void;
   toggleExpandedNode: (nodeId: string) => void;
+  showAllChildren: (nodeId: string) => void;
   setFocusId: (nodeId: string | null) => void;
   revealNode: (nodeId: string) => void;
   setSearchQuery: (query: string) => void;
@@ -156,13 +158,14 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
   edgeArray: [],
   selectedProjectIds: new Set<string>(),
   expandedNodeIds: new Set<string>(),
+  revealedOverflowIds: new Set<string>(),
   focusId: null,
   searchQuery: "",
   showHiddenNodes: false,
   interactionMode: "browse",
   drawerOpen: false,
-  layoutMode: "focus",
-  layoutEngine: "radial",
+  layoutMode: "mindmap",
+  layoutEngine: "mindmap",
   version: 0,
   hasActiveMotion: false,
 
@@ -329,20 +332,21 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
 
   setProjectSelection(projectId) {
     if (!projectId) {
-      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
+      set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), revealedOverflowIds: new Set<string>(), focusId: null });
       return;
     }
-    set({
+    set((state) => ({
       selectedProjectIds: new Set<string>([projectId]),
-      expandedNodeIds: new Set<string>(),
+      expandedNodeIds: new Set(state.nodeArray.filter((node) => node.id === projectId || (node.parentId === projectId && node.kind === "dir")).map((node) => node.id)),
+      revealedOverflowIds: new Set<string>(),
       focusId: projectId,
       drawerOpen: true,
-      layoutMode: "focus"
-    });
+      layoutMode: "mindmap"
+    }));
   },
 
   clearProjectSelection() {
-    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), focusId: null });
+    set({ selectedProjectIds: new Set<string>(), expandedNodeIds: new Set<string>(), revealedOverflowIds: new Set<string>(), focusId: null });
   },
 
   selectAllProjects() {
@@ -353,9 +357,10 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       }
       return {
         selectedProjectIds: all,
-        expandedNodeIds: new Set<string>(),
+        expandedNodeIds: new Set(state.nodeArray.filter((node) => node.kind === "dir" && (!node.parentId || node.depth === 1)).map((node) => node.id)),
+        revealedOverflowIds: new Set<string>(),
         focusId: null,
-        layoutMode: all.size > 1 ? "overview" : state.layoutMode
+        layoutMode: "mindmap"
       };
     });
   },
@@ -367,6 +372,13 @@ export const useUniverseGraphStore = create<UniverseGraphState>((set, get) => ({
       else next.add(nodeId);
       return { expandedNodeIds: next };
     });
+  },
+
+  showAllChildren(nodeId) {
+    set((state) => ({
+      expandedNodeIds: new Set([...state.expandedNodeIds, nodeId]),
+      revealedOverflowIds: new Set([...state.revealedOverflowIds, nodeId])
+    }));
   },
 
   setFocusId(nodeId) {

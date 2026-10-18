@@ -6,14 +6,13 @@ import {
   Blocks,
   ChevronDown,
   ChevronRight,
+  Download,
   Folder,
   FolderOpen,
   HardDrive,
-  Layers3,
   Network,
   PanelLeft,
   PanelRight,
-  Radar,
   Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
-import { useUniverseGraphStore, type InteractionMode, type RenderNode } from "./graphStore";
+import { useUniverseGraphStore, type RenderNode } from "./graphStore";
+import { toFreeplaneMap, toMermaidMindmap } from "./mindmapExport";
 import type { LocalAccessSession, SourceFolder } from "./sourceApi";
 import type { UniverseConnectionStatus } from "./UniverseLiveProvider";
 
@@ -31,7 +31,7 @@ type ControlRoomShellProps = {
   preview?: boolean;
   currentRoot: string | null;
   localAccessSession: LocalAccessSession | null;
-  sourceMode: "server" | "local-access" | "browser";
+  sourceMode: "server" | "local-access" | "browser" | "demo";
   serverAvailable: boolean;
   sourceModalOpen: boolean;
   sourceLoading: boolean;
@@ -45,6 +45,7 @@ type ControlRoomShellProps = {
   onSelectedServer: (path: string) => void;
   onSelectedLocal: (path: string) => void;
   onSelectedBrowser: (files: FileList) => void;
+  onLoadDemo: () => void;
 };
 
 function formatRootLabel(root: string | null): string {
@@ -70,6 +71,9 @@ function deriveStatusTone(params: {
       label: "Folder ready",
       detail: "Choose the folder again to refresh the map."
     };
+  }
+  if (params.sourceMode === "demo" && params.currentRoot) {
+    return { tone: "good", label: "Example map", detail: "Click a folder to expand its branches." };
   }
   if (params.localAccessSession && params.currentRoot) {
     return {
@@ -503,8 +507,6 @@ function QuickFilters() {
   const setSearchQuery = useUniverseGraphStore((s) => s.setSearchQuery);
   const showHiddenNodes = useUniverseGraphStore((s) => s.showHiddenNodes);
   const setShowHiddenNodes = useUniverseGraphStore((s) => s.setShowHiddenNodes);
-  const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
-  const setLayoutMode = useUniverseGraphStore((s) => s.setLayoutMode);
 
   return (
     <Card className="nebula-panel rounded-[1.8rem]">
@@ -521,27 +523,6 @@ function QuickFilters() {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <Button
-            variant={layoutMode === "overview" ? "default" : "outline"}
-            className="justify-start rounded-2xl"
-            aria-pressed={layoutMode === "overview"}
-            onClick={() => setLayoutMode("overview")}
-          >
-            <Layers3 size={16} className="mr-2" />
-            Overview
-          </Button>
-          <Button
-            variant={layoutMode === "focus" ? "default" : "outline"}
-            className="justify-start rounded-2xl"
-            aria-pressed={layoutMode === "focus"}
-            onClick={() => setLayoutMode("focus")}
-          >
-            <Radar size={16} className="mr-2" />
-            Focused
-          </Button>
         </div>
 
         <Button
@@ -667,7 +648,7 @@ function InspectorRail({
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-slate-400">Runtime phase</span>
-              <span className="font-medium text-white">{sourceMode === "browser" ? "snapshot" : status.phase}</span>
+              <span className="font-medium text-white">{sourceMode === "browser" || sourceMode === "demo" ? "snapshot" : status.phase}</span>
             </div>
           </div>
 
@@ -709,14 +690,14 @@ export function ControlRoomShell({
   onRequestLocalAccess,
   onSelectedServer,
   onSelectedLocal,
-  onSelectedBrowser
+  onSelectedBrowser,
+  onLoadDemo
 }: ControlRoomShellProps) {
   const connected = useUniverseGraphStore((s) => s.connected);
   const nodeArray = useUniverseGraphStore((s) => s.nodeArray);
   const edgeArray = useUniverseGraphStore((s) => s.edgeArray);
-  const interactionMode = useUniverseGraphStore((s) => s.interactionMode);
-  const setInteractionMode = useUniverseGraphStore((s) => s.setInteractionMode);
   const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
+  const setLayoutMode = useUniverseGraphStore((s) => s.setLayoutMode);
   const layoutEngine = useUniverseGraphStore((s) => s.layoutEngine);
   const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
@@ -762,8 +743,18 @@ export function ControlRoomShell({
   const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled, sourceMode });
   const hasGraph = nodeArray.length > 0;
   const openFolder = () => browserFolderRef.current?.click();
-
-  const topActions: InteractionMode[] = ["browse", "pan", "edit"];
+  const exportMap = (format: "mermaid" | "freeplane") => {
+    const content = format === "mermaid" ? toMermaidMindmap(nodeArray) : toFreeplaneMap(nodeArray);
+    const filename = (formatRootLabel(currentRoot) || "workspace").split("/").pop()?.replace(/[^a-zA-Z0-9._-]+/g, "-") || "workspace";
+    const extension = format === "mermaid" ? "mmd" : "mm";
+    const blob = new Blob([content], { type: format === "mermaid" ? "text/plain;charset=utf-8" : "application/xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${filename}.${extension}`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const closeResponsiveRails = () => {
     setDrawerOpen(false);
     setRightRailOpen(false);
@@ -799,17 +790,18 @@ export function ControlRoomShell({
             {hasGraph ? (
               <>
                 <span role="status" className="nebula-connection hidden sm:inline-flex">
-                  <span className={cn("nebula-connection-dot", sourceMode !== "browser" && connected && "is-live")} />
-                  {sourceMode === "browser" ? "Local snapshot" : connected ? "Live" : "Standby"}
+                  <span className={cn("nebula-connection-dot", sourceMode !== "browser" && sourceMode !== "demo" && connected && "is-live")} />
+                  {sourceMode === "demo" ? "Example map" : sourceMode === "browser" ? "Local snapshot" : connected ? "Live" : "Standby"}
                 </span>
                 <button type="button" className={cn("nebula-header-action", drawerOpen && "is-active")} aria-label="Toggle explorer" aria-expanded={drawerOpen} aria-controls="nebula-explorer" onClick={() => { setDrawerOpen(!drawerOpen); if (shellMode !== "desktop") setRightRailOpen(false); }}><PanelLeft size={17} /><span className="hidden md:inline">Explorer</span></button>
                 <button type="button" className={cn("nebula-header-action", rightRailOpen && "is-active")} aria-label="Toggle details" aria-expanded={rightRailOpen} aria-controls="nebula-inspector" onClick={() => { setRightRailOpen(!rightRailOpen); if (shellMode !== "desktop") setDrawerOpen(false); }}><PanelRight size={17} /><span className="hidden md:inline">Details</span></button>
               </>
             ) : null}
-            {sourceMode === "browser" && shellMode !== "mobile" ? (
+            {(sourceMode === "browser" || sourceMode === "demo") && shellMode !== "mobile" ? (
               <button type="button" className="nebula-header-action" ref={sourceTriggerRef} onClick={onOpenSource}>Other sources</button>
             ) : null}
-            <button type="button" className="nebula-primary nebula-header-primary" onClick={sourceMode === "browser" ? openFolder : onOpenSource}>
+            {(sourceMode === "browser" || sourceMode === "demo") && shellMode === "mobile" ? <button type="button" className="nebula-header-action" aria-label="More source options" onClick={onOpenSource}><Network size={16} /></button> : null}
+            <button type="button" className="nebula-primary nebula-header-primary" onClick={sourceMode === "browser" || sourceMode === "demo" ? openFolder : onOpenSource}>
               <FolderOpen size={16} />
               <span>{hasGraph ? "Change folder" : "Open folder"}</span>
               <ArrowUpRight size={15} className="hidden sm:block" />
@@ -847,13 +839,22 @@ export function ControlRoomShell({
             {hasGraph ? (
               <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-3 p-3 sm:p-5">
                 <div className="nebula-stage-banner max-w-[calc(100%-8rem)] rounded-xl px-3 py-2 sm:px-4 sm:py-3">
-                  <div className="text-[0.62rem] font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Workspace / {sourceMode === "browser" ? "Snapshot" : "Live"}</div>
+                  <div className="text-[0.62rem] font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Workspace / {sourceMode === "demo" ? "Example" : sourceMode === "browser" ? "Snapshot" : "Live"}</div>
                   <div className="mt-1 truncate text-sm font-medium text-white sm:text-base">{formatRootLabel(currentRoot)}</div>
                 </div>
-                <div className="pointer-events-auto flex gap-1 rounded-xl border border-[var(--line)] bg-[var(--surface-strong)] p-1">
-                  {topActions.map((mode) => (
-                    <button key={mode} type="button" className={cn("nebula-mode", interactionMode === mode && "is-active")} aria-pressed={interactionMode === mode} onClick={() => setInteractionMode(mode)}>{mode}</button>
-                  ))}
+                <div className="pointer-events-auto flex flex-wrap items-center gap-2">
+                  <div className="flex gap-1 rounded-xl border border-[var(--line)] bg-[var(--surface-strong)] p-1" role="group" aria-label="Map view">
+                    {([['mindmap', 'Mind map'], ['overview', 'Tree'], ['focus', 'Focus']] as const).map(([mode, label]) => (
+                      <button key={mode} type="button" className={cn("nebula-mode", layoutMode === mode && "is-active")} aria-pressed={layoutMode === mode} onClick={() => setLayoutMode(mode)}>{label}</button>
+                    ))}
+                  </div>
+                  <details className="nebula-export-menu relative">
+                    <summary className="nebula-header-action border border-[var(--line)] bg-[var(--surface-strong)]"><Download size={14} />Export<ChevronDown size={13} /></summary>
+                    <div className="nebula-export-options absolute right-0 top-full mt-2 w-44 rounded-xl border border-[var(--line-strong)] bg-[var(--surface-elevated)] p-1 shadow-2xl">
+                      <button type="button" aria-label="Download Mermaid mind map" onClick={(event) => { exportMap("mermaid"); event.currentTarget.closest("details")?.removeAttribute("open"); }}>Mermaid <span>.mmd</span></button>
+                      <button type="button" aria-label="Download Freeplane mind map" onClick={(event) => { exportMap("freeplane"); event.currentTarget.closest("details")?.removeAttribute("open"); }}>Freeplane <span>.mm</span></button>
+                    </div>
+                  </details>
                 </div>
               </div>
             ) : null}
@@ -870,7 +871,7 @@ export function ControlRoomShell({
                   <p className="mt-5 max-w-md text-[0.98rem] leading-7 text-[var(--muted)] sm:text-[1.08rem]">Turn any folder into a beautiful, explorable map of your files.</p>
                   <div className="mt-6 flex flex-wrap items-center gap-4">
                     <button type="button" className="nebula-primary nebula-empty-primary" onClick={openFolder}><FolderOpen size={18} />Open a folder<ArrowUpRight size={17} /></button>
-                    <button type="button" className="nebula-text-action" onClick={onOpenSource}>Connect a live workspace <ArrowUpRight size={15} /></button>
+                    <button type="button" className="nebula-text-action" onClick={onLoadDemo}>Explore an example <ArrowUpRight size={15} /></button>
                   </div>
                   <p className="mt-5 text-xs leading-5 text-[var(--subtle)]">Private by design. File contents stay on your device.</p>
                 </div>
@@ -894,7 +895,7 @@ export function ControlRoomShell({
             {hasGraph ? (
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3 sm:p-5">
                 <div className="nebula-status-strip flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs sm:px-4">
-                  <div className="flex items-center gap-2 text-[var(--muted)]"><span className={cn("nebula-connection-dot", sourceMode !== "browser" && connected && "is-live")} />{sourceMode === "browser" ? "Local snapshot" : connected ? "Live connection" : "Standby"}</div>
+                  <div className="flex items-center gap-2 text-[var(--muted)]"><span className={cn("nebula-connection-dot", sourceMode !== "browser" && sourceMode !== "demo" && connected && "is-live")} />{sourceMode === "demo" ? "Example map · click folders to expand" : sourceMode === "browser" ? "Local snapshot · click folders to expand" : connected ? "Live connection" : "Standby"}</div>
                   <div className="flex items-center gap-4 text-[var(--muted)]"><span><strong className="font-medium text-white">{nodeArray.length}</strong> items</span><span><strong className="font-medium text-white">{edgeArray.length}</strong> links</span><span className="hidden sm:inline">{layoutEngine} / {layoutMode}</span></div>
                 </div>
               </div>

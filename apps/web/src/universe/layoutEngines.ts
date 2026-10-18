@@ -2,8 +2,8 @@ import dagre from "dagre";
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { Edge, Node, XYPosition } from "reactflow";
 
-export type LayoutEngine = "living-lite" | "radial" | "dagre" | "elk";
-export type LayoutMode = "focus" | "overview";
+export type LayoutEngine = "living-lite" | "mindmap" | "radial" | "dagre" | "elk";
+export type LayoutMode = "mindmap" | "focus" | "overview";
 
 const elk = new ELK();
 
@@ -14,6 +14,7 @@ export function chooseLayout(ctx: {
   hasCrossLinks: boolean;
   rootCount: number;
 }): LayoutEngine {
+  if (ctx.mode === "mindmap") return "mindmap";
   if (ctx.mode === "focus") {
     if (ctx.rootCount <= 1 && ctx.visibleCount <= 320) {
       return "radial";
@@ -29,6 +30,106 @@ export function chooseLayout(ctx: {
   if (ctx.zoom < 0.45) return "dagre";
   if (ctx.visibleCount > 260) return "elk";
   return "dagre";
+}
+
+export function layoutWithMindmap(nodes: Node[], edges: Edge[]) {
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const children = new Map<string, Node[]>();
+  const roots: Node[] = [];
+
+  for (const node of nodes) {
+    const parentId = (node.data as { parentId?: string } | undefined)?.parentId;
+    if (parentId && byId.has(parentId)) {
+      const siblings = children.get(parentId) ?? [];
+      siblings.push(node);
+      children.set(parentId, siblings);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  for (const siblings of children.values()) siblings.sort(compareRadialNodes);
+  roots.sort(compareRadialNodes);
+
+  const positions = new Map<string, XYPosition>();
+  const COLUMN_GAP = 245;
+  const ROW_GAP = 82;
+  let rootOffset = 0;
+
+  for (const root of roots) {
+    const sides: [Node[], Node[]] = [[], []];
+    const weights = new Map<string, number>();
+    const weight = (node: Node): number => {
+      const cached = weights.get(node.id);
+      if (cached != null) return cached;
+      const total = Math.max(1, (children.get(node.id) ?? []).reduce((sum, child) => sum + weight(child), 0));
+      weights.set(node.id, total);
+      return total;
+    };
+
+    const loads = [0, 0];
+    for (const child of children.get(root.id) ?? []) {
+      const side = loads[0] <= loads[1] ? 0 : 1;
+      sides[side].push(child);
+      loads[side] += weight(child);
+    }
+
+    const placed = new Set<string>([root.id]);
+    const placeSide = (items: Node[], direction: -1 | 1) => {
+      let row = 0;
+      const place = (node: Node, depth: number): number => {
+        if (placed.has(node.id)) return row * ROW_GAP;
+        placed.add(node.id);
+        const branch = children.get(node.id) ?? [];
+        let y: number;
+        if (branch.length === 0) {
+          y = row * ROW_GAP;
+          row += 1;
+        } else {
+          const childYs = branch.map((child) => place(child, depth + 1));
+          y = (childYs[0]! + childYs[childYs.length - 1]!) / 2;
+        }
+        const width = node.width ?? 180;
+        positions.set(node.id, { x: direction > 0 ? depth * COLUMN_GAP : -depth * COLUMN_GAP - width, y });
+        return y;
+      };
+      for (const node of items) place(node, 1);
+      return Math.max(1, row);
+    };
+
+    const leftRows = placeSide(sides[0], -1);
+    const rightRows = placeSide(sides[1], 1);
+    const shiftBranch = (items: Node[], offset: number) => {
+      const visit = (node: Node) => {
+        const position = positions.get(node.id);
+        if (position) positions.set(node.id, { x: position.x, y: position.y + offset + rootOffset });
+        for (const child of children.get(node.id) ?? []) visit(child);
+      };
+      for (const node of items) visit(node);
+    };
+    shiftBranch(sides[0], -((leftRows - 1) * ROW_GAP) / 2);
+    shiftBranch(sides[1], -((rightRows - 1) * ROW_GAP) / 2);
+    positions.set(root.id, { x: -(root.width ?? 180) / 2, y: rootOffset });
+    rootOffset += Math.max(leftRows, rightRows) * ROW_GAP + 150;
+  }
+
+  return {
+    nodes: nodes.map((node) => ({ ...node, position: positions.get(node.id) ?? node.position })),
+    edges: edges.map((edge) => {
+      const source = byId.get(edge.source);
+      const target = byId.get(edge.target);
+      const sourceX = (positions.get(edge.source)?.x ?? 0) + (source?.width ?? 180) / 2;
+      const targetX = (positions.get(edge.target)?.x ?? 0) + (target?.width ?? 180) / 2;
+      const left = targetX < sourceX;
+      return {
+        ...edge,
+        type: "default",
+        sourceHandle: left ? "left-out" : "right-out",
+        targetHandle: left ? "right-in" : "left-in",
+        style: { ...edge.style, strokeWidth: 1.5 }
+      };
+    })
+  };
 }
 
 export function layoutWithDagre(nodes: Node[], edges: Edge[], direction: "TB" | "LR" = "LR") {

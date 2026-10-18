@@ -382,6 +382,14 @@ main {
 .nebula-mode:hover,
 .nebula-mode.is-active { color: white; background: rgba(255, 255, 255, 0.09); }
 
+.nebula-export-menu summary { cursor: pointer; list-style: none; user-select: none; }
+.nebula-export-menu summary::-webkit-details-marker { display: none; }
+.nebula-export-menu[open] summary { color: white; border-color: var(--control-border-strong); }
+.nebula-export-options { z-index: 40; }
+.nebula-export-options button { display: flex; width: 100%; align-items: center; justify-content: space-between; border: 0; border-radius: 0.55rem; padding: 0.65rem 0.7rem; background: transparent; color: white; font-size: 0.76rem; text-align: left; }
+.nebula-export-options button:hover { background: rgba(196, 242, 136, 0.09); }
+.nebula-export-options span { color: var(--subtle); }
+
 .nebula-rail .nebula-panel {
   border-radius: 1rem;
   background: #0e1418;

@@ -16,6 +16,21 @@ import {
 } from "./sourceApi";
 import { UniverseLiveProvider, type UniverseConnectionStatus } from "./UniverseLiveProvider";
 
+const EXAMPLE_PATHS = [
+  "nebula-example/README.md",
+  "nebula-example/package.json",
+  "nebula-example/apps/web/app/page.tsx",
+  "nebula-example/apps/web/app/globals.css",
+  "nebula-example/apps/web/src/components/Header.tsx",
+  "nebula-example/apps/web/src/components/Canvas.tsx",
+  "nebula-example/apps/web/src/lib/graph.ts",
+  "nebula-example/apps/server/src/index.ts",
+  "nebula-example/apps/server/src/routes/projects.ts",
+  "nebula-example/packages/ui/src/Button.tsx",
+  "nebula-example/packages/ui/src/Card.tsx",
+  "nebula-example/docs/architecture.md"
+];
+
 export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [currentRoot, setCurrentRoot] = useState<string | null>(null);
   const [sourceModalOpen, setSourceModalOpen] = useState(false);
@@ -25,7 +40,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
   const [wsEnabled, setWsEnabled] = useState(false);
   const [status, setStatus] = useState<UniverseConnectionStatus>({ phase: "idle" });
   const [localAccessSession, setLocalAccessSession] = useState<LocalAccessSession | null>(null);
-  const [sourceMode, setSourceMode] = useState<"server" | "local-access" | "browser">("server");
+  const [sourceMode, setSourceMode] = useState<"server" | "local-access" | "browser" | "demo">("server");
   const [serverAvailable, setServerAvailable] = useState(false);
   const autoSelectedRootRef = useRef<string | null>(null);
 
@@ -235,6 +250,19 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
     }
   };
 
+  const handleLoadDemo = () => {
+    const { rootName, snapshot } = createBrowserFolderSnapshot(EXAMPLE_PATHS);
+    setWsEnabled(false);
+    setConnected(false);
+    setLocalAccessSession(null);
+    setSourceMode("demo");
+    applySnapshot(snapshot);
+    selectAllProjects();
+    setCurrentRoot(rootName);
+    setSourceError(null);
+    setSourceModalOpen(false);
+  };
+
   return (
     <UniverseLiveProvider enabled={wsEnabled} onStatus={setStatus}>
       <ControlRoomShell
@@ -255,6 +283,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         onSelectedServer={handleSelectSource}
         onSelectedLocal={handleSelectLocalAccessSource}
         onSelectedBrowser={handleSelectBrowserFolder}
+        onLoadDemo={handleLoadDemo}
       />
     </UniverseLiveProvider>
   );
