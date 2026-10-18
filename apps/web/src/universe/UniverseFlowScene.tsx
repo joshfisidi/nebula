@@ -88,7 +88,7 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         setServerAvailable(runtimeConfigured);
         if (!runtimeConfigured) {
           setSourceMode("browser");
-          setSourceModalOpen(true);
+          setSourceModalOpen(false);
           return;
         }
 
@@ -119,9 +119,16 @@ export function UniverseFlowScene({ preview = false }: { preview?: boolean }) {
         setSourceModalOpen(!current.currentRoot);
       } catch (err) {
         if (cancelled) return;
-        setSourceError(err instanceof Error ? err.message : String(err));
-        setSourceModalOpen(true);
         setWsEnabled(false);
+        if (!process.env.NEXT_PUBLIC_UNIVERSE_API_URL && !process.env.NEXT_PUBLIC_UNIVERSE_API_PORT) {
+          setServerAvailable(false);
+          setSourceMode("browser");
+          setSourceError(null);
+          setSourceModalOpen(false);
+        } else {
+          setSourceError(err instanceof Error ? err.message : String(err));
+          setSourceModalOpen(true);
+        }
       } finally {
         if (!cancelled) setSourceLoading(false);
       }

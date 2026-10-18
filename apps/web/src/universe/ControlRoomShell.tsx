@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity,
   ArrowUpRight,
   Blocks,
   ChevronDown,
@@ -15,10 +14,7 @@ import {
   PanelLeft,
   PanelRight,
   Radar,
-  Search,
-  Sparkles,
-  Wifi,
-  WifiOff
+  Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +24,6 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { cn } from "@/lib/utils";
 import { ReactFlowOverlay } from "./ReactFlowOverlay";
 import { useUniverseGraphStore, type InteractionMode, type RenderNode } from "./graphStore";
-import type { LayoutMode } from "./layoutEngines";
 import type { LocalAccessSession, SourceFolder } from "./sourceApi";
 import type { UniverseConnectionStatus } from "./UniverseLiveProvider";
 
@@ -72,8 +67,8 @@ function deriveStatusTone(params: {
   if (params.sourceMode === "browser" && params.currentRoot) {
     return {
       tone: "good",
-      label: "Browser snapshot loaded",
-      detail: "Folder names stay in this browser. Choose the folder again to refresh."
+      label: "Folder ready",
+      detail: "Choose the folder again to refresh the map."
     };
   }
   if (params.localAccessSession && params.currentRoot) {
@@ -111,8 +106,8 @@ function deriveStatusTone(params: {
   if (!params.currentRoot) {
     return {
       tone: "idle",
-      label: "Source setup required",
-      detail: "Grant local folder access or choose a server-backed folder to begin."
+      label: "No folder open",
+      detail: "Open a folder to map your files."
     };
   }
 
@@ -168,7 +163,6 @@ function SourceModal({
   const [selectedFolderPath, setSelectedFolderPath] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
   const browserFolderRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -180,7 +174,6 @@ function SourceModal({
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
-    titleRef.current?.focus();
     return () => {
       if (dialog.open) dialog.close();
     };
@@ -252,187 +245,65 @@ function SourceModal({
         event.preventDefault();
         onClose();
       }}
-      className="source-dialog nebula-panel max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[2rem] border border-[var(--line-strong)] p-0 text-[var(--fg)] shadow-[0_40px_120px_rgba(2,6,23,0.64)]"
-      style={{ width: "min(64rem, calc(100vw - 2rem))" }}
+      className="source-dialog max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[1.3rem] border border-[var(--line-strong)] p-0 text-[var(--fg)]"
+      style={{ width: "min(31rem, calc(100vw - 2rem))" }}
     >
-      <div className="w-full">
-        <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="border-b border-[var(--line)] bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(249,115,22,0.08)_60%,rgba(15,23,42,0.08))] p-6 lg:border-b-0 lg:border-r">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-400/10 text-cyan-100">
-                <Radar size={20} />
-              </div>
-              <div>
-                <div className="text-[0.72rem] uppercase tracking-[0.34em] text-cyan-100/70">Nebula Control Room</div>
-                <h2 id="source-dialog-title" ref={titleRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight text-white">Choose a graph source</h2>
-              </div>
-            </div>
+      <div className="nebula-source-modal p-6 sm:p-7">
+        <div className="flex items-center justify-between">
+          <span className="nebula-eyebrow"><span className="nebula-eyebrow-line" /> Workspace source</span>
+          <button type="button" className="nebula-header-action h-9 w-9 p-0" aria-label="Close source options" onClick={onClose}>×</button>
+        </div>
+        <div className="mt-8 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--surface-soft)] text-[var(--accent)]"><FolderOpen size={21} /></div>
+        <h2 id="source-dialog-title" className="mt-5 text-[1.8rem] font-medium leading-tight tracking-[-0.055em] text-white">Choose a source</h2>
+        <p id="source-dialog-description" className="mt-2 text-sm leading-6 text-[var(--muted)]">Start with a folder on this device. Nebula maps its structure right here in your browser.</p>
 
-            <p id="source-dialog-description" className="max-w-xl text-sm leading-6 text-slate-200/78">
-              Map a folder in this browser, or connect a local agent for live updates.
-            </p>
+        <input
+          ref={browserFolderRef}
+          type="file"
+          className="sr-only"
+          multiple
+          aria-label="Choose folder in browser"
+          onChange={(event) => {
+            if (event.target.files?.length) onSelectedBrowser(event.target.files);
+            event.target.value = "";
+          }}
+        />
+        <button type="button" className="nebula-primary mt-6 w-full justify-between px-4 py-3" disabled={loading} onClick={() => browserFolderRef.current?.click()}><span className="flex items-center gap-2"><FolderOpen size={18} />Open a folder</span><ArrowUpRight size={16} /></button>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="rounded-[1.4rem] border border-cyan-300/20 bg-slate-950/38 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <Badge className="rounded-full border-cyan-300/25 bg-cyan-400/10 px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em] text-cyan-100">
-                    Recommended
-                  </Badge>
-                  <Sparkles size={18} className="text-cyan-100/80" />
-                </div>
-                <div className="text-lg font-semibold text-white">Browser folder snapshot</div>
-                <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Choose a folder to map its file names. File contents stay on your device; choose again to refresh.
-                </p>
-                <input
-                  ref={browserFolderRef}
-                  type="file"
-                  className="hidden"
-                  multiple
-                  aria-label="Choose folder in browser"
-                  onChange={(event) => {
-                    const files = event.target.files;
-                    if (files?.length) onSelectedBrowser(files);
-                    event.target.value = "";
-                  }}
-                />
-                <div className="mt-5">
-                  <Button
-                    className="h-11 w-full rounded-2xl bg-cyan-400 text-slate-950 hover:bg-cyan-300"
-                    disabled={loading}
-                    onClick={() => browserFolderRef.current?.click()}
-                  >
-                    Choose a folder
-                  </Button>
-                </div>
-              </div>
+        <div className="nebula-source-divider my-6"><span>OR</span></div>
+        <button type="button" className="nebula-source-option w-full" disabled={loading} onClick={onRequestLocalAccess}>
+          <span className="nebula-source-option-icon"><Network size={18} /></span>
+          <span className="min-w-0 flex-1 text-left"><strong>Connect live workspace</strong><small>{localAccessSession ? "Local agent connected" : "Use Nebula Sync for live updates"}</small></span>
+          <ArrowUpRight size={16} className="text-[var(--subtle)]" />
+        </button>
 
-              <div className="rounded-[1.4rem] border border-[var(--line)] bg-slate-950/42 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em]">
-                    Live updates
-                  </Badge>
-                  <Network size={18} className="text-slate-200/72" />
-                </div>
-                <div className="text-lg font-semibold text-white">Local workspace agent</div>
-                <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                  Connect Nebula Sync on this computer to stream live changes from a selected folder.
-                </p>
-                <div className="mt-5">
-                  <Button variant="outline" className="h-11 w-full rounded-2xl border-[var(--line)]" disabled={loading} onClick={onRequestLocalAccess}>
-                    {localAccessSession ? "Local agent connected" : "Connect local agent"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[rgba(3,8,17,0.92)] p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[0.72rem] uppercase tracking-[0.3em] text-slate-400">Source path</div>
-                <div className="mt-1 text-lg font-semibold text-white">Route the graph stage</div>
-              </div>
-              <Button variant="ghost" size="sm" className="rounded-full" onClick={onClose}>
-                close
-              </Button>
-            </div>
-
-            {!serverAvailable && !localAccessSession ? (
-              <div className="rounded-2xl border border-[var(--line)] bg-white/[0.02] p-4 text-sm leading-6 text-slate-300/82">
-                This hosted page has no runtime server. Choose a browser folder for a snapshot, or connect a local agent for live updates.
-              </div>
-            ) : <>
-            <label htmlFor="source-root" className="mb-2 block text-[0.72rem] uppercase tracking-[0.18em] text-slate-400">
-              Root
-            </label>
-            <NativeSelect
-              id="source-root"
-              className="mb-4 h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)]"
-              value={selectedRoot}
-              onChange={async (event) => {
+        {(serverAvailable || localAccessSession) ? (
+          <details className="nebula-source-details mt-3">
+            <summary>Choose a server folder <ChevronDown size={15} /></summary>
+            <div className="space-y-3 p-4 pt-0">
+              {roots.length > 0 ? <><label htmlFor="source-root" className="nebula-field-label">Root</label><NativeSelect id="source-root" value={selectedRoot} onChange={async (event) => {
                 const root = event.target.value;
                 setSelectedRoot(root);
                 try {
                   const sourceApi = await import("./sourceApi");
-                  const list = localAccessSession?.token
-                    ? await sourceApi.fetchLocalAccessSourceList(localAccessSession.token, root)
-                    : await sourceApi.fetchSourceList(root);
+                  const list = localAccessSession?.token ? await sourceApi.fetchLocalAccessSourceList(localAccessSession.token, root) : await sourceApi.fetchSourceList(root);
                   setFolders(list.folders ?? []);
-                } catch (err) {
-                  setLocalError(err instanceof Error ? err.message : String(err));
-                }
-              }}
-            >
-              {roots.map((root) => (
-                <NativeSelectOption key={root} value={root}>
-                  {root}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-
-            <label htmlFor="source-folder" className="mb-2 block text-[0.72rem] uppercase tracking-[0.18em] text-slate-400">
-              Folder
-            </label>
-            <NativeSelect
-              id="source-folder"
-              className="mb-4 h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)]"
-              value={selectedFolderPath}
-              onChange={(event) => {
-                setSelectedFolderPath(event.target.value);
-                setManualPath(event.target.value);
-              }}
-            >
-              <NativeSelectOption value="">Select folder...</NativeSelectOption>
-              {folders.map((folder) => (
-                <NativeSelectOption key={folder.path} value={folder.path}>
-                  {folder.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-
-            <label htmlFor="manual-path" className="mb-2 block text-[0.72rem] uppercase tracking-[0.18em] text-slate-400">
-              Manual path
-            </label>
-            <Input
-              id="manual-path"
-              className="mb-4 h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)]"
-              value={manualPath}
-              onChange={(event) => setManualPath(event.target.value)}
-              placeholder="/absolute/path"
-            />
-            </>}
-
-            {effectiveError ? (
-              <div className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                {effectiveError}
-              </div>
-            ) : serverAvailable || localAccessSession ? (
-              <div className="mb-4 rounded-2xl border border-[var(--line)] bg-white/[0.02] px-4 py-3 text-sm text-slate-300/82">
-                {localAccessSession?.token
-                  ? "Local workspace access is available. Folder changes will refresh the graph from the local agent."
-                  : "Server mode will continue to use the runtime API and websocket connection."}
-              </div>
-            ) : null}
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <Button variant="outline" className="rounded-2xl border-[var(--line)]" onClick={onClose}>
-                Keep current state
-              </Button>
-              {(serverAvailable || localAccessSession) && <Button
-                className="rounded-2xl bg-[linear-gradient(135deg,#38bdf8,#0ea5e9)] text-slate-950 hover:opacity-95"
-                disabled={loading}
-                onClick={() => {
-                  const path = manualPath.trim() || selectedFolderPath;
-                  if (localAccessSession?.token) onSelectedLocal(path);
-                  else onSelectedServer(path);
-                }}
-              >
-                {loading ? "Routing graph..." : "Load into control room"}
-              </Button>}
+                } catch (err) { setLocalError(err instanceof Error ? err.message : String(err)); }
+              }}>{roots.map((root) => <NativeSelectOption key={root} value={root}>{root}</NativeSelectOption>)}</NativeSelect></> : null}
+              <label htmlFor="source-folder" className="nebula-field-label">Folder</label>
+              <NativeSelect id="source-folder" value={selectedFolderPath} onChange={(event) => { setSelectedFolderPath(event.target.value); setManualPath(event.target.value); }}>
+                <NativeSelectOption value="">Select folder...</NativeSelectOption>
+                {folders.map((folder) => <NativeSelectOption key={folder.path} value={folder.path}>{folder.name}</NativeSelectOption>)}
+              </NativeSelect>
+              <label htmlFor="manual-path" className="nebula-field-label">Or enter a path</label>
+              <Input id="manual-path" value={manualPath} onChange={(event) => setManualPath(event.target.value)} placeholder="/absolute/path" />
+              <button type="button" className="nebula-primary w-full" disabled={loading} onClick={() => { const path = manualPath.trim() || selectedFolderPath; if (localAccessSession?.token) onSelectedLocal(path); else onSelectedServer(path); }}>{loading ? "Loading..." : "Load folder"}</button>
             </div>
-          </div>
-        </div>
+          </details>
+        ) : null}
+
+        {effectiveError ? <div className="mt-4 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{effectiveError}</div> : null}
+        <p className="mt-6 text-center text-xs leading-5 text-[var(--subtle)]">File contents stay on your device.</p>
       </div>
     </dialog>
   );
@@ -576,7 +447,7 @@ function ProjectTree() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-[0.72rem] uppercase tracking-[0.26em] text-slate-400">Explorer</div>
-            <CardTitle className="mt-1 text-lg text-white">Project lattice</CardTitle>
+            <CardTitle className="mt-1 text-lg text-white">Files</CardTitle>
           </div>
           <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em]">
             {projects.length} roots
@@ -586,7 +457,7 @@ function ProjectTree() {
       <CardContent className="space-y-4">
         <div className="rounded-[1.35rem] border border-[var(--line)] bg-white/[0.02] p-3">
           <div className="mb-2 flex items-center justify-between gap-3 text-[0.72rem] uppercase tracking-[0.16em] text-slate-400">
-            <span>Scope</span>
+            <span>Projects</span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" className="rounded-full px-3" onClick={selectAllProjects}>
                 all
@@ -614,7 +485,7 @@ function ProjectTree() {
         <div className="max-h-[min(55vh,42rem)] overflow-auto rounded-[1.4rem] border border-[var(--line)] bg-white/[0.02] p-2">
           {selectedProjectIds.size === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-slate-400">
-              Select at least one project to map the explorer rail.
+              Choose a project to browse its files.
             </div>
           ) : visibleRoots.length === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-slate-400">Waiting for graph data...</div>
@@ -638,7 +509,7 @@ function QuickFilters() {
   return (
     <Card className="nebula-panel rounded-[1.8rem]">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-white">Command filters</CardTitle>
+        <CardTitle className="text-lg text-white">View options</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative">
@@ -646,7 +517,7 @@ function QuickFilters() {
           <Input
             aria-label="Search graph paths"
             className="h-11 rounded-2xl border-[var(--line)] bg-[var(--surface-strong)] pl-11"
-            placeholder="Search every visible path"
+            placeholder="Search files and folders"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
@@ -660,7 +531,7 @@ function QuickFilters() {
             onClick={() => setLayoutMode("overview")}
           >
             <Layers3 size={16} className="mr-2" />
-            Overview map
+            Overview
           </Button>
           <Button
             variant={layoutMode === "focus" ? "default" : "outline"}
@@ -669,7 +540,7 @@ function QuickFilters() {
             onClick={() => setLayoutMode("focus")}
           >
             <Radar size={16} className="mr-2" />
-            Focus lane
+            Focused
           </Button>
         </div>
 
@@ -680,7 +551,7 @@ function QuickFilters() {
           onClick={() => setShowHiddenNodes(!showHiddenNodes)}
         >
           <HardDrive size={16} className="mr-2" />
-          {showHiddenNodes ? "Hidden infrastructure visible" : "Reveal hidden infrastructure"}
+          {showHiddenNodes ? "Hidden files visible" : "Show hidden files"}
         </Button>
       </CardContent>
     </Card>
@@ -735,7 +606,7 @@ function InspectorRail({
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-[0.72rem] uppercase tracking-[0.26em] text-slate-400">Inspector</div>
-              <CardTitle className="mt-1 text-lg text-white">Focused signal</CardTitle>
+              <CardTitle className="mt-1 text-lg text-white">Selection</CardTitle>
             </div>
             <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.2em]">
               {selectedNode ? formatKind(selectedNode) : "Idle"}
@@ -768,7 +639,7 @@ function InspectorRail({
             </div>
           ) : (
             <div className="rounded-[1.35rem] border border-dashed border-[var(--line)] bg-white/[0.02] px-4 py-10 text-center text-sm leading-6 text-slate-400">
-              Focus a node in the graph stage to inspect its path, structure, and branch context.
+              Select a node in the map to see its details.
             </div>
           )}
         </CardContent>
@@ -776,7 +647,7 @@ function InspectorRail({
 
       <Card className="nebula-panel rounded-[1.8rem]">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg text-white">Runtime status</CardTitle>
+          <CardTitle className="text-lg text-white">Workspace</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className={cn("rounded-[1.3rem] border px-4 py-4", toneClass)}>
@@ -813,7 +684,7 @@ function InspectorRail({
 
           <Button variant="outline" className="w-full rounded-2xl border-[var(--line)]" onClick={onOpenSource}>
             <ArrowUpRight size={16} className="mr-2" />
-            Re-route source
+            Change source
           </Button>
         </CardContent>
       </Card>
@@ -843,7 +714,6 @@ export function ControlRoomShell({
   const connected = useUniverseGraphStore((s) => s.connected);
   const nodeArray = useUniverseGraphStore((s) => s.nodeArray);
   const edgeArray = useUniverseGraphStore((s) => s.edgeArray);
-  const selectedProjectIds = useUniverseGraphStore((s) => s.selectedProjectIds);
   const interactionMode = useUniverseGraphStore((s) => s.interactionMode);
   const setInteractionMode = useUniverseGraphStore((s) => s.setInteractionMode);
   const layoutMode = useUniverseGraphStore((s) => s.layoutMode);
@@ -851,10 +721,15 @@ export function ControlRoomShell({
   const drawerOpen = useUniverseGraphStore((s) => s.drawerOpen);
   const setDrawerOpen = useUniverseGraphStore((s) => s.setDrawerOpen);
 
-  const [rightRailOpen, setRightRailOpen] = useState(true);
+  const [rightRailOpen, setRightRailOpen] = useState(false);
   const sourceTriggerRef = useRef<HTMLButtonElement>(null);
+  const browserFolderRef = useRef<HTMLInputElement>(null);
   const wasSourceModalOpenRef = useRef(sourceModalOpen);
   const shellMode = useShellMode();
+
+  useEffect(() => {
+    browserFolderRef.current?.setAttribute("webkitdirectory", "");
+  }, []);
 
   useEffect(() => {
     if (wasSourceModalOpenRef.current && !sourceModalOpen) {
@@ -869,11 +744,7 @@ export function ControlRoomShell({
     if (shellMode !== "desktop") {
       setDrawerOpen(false);
       setRightRailOpen(false);
-      return;
     }
-
-    setDrawerOpen(true);
-    setRightRailOpen(true);
   }, [setDrawerOpen, shellMode]);
 
   useEffect(() => {
@@ -889,19 +760,8 @@ export function ControlRoomShell({
   }, [drawerOpen, rightRailOpen, setDrawerOpen, shellMode]);
 
   const statusTone = deriveStatusTone({ localAccessSession, currentRoot, status, wsEnabled, sourceMode });
-  const graphStateText = sourceLoading
-    ? "Checking control-room source..."
-    : !currentRoot
-      ? "No active source. Open source routing to begin."
-      : nodeArray.length === 0
-        ? "Source connected, waiting for the graph to populate."
-        : sourceMode === "browser"
-          ? "Browser folder snapshot loaded. Choose the folder again to refresh."
-          : connected
-          ? "Live signal is feeding the graph stage."
-          : localAccessSession
-            ? "Local workspace snapshot loaded."
-            : "Source loaded. Runtime is on standby.";
+  const hasGraph = nodeArray.length > 0;
+  const openFolder = () => browserFolderRef.current?.click();
 
   const topActions: InteractionMode[] = ["browse", "pan", "edit"];
   const closeResponsiveRails = () => {
@@ -910,78 +770,58 @@ export function ControlRoomShell({
   };
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-[var(--bg)] text-[var(--fg)]">
+    <div className="nebula-app relative h-[100dvh] w-full overflow-hidden bg-[var(--bg)] text-[var(--fg)]">
       <div className="nebula-atmosphere" />
-      <div className="relative z-10 flex h-full flex-col gap-4 p-3 sm:p-4 lg:p-5">
-        <Card className="nebula-panel shrink-0 rounded-[1.8rem]">
-          <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.4rem] border border-cyan-300/20 bg-cyan-400/10 text-cyan-100">
-                <Radar size={22} />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="text-[0.72rem] uppercase tracking-[0.34em] text-cyan-100/70">Nebula Control Room</div>
-                  {preview ? (
-                    <Badge className="rounded-full border-fuchsia-300/20 bg-fuchsia-500/10 px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-fuchsia-100">
-                      Preview route
-                    </Badge>
-                  ) : null}
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">File-system operations cockpit</h1>
-                  <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {layoutEngine}
-                  </Badge>
-                </div>
-                <p role="status" className="mt-1 max-w-3xl text-sm leading-6 text-slate-300/78">
-                  {graphStateText}
-                </p>
-              </div>
+      <input
+        ref={browserFolderRef}
+        type="file"
+        className="sr-only"
+        tabIndex={-1}
+        multiple
+        aria-label="Open folder"
+        onChange={(event) => {
+          if (event.target.files?.length) onSelectedBrowser(event.target.files);
+          event.target.value = "";
+        }}
+      />
+      <div className="relative z-10 flex h-full flex-col gap-3 p-3 sm:p-4 lg:p-5">
+        <header className="nebula-header flex shrink-0 items-center justify-between gap-4 px-2 py-2 sm:px-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="nebula-mark" aria-hidden="true"><span /></div>
+            <div className="min-w-0">
+              <h1 className="text-[1.16rem] font-semibold leading-none tracking-[-0.06em] text-white sm:text-[1.35rem]">nebula<span className="text-[var(--accent)]">.</span></h1>
+              <p className="mt-1 hidden text-[0.64rem] font-medium uppercase tracking-[0.18em] text-[var(--muted)] sm:block">Your workspace, mapped</p>
             </div>
+            {preview ? <span className="nebula-mini-tag ml-2">Preview</span> : null}
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-[var(--line)]"
-                onClick={() => {
-                  setDrawerOpen(!drawerOpen);
-                  if (shellMode !== "desktop") setRightRailOpen(false);
-                }}
-                aria-expanded={drawerOpen}
-                aria-controls="nebula-explorer"
-              >
-                <PanelLeft size={16} className="mr-2" />
-                Explorer
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-[var(--line)]"
-                onClick={() => {
-                  setRightRailOpen(!rightRailOpen);
-                  if (shellMode !== "desktop") setDrawerOpen(false);
-                }}
-                aria-expanded={rightRailOpen}
-                aria-controls="nebula-inspector"
-              >
-                <PanelRight size={16} className="mr-2" />
-                Inspector
-              </Button>
-              <Button ref={sourceTriggerRef} className="rounded-full bg-white text-slate-950 hover:bg-slate-100" size="sm" onClick={onOpenSource}>
-                <HardDrive size={16} className="mr-2" />
-                Source routing
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {hasGraph ? (
+              <>
+                <span role="status" className="nebula-connection hidden sm:inline-flex">
+                  <span className={cn("nebula-connection-dot", sourceMode !== "browser" && connected && "is-live")} />
+                  {sourceMode === "browser" ? "Local snapshot" : connected ? "Live" : "Standby"}
+                </span>
+                <button type="button" className={cn("nebula-header-action", drawerOpen && "is-active")} aria-label="Toggle explorer" aria-expanded={drawerOpen} aria-controls="nebula-explorer" onClick={() => { setDrawerOpen(!drawerOpen); if (shellMode !== "desktop") setRightRailOpen(false); }}><PanelLeft size={17} /><span className="hidden md:inline">Explorer</span></button>
+                <button type="button" className={cn("nebula-header-action", rightRailOpen && "is-active")} aria-label="Toggle details" aria-expanded={rightRailOpen} aria-controls="nebula-inspector" onClick={() => { setRightRailOpen(!rightRailOpen); if (shellMode !== "desktop") setDrawerOpen(false); }}><PanelRight size={17} /><span className="hidden md:inline">Details</span></button>
+              </>
+            ) : null}
+            {sourceMode === "browser" && shellMode !== "mobile" ? (
+              <button type="button" className="nebula-header-action" ref={sourceTriggerRef} onClick={onOpenSource}>Other sources</button>
+            ) : null}
+            <button type="button" className="nebula-primary nebula-header-primary" onClick={sourceMode === "browser" ? openFolder : onOpenSource}>
+              <FolderOpen size={16} />
+              <span>{hasGraph ? "Change folder" : "Open folder"}</span>
+              <ArrowUpRight size={15} className="hidden sm:block" />
+            </button>
+          </div>
+        </header>
 
         <div className={cn(
-          "relative grid min-h-0 flex-1 gap-4",
-          drawerOpen && rightRailOpen && "xl:grid-cols-[22rem_minmax(0,1fr)_22rem]",
-          drawerOpen && !rightRailOpen && "xl:grid-cols-[22rem_minmax(0,1fr)]",
-          !drawerOpen && rightRailOpen && "xl:grid-cols-[minmax(0,1fr)_22rem]"
+          "relative grid min-h-0 flex-1 gap-3",
+          drawerOpen && rightRailOpen && "xl:grid-cols-[18rem_minmax(0,1fr)_18rem]",
+          drawerOpen && !rightRailOpen && "xl:grid-cols-[18rem_minmax(0,1fr)]",
+          !drawerOpen && rightRailOpen && "xl:grid-cols-[minmax(0,1fr)_18rem]"
         )}>
           {(drawerOpen || rightRailOpen) && shellMode !== "desktop" ? (
             <button
@@ -995,7 +835,7 @@ export function ControlRoomShell({
             id="nebula-explorer"
             aria-label="Explorer"
             className={cn(
-              "nebula-rail absolute inset-y-0 left-0 z-30 w-[min(22rem,calc(100vw-1.5rem))] space-y-4 overflow-y-auto rounded-[1.8rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
+              "nebula-rail absolute inset-y-0 left-0 z-30 w-[min(20rem,calc(100vw-1.5rem))] space-y-3 overflow-y-auto rounded-[1.2rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
               !drawerOpen && "hidden"
             )}
           >
@@ -1003,47 +843,44 @@ export function ControlRoomShell({
             <ProjectTree />
           </aside>
 
-          <div id="nebula-graph" className="nebula-stage relative min-h-0 overflow-hidden rounded-[2rem] border border-[var(--line-strong)]">
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-3 p-4">
-              <div className="nebula-stage-banner max-w-xl rounded-[1.2rem] px-3 py-2 sm:px-4 sm:py-3">
-                <div className="hidden text-[0.72rem] uppercase tracking-[0.24em] text-slate-400 sm:block">Stage feed</div>
-                <div className="flex flex-wrap items-center gap-2 sm:mt-2">
-                  <span className="text-lg font-semibold text-white">{formatRootLabel(currentRoot)}</span>
-                  <Badge className="hidden rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] sm:inline-flex">
-                    {sourceMode}
-                  </Badge>
-                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {layoutMode}
-                  </Badge>
+          <div id="nebula-graph" className="nebula-stage relative min-h-0 overflow-hidden rounded-[1.2rem] border border-[var(--line-strong)]">
+            {hasGraph ? (
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-3 p-3 sm:p-5">
+                <div className="nebula-stage-banner max-w-[calc(100%-8rem)] rounded-xl px-3 py-2 sm:px-4 sm:py-3">
+                  <div className="text-[0.62rem] font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Workspace / {sourceMode === "browser" ? "Snapshot" : "Live"}</div>
+                  <div className="mt-1 truncate text-sm font-medium text-white sm:text-base">{formatRootLabel(currentRoot)}</div>
+                </div>
+                <div className="pointer-events-auto flex gap-1 rounded-xl border border-[var(--line)] bg-[var(--surface-strong)] p-1">
+                  {topActions.map((mode) => (
+                    <button key={mode} type="button" className={cn("nebula-mode", interactionMode === mode && "is-active")} aria-pressed={interactionMode === mode} onClick={() => setInteractionMode(mode)}>{mode}</button>
+                  ))}
                 </div>
               </div>
-
-              <div className="pointer-events-auto flex flex-wrap gap-2">
-                {topActions.map((mode) => (
-                  <Button
-                    key={mode}
-                    size="sm"
-                    variant={interactionMode === mode ? "default" : "outline"}
-                    className="rounded-full border-[var(--line)]"
-                    aria-pressed={interactionMode === mode}
-                    onClick={() => setInteractionMode(mode)}
-                  >
-                    {mode}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            ) : null}
 
             <div className="absolute inset-0">
               <ReactFlowOverlay enabled />
             </div>
 
-            {sourceLoading ? (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[rgba(2,6,23,0.36)]">
-                <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-5 text-center shadow-2xl">
-                  <div className="text-[0.72rem] uppercase tracking-[0.28em] text-slate-400">Boot sequence</div>
-                  <div className="mt-2 text-lg font-semibold text-white">Checking source configuration</div>
+            {!sourceLoading && !hasGraph ? (
+              <div className="nebula-empty absolute inset-0 z-10 flex items-center">
+                <div className="nebula-empty-content relative z-10 px-7 py-12 sm:px-12 lg:px-[clamp(4rem,9vw,10rem)]">
+                  <div className="nebula-eyebrow"><span className="nebula-eyebrow-line" /> A clearer view of everything</div>
+                  <h2 className="mt-4 max-w-[13ch] text-[clamp(3rem,5.3vw,5.4rem)] font-medium leading-[0.99] tracking-[-0.075em] text-white">See the shape<br /><span>of your work.</span></h2>
+                  <p className="mt-5 max-w-md text-[0.98rem] leading-7 text-[var(--muted)] sm:text-[1.08rem]">Turn any folder into a beautiful, explorable map of your files.</p>
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <button type="button" className="nebula-primary nebula-empty-primary" onClick={openFolder}><FolderOpen size={18} />Open a folder<ArrowUpRight size={17} /></button>
+                    <button type="button" className="nebula-text-action" onClick={onOpenSource}>Connect a live workspace <ArrowUpRight size={15} /></button>
+                  </div>
+                  <p className="mt-5 text-xs leading-5 text-[var(--subtle)]">Private by design. File contents stay on your device.</p>
                 </div>
+                <div className="nebula-orbit" aria-hidden="true"><i /><i /><i /><span className="nebula-orbit-core" /><span className="nebula-orbit-point point-one" /><span className="nebula-orbit-point point-two" /><span className="nebula-orbit-point point-three" /><span className="nebula-orbit-point point-four" /></div>
+              </div>
+            ) : null}
+
+            {sourceLoading ? (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-sm text-[var(--muted)]">
+                Preparing workspace...
               </div>
             ) : null}
 
@@ -1054,51 +891,21 @@ export function ControlRoomShell({
               </div>
             ) : null}
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-2 sm:p-4">
-              <div className="nebula-status-strip flex flex-col gap-2 rounded-[1.4rem] px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <Badge className="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em]">
-                    {sourceMode === "browser" ? (
-                      <><HardDrive size={13} className="mr-1.5" /> snapshot</>
-                    ) : connected ? (
-                      <>
-                        <Wifi size={13} className="mr-1.5" />
-                        live
-                      </>
-                    ) : (
-                      <>
-                        <WifiOff size={13} className="mr-1.5" />
-                        standby
-                      </>
-                    )}
-                  </Badge>
-                  <span className="text-sm text-slate-300/82 sm:hidden">{statusTone.label}</span>
-                  <span className="hidden text-sm text-slate-300/82 sm:inline">{statusTone.detail}</span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-200 sm:gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1">
-                    <Blocks size={14} className="text-cyan-200" />
-                    {nodeArray.length} nodes
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1">
-                    <Network size={14} className="text-cyan-200" />
-                    {edgeArray.length} edges
-                  </span>
-                  <span className="hidden items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1 sm:inline-flex">
-                    <Activity size={14} className="text-cyan-200" />
-                    {selectedProjectIds.size || 0} active projects
-                  </span>
+            {hasGraph ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3 sm:p-5">
+                <div className="nebula-status-strip flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs sm:px-4">
+                  <div className="flex items-center gap-2 text-[var(--muted)]"><span className={cn("nebula-connection-dot", sourceMode !== "browser" && connected && "is-live")} />{sourceMode === "browser" ? "Local snapshot" : connected ? "Live connection" : "Standby"}</div>
+                  <div className="flex items-center gap-4 text-[var(--muted)]"><span><strong className="font-medium text-white">{nodeArray.length}</strong> items</span><span><strong className="font-medium text-white">{edgeArray.length}</strong> links</span><span className="hidden sm:inline">{layoutEngine} / {layoutMode}</span></div>
                 </div>
               </div>
-            </div>
+            ) : null}
           </div>
 
           <aside
             id="nebula-inspector"
             aria-label="Inspector"
             className={cn(
-              "nebula-rail absolute inset-y-0 right-0 z-30 w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-[1.8rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
+              "nebula-rail absolute inset-y-0 right-0 z-30 w-[min(20rem,calc(100vw-1.5rem))] overflow-y-auto rounded-[1.2rem] bg-[var(--surface-elevated)] p-2 shadow-2xl xl:static xl:w-auto xl:bg-transparent xl:p-0 xl:shadow-none",
               !rightRailOpen && "hidden"
             )}
           >

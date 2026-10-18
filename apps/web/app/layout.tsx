@@ -3,14 +3,14 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Nebula",
-  description: "Nebula control room for live file-system graph operations"
+  description: "A beautiful, explorable map of your workspace."
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#02040b",
+  themeColor: "#06080b",
   colorScheme: "dark"
 };
 

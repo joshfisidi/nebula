@@ -151,38 +151,38 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
     },
     style: {
       background: isFocusNode
-        ? "linear-gradient(135deg, rgba(250,204,21,0.96), rgba(249,115,22,0.96))"
+        ? "linear-gradient(135deg, #d8f8ac, #aadf72)"
         : isFocusParent
-          ? "linear-gradient(135deg, rgba(244,114,182,0.92), rgba(251,113,133,0.92))"
+          ? "linear-gradient(135deg, #283e2d, #192a23)"
           : isMindmapNode && isDir
-            ? "linear-gradient(145deg, rgba(14,165,233,0.92), rgba(37,99,235,0.92))"
+            ? "linear-gradient(145deg, #223a2c, #13251e)"
             : isBubbleGroup
-              ? "linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92))"
+              ? "linear-gradient(135deg, #1a2725, #121b1b)"
               : isDir
-                ? "linear-gradient(145deg, rgba(15,23,42,0.94), rgba(30,64,175,0.64))"
-                : "linear-gradient(145deg, rgba(15,23,42,0.9), rgba(51,65,85,0.82))",
-      color: "#f8fafc",
+                ? "linear-gradient(145deg, #1c2b27, #13201e)"
+                : "linear-gradient(145deg, #171f21, #11191b)",
+      color: isFocusNode ? "#10200b" : "#ecf4ec",
       border: isFocusNode
-        ? "2px solid rgba(255,255,255,0.92)"
+        ? "1px solid #edffd6"
         : isFocusParent
-          ? "1px solid rgba(255,228,214,0.86)"
+          ? "1px solid rgba(196,242,136,0.68)"
           : isMindmapNode && isDir
-            ? "1px solid rgba(255,255,255,0.72)"
+            ? "1px solid rgba(196,242,136,0.55)"
             : isBubbleGroup
-              ? "1px solid rgba(125,211,252,0.3)"
+              ? "1px solid rgba(196,242,136,0.18)"
               : isDir
-                ? `1px solid hsla(${(node.depth * 37 + 190) % 360} 92% ${64 + Math.min(8, node.salience * 2)}% / 0.52)`
-                : `1px solid rgba(148,163,184,${Math.min(0.52, 0.22 + node.salience * 0.06)})`,
-      borderRadius: isMindmapNode && isDir ? 24 : isBubbleGroup ? 999 : 18,
+                ? "1px solid rgba(175,220,167,0.34)"
+                : "1px solid rgba(177,196,187,0.22)",
+      borderRadius: isMindmapNode && isDir ? 999 : isBubbleGroup ? 999 : 12,
       boxShadow: isSummary
         ? "none"
         : isFocusNode
-          ? "0 0 0 8px rgba(250,204,21,0.12), 0 24px 70px rgba(249,115,22,0.32)"
+          ? "0 0 0 6px rgba(196,242,136,0.1), 0 16px 42px rgba(122,186,83,0.18)"
           : isFocusParent
-            ? "0 0 0 5px rgba(244,114,182,0.1), 0 18px 48px rgba(251,113,133,0.22)"
+            ? "0 0 0 4px rgba(196,242,136,0.06), 0 12px 28px rgba(0,0,0,0.22)"
             : isMindmapNode && isDir
-              ? "0 18px 40px rgba(14,165,233,0.22)"
-              : `0 16px ${22 + node.salience * 10}px rgba(14,165,233,${Math.min(0.22, node.salience * 0.04)})`,
+              ? "0 12px 30px rgba(0,0,0,0.2)"
+              : "0 8px 22px rgba(0,0,0,0.22)",
       fontSize: isFocusNode ? "0.8rem" : isBubbleGroup ? "0.66rem" : "0.7rem",
       fontWeight: isFocusNode || isFocusParent ? 700 : 600,
       lineHeight: 1.2,
@@ -205,7 +205,6 @@ function toFlowNode(node: VisibleNode): Node<FlowNodeData> {
 }
 
 function toFlowEdge(edge: { id: string; from: string; to: string }, depth: number, sourceLabel: string, targetLabel: string): Edge {
-  const hue = (depth * 31 + 190) % 360;
   return {
     id: edge.id,
     source: edge.from,
@@ -213,7 +212,7 @@ function toFlowEdge(edge: { id: string; from: string; to: string }, depth: numbe
     type: "smoothstep",
     focusable: false,
     ariaLabel: buildEdgeAriaLabel(sourceLabel, targetLabel),
-    style: { stroke: `hsla(${hue} 90% 72% / 0.26)`, strokeWidth: 1.15 }
+    style: { stroke: `rgba(178, 221, 167, ${Math.max(0.16, 0.34 - depth * 0.025)})`, strokeWidth: 1.1 }
   };
 }
 
@@ -790,8 +789,8 @@ export const ReactFlowOverlay = memo(function ReactFlowOverlay({ enabled }: { en
         zoomOnScroll
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="rgba(56,189,248,0.08)" gap={isMobile ? 20 : 24} size={1} />
-        <Controls showInteractive={false} position="top-right" />
+        <Background color="rgba(190,224,186,0.06)" gap={isMobile ? 20 : 24} size={1} />
+        {graphSnapshot.nodes.length > 0 ? <Controls showInteractive={false} position="top-right" /> : null}
       </ReactFlow>
     </div>
   );
